@@ -176,6 +176,8 @@ function resolveArmour(state, playerId, card, cardIdx) {
 
   player.ap -= card.cost;
   player.hand.splice(cardIdx, 1);
+  // Track durability countdown
+  card._turnsRemaining = card.durability;
   player.gear[slot] = card;
   events.push({ type: 'equip_armour', cardUid: card.uid, card, playerId, slot });
 
