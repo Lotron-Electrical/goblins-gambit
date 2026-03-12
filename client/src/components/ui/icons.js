@@ -16,6 +16,7 @@ export const ICONS = {
   clock: '\u23F0',       // ⏰
   music: '\uD83C\uDFB5',  // 🎵
   musicOff: '\uD83D\uDD15', // 🔕
+  bug: '\uD83D\uDC1B',      // 🐛
 };
 
 export const TYPE_ICON = {

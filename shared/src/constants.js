@@ -90,6 +90,10 @@ export const EVENTS = {
   TARGET_REQUEST: 'target_request',
   CARD_CHOICE: 'card_choice',
 
+  // Bots
+  ADD_BOT: 'add_bot',
+  REMOVE_BOT: 'remove_bot',
+
   // System
   PLAYER_DISCONNECTED: 'player_disconnected',
   PLAYER_RECONNECTED: 'player_reconnected',

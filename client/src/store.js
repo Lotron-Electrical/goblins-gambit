@@ -138,6 +138,18 @@ export const useStore = create((set, get) => ({
     });
   },
 
+  addBot: () => {
+    socket.emit(EVENTS.ADD_BOT, null, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+  },
+
+  removeBot: (botId) => {
+    socket.emit(EVENTS.REMOVE_BOT, { botId }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+  },
+
   selectCard: (card) => set({ selectedCard: card }),
   setTargetMode: (mode) => set({ targetMode: mode }),
   setZoomedCard: (card) => set({ zoomedCard: card }),

@@ -2,13 +2,14 @@ import { useStore } from '../store.js';
 import { socket } from '../socket.js';
 
 export default function RoomScreen() {
-  const { currentRoom, leaveRoom, toggleReady, startGame } = useStore();
+  const { currentRoom, leaveRoom, toggleReady, startGame, addBot, removeBot } = useStore();
 
   if (!currentRoom) return null;
 
   const isHost = currentRoom.host === socket.id;
   const allReady = currentRoom.players.length >= 2 && currentRoom.players.every(p => p.ready);
   const myPlayer = currentRoom.players.find(p => p.id === socket.id);
+  const isFull = currentRoom.players.length >= currentRoom.maxPlayers;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -37,10 +38,23 @@ export default function RoomScreen() {
                 {p.id === currentRoom.host && (
                   <span className="text-xs bg-[var(--color-gold)]/20 text-[var(--color-gold)] px-2 py-0.5 rounded">HOST</span>
                 )}
+                {p.isBot && (
+                  <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded">BOT</span>
+                )}
               </div>
-              <span className={p.ready ? 'text-green-400 font-bold' : 'text-gray-500'}>
-                {p.ready ? 'READY' : 'Not Ready'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={p.ready ? 'text-green-400 font-bold' : 'text-gray-500'}>
+                  {p.ready ? 'READY' : 'Not Ready'}
+                </span>
+                {isHost && p.isBot && (
+                  <button
+                    onClick={() => removeBot(p.id)}
+                    className="text-red-400 hover:text-red-300 text-sm ml-2 px-2 py-0.5 rounded bg-red-900/30 hover:bg-red-900/50 transition"
+                  >
+                    Kick
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -72,6 +86,16 @@ export default function RoomScreen() {
             </button>
           )}
         </div>
+
+        {/* Add Bot button */}
+        {isHost && !isFull && (
+          <button
+            onClick={addBot}
+            className="w-full mt-4 bg-purple-700 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">+</span> Add Bot
+          </button>
+        )}
       </div>
     </div>
   );
