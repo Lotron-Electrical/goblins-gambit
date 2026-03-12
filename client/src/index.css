@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'MedievalSharp', cursive;
+  --font-body: 'Inter', sans-serif;
+  --color-swamp: #1a2e1a;
+  --color-swamp-dark: #0d1a0d;
+  --color-card-red: #b91c1c;
+  --color-card-blue: #1d4ed8;
+  --color-card-green: #15803d;
+  --color-card-black: #374151;
+  --color-gold: #d4a017;
+  --color-gold-bright: #fbbf24;
+}
+
+body {
+  font-family: var(--font-body);
+  background: linear-gradient(180deg, #0a0f0a 0%, #1a2e1a 50%, #0d1a0d 100%);
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Card zoom slide-in */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.2s ease-out;
+}
+
+/* Reduced motion: disable animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse, .animate-slide-in-right {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
