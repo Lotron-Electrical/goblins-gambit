@@ -85,14 +85,15 @@ export class GameEngine {
   }
 
   handleDrawCard(player, playerId) {
-    // Check Lagg draw skip
-    if (player._drawSkip && player._drawSkip > 0) {
-      player._drawSkip--;
-      return { success: false, error: 'Draw skipped by Lagg!' };
-    }
-
     if (player.ap < 1) {
       return { success: false, error: 'Need 1 AP to draw' };
+    }
+
+    // Check Lagg draw skip (still costs AP)
+    if (player._drawSkip && player._drawSkip > 0) {
+      player._drawSkip--;
+      player.ap -= 1;
+      return { success: false, error: 'Draw skipped by Lagg! (1 AP wasted)' };
     }
     if (player.hand.length >= MAX_HAND_SIZE) {
       return { success: false, error: 'Hand is full' };
