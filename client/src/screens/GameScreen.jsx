@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useStore } from '../store.js';
 import { useAnimationQueue } from '../hooks/useAnimationQueue.js';
 import useMusicDirector from '../hooks/useMusicDirector.js';
@@ -16,6 +16,9 @@ import GameOverModal from '../components/ui/GameOverModal.jsx';
 import GraveyardModal from '../components/ui/GraveyardModal.jsx';
 import HelpPanel from '../components/ui/HelpPanel.jsx';
 import CardChoiceModal from '../components/ui/CardChoiceModal.jsx';
+import DamageNumber from '../components/ui/DamageNumber.jsx';
+import DiceRoll from '../components/ui/DiceRoll.jsx';
+import SPParticles from '../components/ui/SPParticles.jsx';
 import { motion } from 'framer-motion';
 
 export default function GameScreen() {
@@ -54,9 +57,84 @@ export default function GameScreen() {
 
   useMusicDirector();
 
+  // Start ambient sounds on mount
+  useEffect(() => {
+    const handler = () => {
+      soundManager.startAmbient();
+    };
+    document.addEventListener('click', handler, { once: true });
+    return () => {
+      document.removeEventListener('click', handler);
+      soundManager.stopAmbient();
+    };
+  }, []);
+
   const { currentAnimation, isAnimating, announcement } = useAnimationQueue(
     gameState?.animations
   );
+
+  // VFX state
+  const [activeDamages, setActiveDamages] = useState([]);
+  const [spEvents, setSPEvents] = useState([]);
+  const [diceData, setDiceData] = useState(null);
+  const damageIdRef = useRef(0);
+  const spIdRef = useRef(0);
+
+  // Wire damage numbers to animation events
+  useEffect(() => {
+    if (!currentAnimation) return;
+    if (currentAnimation.type === 'damage' && currentAnimation.amount) {
+      const cardUid = currentAnimation.targetUid || currentAnimation.cardUid;
+      // Find card DOM element position
+      let x = '50%';
+      let y = '40%';
+      if (cardUid) {
+        const el = document.querySelector(`[data-card-uid="${cardUid}"]`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          x = rect.left + rect.width / 2;
+          y = rect.top + rect.height / 3;
+        }
+      }
+      const id = ++damageIdRef.current;
+      const dmg = { id, cardUid, x, y, amount: -(currentAnimation.amount) };
+      setActiveDamages(prev => [...prev, dmg]);
+      setTimeout(() => {
+        setActiveDamages(prev => prev.filter(d => d.id !== id));
+      }, 800);
+    }
+
+    if (currentAnimation.type === 'sp_change' && currentAnimation.amount > 0) {
+      const playerId = currentAnimation.playerId;
+      // Position near the player's SP counter
+      let x = window.innerWidth / 2;
+      let y = window.innerHeight * 0.35;
+      if (playerId) {
+        const spEl = document.querySelector(`[data-player-sp="${playerId}"]`);
+        if (spEl) {
+          const rect = spEl.getBoundingClientRect();
+          x = rect.left + rect.width / 2;
+          y = rect.top;
+        }
+      }
+      const id = ++spIdRef.current;
+      setSPEvents(prev => [...prev, { id, x, y, amount: currentAnimation.amount }]);
+      setTimeout(() => {
+        setSPEvents(prev => prev.filter(e => e.id !== id));
+      }, 1000);
+    }
+
+    if (currentAnimation.type === 'dice_roll') {
+      setDiceData({
+        dice: currentAnimation.dice || [currentAnimation.roll1 || 1, currentAnimation.roll2 || 1],
+        result: currentAnimation.result || currentAnimation.outcome || '',
+      });
+    }
+  }, [currentAnimation]);
+
+  const handleDiceComplete = useCallback(() => {
+    setDiceData(null);
+  }, []);
 
   if (!gameState) return null;
 
@@ -157,6 +235,17 @@ export default function GameScreen() {
 
       {/* Card play announcement */}
       <CardAnnouncement announcement={announcement} />
+
+      {/* VFX overlays */}
+      <DamageNumber damages={activeDamages} />
+      <SPParticles spEvents={spEvents} />
+      {diceData && (
+        <DiceRoll
+          dice={diceData.dice}
+          result={diceData.result}
+          onComplete={handleDiceComplete}
+        />
+      )}
     </motion.div>
   );
 }

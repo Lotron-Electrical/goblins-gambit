@@ -15,6 +15,8 @@ class SoundManager {
     this.musicVolume = 0.12;
     this.intensity = 0;
     this.targetIntensity = 0;
+    this.ambientPlaying = false;
+    this.ambientTimer = null;
   }
 
   /** Must be called from a user gesture (click/tap) to unlock AudioContext */
@@ -74,6 +76,30 @@ class SoundManager {
     this.targetIntensity = Math.max(0, Math.min(1, value));
   }
 
+  startAmbient() {
+    if (this.ambientPlaying) return;
+    if (!this.ctx) this.init();
+    if (!this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.ambientPlaying = true;
+    this._scheduleAmbient();
+  }
+
+  stopAmbient() {
+    this.ambientPlaying = false;
+    if (this.ambientTimer) {
+      clearTimeout(this.ambientTimer);
+      this.ambientTimer = null;
+    }
+  }
+
+  _scheduleAmbient() {
+    if (!this.ambientPlaying || !this.ctx) return;
+    playSwampAmbient(this.ctx, this.muted ? 0 : 0.06);
+    // Ambient loop is ~10s
+    this.ambientTimer = setTimeout(() => this._scheduleAmbient(), 10000);
+  }
+
   _scheduleLoop() {
     if (!this.musicPlaying || !this.ctx) return;
     // Smooth interpolation toward target
@@ -130,6 +156,80 @@ function playNoise(ctx, duration, volume = 0.3) {
 function playChord(ctx, freqs, duration, type = 'sine', volume = 0.15) {
   for (const f of freqs) {
     playTone(ctx, f, duration, type, volume);
+  }
+}
+
+/**
+ * Ambient swamp soundscape — bubbling, croaking, insects.
+ * Plays a 10s loop of layered procedural nature sounds.
+ */
+function playSwampAmbient(ctx, volume) {
+  const t = ctx.currentTime;
+
+  // Layer 1: Bubbling — random short low-freq bursts
+  for (let i = 0; i < 8; i++) {
+    const start = t + Math.random() * 9;
+    const freq = 60 + Math.random() * 80;
+    const dur = 0.08 + Math.random() * 0.12;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, start);
+    osc.frequency.linearRampToValueAtTime(freq * 1.8, start + dur);
+    gain.gain.setValueAtTime(volume * 0.4, start);
+    gain.gain.linearRampToValueAtTime(0, start + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + dur);
+  }
+
+  // Layer 2: Frog croaks — pairs of low tones
+  const croakCount = 1 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < croakCount; i++) {
+    const start = t + 1 + Math.random() * 7;
+    for (let j = 0; j < 2; j++) {
+      const cStart = start + j * 0.18;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(120 + Math.random() * 40, cStart);
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(300, cStart);
+      gain.gain.setValueAtTime(volume * 0.2, cStart);
+      gain.gain.linearRampToValueAtTime(0, cStart + 0.12);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(cStart);
+      osc.stop(cStart + 0.12);
+    }
+  }
+
+  // Layer 3: Insects — high-freq filtered noise bursts
+  for (let i = 0; i < 5; i++) {
+    const start = t + Math.random() * 9;
+    const dur = 0.5 + Math.random() * 1.5;
+    const bufLen = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const hpf = ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.setValueAtTime(6000 + Math.random() * 3000, start);
+    const gain = ctx.createGain();
+    const insVol = volume * (0.03 + Math.random() * 0.04);
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(insVol, start + 0.2);
+    gain.gain.setValueAtTime(insVol, start + dur - 0.3);
+    gain.gain.linearRampToValueAtTime(0, start + dur);
+    src.connect(hpf);
+    hpf.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(start);
   }
 }
 

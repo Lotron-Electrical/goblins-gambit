@@ -55,7 +55,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           {isCurrentTurn && <span className="text-[11px] text-[var(--color-gold)]">TURN</span>}
         </div>
         <div className="flex items-center gap-3 text-[13px]">
-          <span className="text-yellow-400 font-bold text-[15px]">{player.sp} SP</span>
+          <span className="text-yellow-400 font-bold text-[15px]" data-player-sp={playerId}>{player.sp} SP</span>
           <span className="text-blue-300">{player.ap} AP</span>
           <span className="text-gray-400">{player.handCount ?? player.hand?.length ?? 0} cards</span>
         </div>

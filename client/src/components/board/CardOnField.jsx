@@ -51,6 +51,7 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       } ${invisible ? 'opacity-40' : ''}`}
       style={hovered && !invisible ? { boxShadow: TYPE_GLOW[card.type] } : undefined}
       data-card-hover
+      data-card-uid={card.uid}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onMouseEnter={(e) => { setHovered(true); setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' }); }}
