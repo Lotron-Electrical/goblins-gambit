@@ -56,7 +56,7 @@ export default function CardInHand({ card, isSelected }) {
       onMouseEnter={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
       onMouseMove={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
       onMouseLeave={clearHoveredCard}
-      whileHover={animationsOff ? undefined : { y: -12, scale: 1.05 }}
+      whileHover={animationsOff ? undefined : { y: -12, scale: 1.05, zIndex: 50 }}
       animate={animationsOff ? {} : (isSelected ? { y: -12, scale: 1.05 } : {})}
       layout
     >

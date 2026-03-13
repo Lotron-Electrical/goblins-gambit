@@ -101,7 +101,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         {/* Swamp zone */}
         <div className="flex-1">
           <div className="text-[11px] text-gray-500 text-center mb-1">The Swamp</div>
-          <div className="flex gap-1 justify-center min-h-[100px] bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-1">
+          <div className="flex gap-0.5 justify-center min-h-[100px] bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-1 max-w-[600px] mx-auto">
             {Array.from({ length: 5 }).map((_, slotIdx) => {
               const creature = player.swamp.find(c => c._slot === slotIdx) || null;
               const canPlace = !isOpponent && isMyTurn && !creature

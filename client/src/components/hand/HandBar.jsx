@@ -23,22 +23,25 @@ export default function HandBar() {
   const canBuyAP = myPlayer.sp >= buyAPCost;
 
   return (
-    <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0">
-      {/* Activity log — anchored above the hand bar, left side */}
-      <div className="absolute bottom-full left-0 mb-1 z-10">
-        <ActivityLog />
-      </div>
-      <div className="flex gap-1 justify-center items-end overflow-x-auto pb-1 pr-40">
-        {hand.map((card) => (
-          <CardInHand
-            key={card.uid}
-            card={card}
-            isSelected={selectedCard?.uid === card.uid}
-          />
-        ))}
-        {hand.length === 0 && (
-          <div className="text-gray-600 py-4">No cards in hand</div>
-        )}
+    <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0 overflow-visible z-30">
+      <div className="flex items-end gap-2">
+        {/* Activity log — inline bottom-left */}
+        <div className="shrink-0 self-end" style={{ width: '240px' }}>
+          <ActivityLog />
+        </div>
+        {/* Cards */}
+        <div className="flex gap-1 justify-center items-end overflow-x-auto overflow-y-visible pb-1 flex-1 pr-40">
+          {hand.map((card) => (
+            <CardInHand
+              key={card.uid}
+              card={card}
+              isSelected={selectedCard?.uid === card.uid}
+            />
+          ))}
+          {hand.length === 0 && (
+            <div className="text-gray-600 py-4">No cards in hand</div>
+          )}
+        </div>
       </div>
       {isMyTurn && (
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-1.5">

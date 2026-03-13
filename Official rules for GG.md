@@ -27,7 +27,29 @@ Each action costs **1 AP** unless otherwise noted:
 | **Buy AP** | 1,000 SP | Spend 1,000 SP to gain +1 AP this turn |
 | **End Turn** | 0 | End your turn and pass to the next player |
 
-Players receive **2 AP** at the start of each turn.
+The base AP a player receives at the start of each turn is modified by the **Encumbrance** system (see below).
+
+---
+
+## Encumbrance
+
+The number of cards in your hand at the start of your turn determines how many Action Points you receive. This mechanic rewards aggressive play and punishes hoarding, while also providing a comeback burst when your hand is completely full.
+
+| Cards in Hand | AP Granted |
+|---------------|-----------|
+| 0 | 4 |
+| 1 | 3 |
+| 2–7 | 2 (default) |
+| 8–9 | 1 |
+| 10 (max hand) | 7 |
+
+- **Empty-handed bonus (0 cards):** Having no cards means you've played aggressively. You're rewarded with 4 AP to draw and rebuild.
+- **Light hand (1 card):** Nearly empty — you get 3 AP to help recover.
+- **Standard (2–7 cards):** The normal range. You receive the default 2 AP.
+- **Heavy hand (8–9 cards):** You're nearing the hand limit and hoarding cards. Your AP is reduced to 1, pressuring you to play cards.
+- **Full hand burst (10 cards):** Your hand is completely full (max hand size). You receive a massive 7 AP burst, giving you the resources to play a big turn and clear your hand. This prevents players from being stuck with a full hand and no way to act.
+
+Encumbrance AP is calculated before other modifiers (Hessian set bonus, Viper AP penalties). For example, a player with 0 cards in hand and a Viper penalty of 1 would receive 4 − 1 = 3 AP.
 
 ---
 
@@ -243,7 +265,7 @@ At the end of each turn, the following occurs in order:
 6. **Armour Durability** — All equipped armour loses 1 durability. Pieces at 0 are destroyed.
 7. **Silence Expires** — STFU silence wears off.
 8. **Temporary Buffs Clear** — Attack/defence buffs from spells reset.
-9. **AP Reset** — Next player receives 2 base AP (modified by Hessian set bonus and Viper penalties).
+9. **AP Reset (Encumbrance)** — Next player receives AP based on their hand size (see Encumbrance table), then modified by Hessian set bonus and Viper penalties.
 
 ---
 

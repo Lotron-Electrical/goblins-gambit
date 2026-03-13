@@ -54,6 +54,11 @@ export function setupSocketHandlers(io, lobby) {
 
       if (botState.currentPlayerId !== botId && !needsResponse) return;
 
+      // Wait if a human player has a pending choice (e.g. Dead Meme)
+      const pendingForHuman = engine.state.pendingChoice
+        && !botIds.has(engine.state.pendingChoice.playerId);
+      if (pendingForHuman) return;
+
       const action = decideBotAction(botState);
       if (!action) {
         // Bot is stuck — force end turn to prevent freeze

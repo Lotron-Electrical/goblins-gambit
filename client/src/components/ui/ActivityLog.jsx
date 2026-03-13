@@ -104,7 +104,7 @@ export default function ActivityLog() {
   };
 
   return (
-    <div className="pointer-events-auto" style={{ width: '260px' }}>
+    <div className="pointer-events-auto" style={{ width: '240px' }}>
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="text-[11px] text-gray-500 hover:text-gray-300 mb-1 transition"
@@ -114,7 +114,7 @@ export default function ActivityLog() {
       {!collapsed && (
         <div
           ref={scrollRef}
-          className="bg-gray-950/80 border border-gray-800 rounded-lg p-2 max-h-[200px] overflow-y-auto"
+          className="bg-gray-950/80 border border-gray-800 rounded-lg p-2 max-h-[160px] overflow-y-auto"
         >
           {entries.length === 0 && (
             <div className="text-gray-600 text-[11px]">Waiting for action...</div>

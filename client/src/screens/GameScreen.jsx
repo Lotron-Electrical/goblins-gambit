@@ -79,8 +79,9 @@ export default function GameScreen() {
     gameState?.animations
   );
 
-  // Staged card (briefly shown in center when played)
-  const [stagedCard, setStagedCard] = useState(null);
+  // Staged card stack (shown in center when played)
+  const [stagedCards, setStagedCards] = useState([]);
+  const stagedIdRef = useRef(0);
 
   // VFX state
   const [activeDamages, setActiveDamages] = useState([]);
@@ -93,9 +94,13 @@ export default function GameScreen() {
   useEffect(() => {
     if (!currentAnimation) return;
     // Stage played cards briefly in center
-    if (currentAnimation.type === 'card_played' && currentAnimation.card) {
-      setStagedCard(currentAnimation.card);
-      setTimeout(() => setStagedCard(null), 1200);
+    if (currentAnimation.type === 'card_played' && currentAnimation.card && currentAnimation.card.type !== 'Creature') {
+      const id = ++stagedIdRef.current;
+      const rotation = (Math.random() - 0.5) * 10; // -5 to +5 degrees
+      setStagedCards(prev => [...prev, { ...currentAnimation.card, _stagedId: id, _rotation: rotation }]);
+      setTimeout(() => {
+        setStagedCards(prev => prev.filter(c => c._stagedId !== id));
+      }, 5000);
     }
 
     if (currentAnimation.type === 'damage' && currentAnimation.amount) {
@@ -179,7 +184,7 @@ export default function GameScreen() {
       } : {}}
     >
       {/* Opponent fields */}
-      <div className="flex-1 overflow-auto p-2 min-h-0">
+      <div className="flex-1 overflow-auto p-2 pt-14 min-h-0">
         <div
           className="grid gap-2"
           style={{
@@ -208,7 +213,7 @@ export default function GameScreen() {
         deckCount={gameState.deckCount}
         graveyardCount={gameState.graveyardCount}
         graveyard={gameState.graveyard || []}
-        stagedCard={stagedCard}
+        stagedCards={stagedCards}
       />
 
       {/* My field */}

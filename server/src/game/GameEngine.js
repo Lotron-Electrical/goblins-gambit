@@ -19,6 +19,14 @@ import {
   ACTION,
 } from '../../../shared/src/constants.js';
 
+function getEncumbranceAP(handSize) {
+  if (handSize === 0) return 4;
+  if (handSize === 1) return 3;
+  if (handSize >= 10) return 7;
+  if (handSize >= 8) return 1;
+  return BASE_AP;
+}
+
 export class GameEngine {
   constructor(playerIds, playerNames, winSP) {
     this.state = createGameState(playerIds, playerNames);
@@ -51,6 +59,11 @@ export class GameEngine {
     // Handle card choice (Dead Meme graveyard pick, Woke deck peek)
     if (action.type === ACTION.CHOOSE_CARD && state.pendingChoice) {
       return this.handleCardChoice(playerId, action);
+    }
+
+    // Block actions while another player has a pending choice (e.g. Dead Meme)
+    if (state.pendingChoice && state.pendingChoice.playerId !== playerId && action.type !== ACTION.CHOOSE_CARD) {
+      return { success: false, error: 'Waiting for another player to choose' };
     }
 
     // Reaction cards can be played on any player's turn
@@ -308,13 +321,16 @@ export class GameEngine {
     this.state.turnNumber++;
     this.state.turnPhase = TURN_PHASE.MAIN;
     this.state.pendingTarget = null;
-    this.state.pendingChoice = null;
+    // Only clear pendingChoice if it belongs to the player ending their turn
+    if (this.state.pendingChoice?.playerId === playerId) {
+      this.state.pendingChoice = null;
+    }
 
     // Set up next player's turn
     const nextPlayer = getCurrentPlayer(this.state);
     const nextPlayerId = this.getCurrentPlayerId();
     const apPenalty = nextPlayer.apPenalty || 0;
-    nextPlayer.ap = Math.max(0, BASE_AP - apPenalty);
+    nextPlayer.ap = Math.max(0, getEncumbranceAP(nextPlayer.hand.length) - apPenalty);
     nextPlayer.apPenalty = 0;
 
     // Hessian set bonus: extra AP
@@ -347,7 +363,7 @@ export class GameEngine {
       const np = getCurrentPlayer(this.state);
       const npId = this.getCurrentPlayerId();
       const apPen = np.apPenalty || 0;
-      np.ap = Math.max(0, BASE_AP - apPen);
+      np.ap = Math.max(0, getEncumbranceAP(np.hand.length) - apPen);
       np.apPenalty = 0;
       for (const c of np.swamp) { delete c._silenced; }
       events.push({ type: 'turn_start', playerId: npId, turnNumber: this.state.turnNumber });
