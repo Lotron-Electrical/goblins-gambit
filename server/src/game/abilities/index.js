@@ -16,7 +16,7 @@ import {
   streamer_draw, ghost_invisible, thot_instakill, stoner_shield,
   thief_steal, king_thief_steal, troll_swap, saving_grace_multi,
   dead_meme_revive, zucc_steal, crack_head_multi, harambe_plant,
-  rhy_bear_split, catfish_mimic,
+  rhy_bear_split, catfish_mimic, gamblid_dynamic,
 } from './creatures.js';
 
 // On-play: Magic
@@ -58,6 +58,7 @@ export const onPlayRegistry = {
   harambe_plant,
   rhy_bear_split,
   catfish_mimic,
+  gamblid_dynamic,
 
   // Magic
   smesh_damage,

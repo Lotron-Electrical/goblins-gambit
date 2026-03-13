@@ -1,7 +1,11 @@
 {
   "name": "goblins-gambit",
   "private": true,
-  "workspaces": ["shared", "server", "client"],
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run dev -w server",
@@ -11,5 +15,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
   }
 }

@@ -88,11 +88,11 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
             <span className="text-red-400 font-bold flex items-center gap-0.5">
               <span className="text-[8px]">{ICONS.swords}</span>{card._attackBuff ? <span className="text-green-400">{(card.attack || 0) + card._attackBuff}</span> : card.attack ?? 0}
             </span>
-            <span className="text-yellow-400 font-bold flex items-center gap-0.5">
-              <span className="text-[8px]">{ICONS.coin}</span>{card.sp ?? 0}
-            </span>
             <span className={`font-bold flex items-center gap-0.5 ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>
               <span className="text-[8px]">{ICONS.shield}</span>{currentDef}{card._defenceDamage ? <span className="text-gray-500 text-[7px]">/{card.defence}</span> : null}
+            </span>
+            <span className="text-yellow-400 font-bold flex items-center gap-0.5">
+              <span className="text-[8px]">{ICONS.coin}</span>{card.sp ?? 0}
             </span>
           </div>
         )}

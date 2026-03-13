@@ -131,9 +131,13 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
-  const handleSubmit = () => {
-    if (!title.trim()) return;
+  const handleSubmit = async () => {
+    if (!title.trim() || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
     const label = type === 'bug' ? 'bug' : 'enhancement';
     const gameContext = [
       `**Turn:** ${gameState.turnNumber}`,
@@ -142,9 +146,23 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
       `**My creatures:** ${gameState.players[gameState.myId]?.swamp?.map(c => c.name).join(', ') || 'none'}`,
     ].join('\n');
     const body = `## Description\n${description || '_No description provided_'}\n\n## Game Context\n${gameContext}\n\n---\n_Submitted from in-game feedback_`;
-    const url = `https://github.com/Lotron-Electrical/goblins-gambit/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=${encodeURIComponent(label)}`;
-    window.open(url, '_blank');
-    setSubmitted(true);
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, labels: label }),
+      });
+      if (!res.ok) throw new Error('Failed to submit');
+      setSubmitted(true);
+    } catch (e) {
+      // Fallback: open GitHub directly
+      const url = `https://github.com/Lotron-Electrical/goblins-gambit/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=${encodeURIComponent(label)}`;
+      window.open(url, '_blank');
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -154,7 +172,7 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
           <div className="text-center py-4">
             <div className="text-3xl mb-3">{ICONS.sparkles}</div>
             <h3 className="text-white text-lg font-bold mb-2">Thanks for the feedback!</h3>
-            <p className="text-gray-400 text-sm mb-4">Your issue should be opening on GitHub now.</p>
+            <p className="text-gray-400 text-sm mb-4">Your feedback has been submitted.</p>
             <button onClick={() => { onClose(); onCloseMenu(); }} className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition">Close</button>
           </div>
         ) : (
@@ -166,10 +184,10 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
             </div>
             <input type="text" placeholder={type === 'bug' ? 'What went wrong?' : 'What would you like to see?'} value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm mb-3 focus:outline-none focus:border-[var(--color-gold)]" autoFocus />
             <textarea placeholder="Add any details... (optional)" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm mb-3 focus:outline-none focus:border-[var(--color-gold)] resize-none" />
-            <p className="text-gray-500 text-[11px] mb-4">This will open a GitHub issue with your game context automatically attached.</p>
+            <p className="text-gray-500 text-[11px] mb-4">Your game context will be automatically attached.</p>
             <div className="flex gap-3">
               <button onClick={onClose} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded-lg transition">Cancel</button>
-              <button onClick={handleSubmit} disabled={!title.trim()} className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-400 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-2 rounded-lg transition">Submit</button>
+              <button onClick={handleSubmit} disabled={!title.trim() || submitting} className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-400 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-2 rounded-lg transition">{submitting ? 'Submitting...' : 'Submit'}</button>
             </div>
           </>
         )}

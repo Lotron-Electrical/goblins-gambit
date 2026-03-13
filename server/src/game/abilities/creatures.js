@@ -194,6 +194,17 @@ export function rhy_bear_split(state, playerId, card, cardIdx, targetInfo) {
   return { success: true, events: [] };
 }
 
+// --- Gamblid: ATK = avg opponent hand size * 100, DEF = own hand * 100, SP = ATK + DEF ---
+export function gamblid_dynamic(state, playerId, card, cardIdx, targetInfo) {
+  const player = state.players[playerId];
+  const otherIds = getOtherPlayerIds(state, playerId);
+  const avgOppHand = otherIds.reduce((sum, id) => sum + (state.players[id]?.hand.length || 0), 0) / Math.max(1, otherIds.length);
+  card.attack = Math.round(avgOppHand) * 100;
+  card.defence = player.hand.length * 100;
+  card.sp = card.attack + card.defence;
+  return { success: true, events: [{ type: 'buff', text: `Gamblid: ATK ${card.attack}, DEF ${card.defence}, SP ${card.sp}` }] };
+}
+
 // --- Catfish: stats copy first creature to attack it (passive, handled in CombatResolver) ---
 export function catfish_mimic(state, playerId, card, cardIdx, targetInfo) {
   return { success: true, events: [] };

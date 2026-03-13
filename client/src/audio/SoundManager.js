@@ -102,10 +102,21 @@ class SoundManager {
 
   _scheduleLoop() {
     if (!this.musicPlaying || !this.ctx) return;
+    // Resume suspended context (e.g. after tab switch)
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
     // Smooth interpolation toward target
     this.intensity += (this.targetIntensity - this.intensity) * 0.4;
-    const nodes = playDynamicLoop(this.ctx, this.intensity, this.musicVolume);
-    this.musicNodes = nodes;
+    // Guard against NaN intensity
+    if (!isFinite(this.intensity)) this.intensity = 0;
+    try {
+      const nodes = playDynamicLoop(this.ctx, this.intensity, this.musicVolume);
+      this.musicNodes = nodes;
+    } catch (e) {
+      // Prevent loop chain from breaking on audio errors
+      console.warn('[SoundManager] music loop error:', e);
+    }
     // 8 bars at 140bpm = 8 * 4 * (60/140) = ~13714ms
     this._musicTimer = setTimeout(() => {
       this._scheduleLoop();
