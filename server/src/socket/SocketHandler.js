@@ -257,6 +257,7 @@ export function setupSocketHandlers(io, lobby) {
         return;
       }
       // Validate and apply settings
+      if (settings.winSP != null) room.winSP = Math.max(1000, Math.min(20000, Number(settings.winSP) || 10000));
       if (settings.startingSP != null) room.startingSP = Math.max(0, Math.min(5000, Number(settings.startingSP) || 0));
       if (settings.maxPlayers != null) room.maxPlayers = Math.max(2, Math.min(6, Number(settings.maxPlayers) || 6));
       if (settings.startingHandSize != null) room.startingHandSize = Math.max(3, Math.min(10, Number(settings.startingHandSize) || 5));

@@ -6,7 +6,6 @@ import SparkleParticles from '../components/ui/SparkleParticles.jsx';
 export default function LobbyScreen() {
   const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted } = useStore();
   const [name, setName] = useState(playerName || '');
-  const [quickGame, setQuickGame] = useState(false);
 
   useEffect(() => {
     refreshRooms();
@@ -37,7 +36,7 @@ export default function LobbyScreen() {
   const handleCreate = () => {
     if (!name.trim()) return;
     setPlayerName(name.trim());
-    createRoom({ quickGame });
+    createRoom();
   };
 
   const handleJoin = (roomId) => {
@@ -78,15 +77,6 @@ export default function LobbyScreen() {
           >
             Create Game
           </button>
-          <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={quickGame}
-              onChange={(e) => setQuickGame(e.target.checked)}
-              className="accent-[var(--color-gold)]"
-            />
-            Quick (5K SP)
-          </label>
         </div>
 
         {rooms.length > 0 && (
@@ -102,7 +92,6 @@ export default function LobbyScreen() {
                     <span className="text-white font-medium">{room.host}'s game</span>
                     <span className="text-gray-400 ml-3 text-sm">
                       {room.playerCount}/{room.maxPlayers} players
-                      {room.quickGame && ' (Quick)'}
                     </span>
                   </div>
                   <button

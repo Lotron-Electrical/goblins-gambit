@@ -3,9 +3,9 @@ import { useStore } from '../store.js';
 import { socket } from '../socket.js';
 
 const THEME_OPTIONS = [
-  { id: 'swamp', name: 'Swamp', icon: '\u{1F438}', desc: 'Goblin swamp — murky, squelchy, banjo', bg: 'bg-green-900/40', border: 'border-green-600', ring: 'ring-green-500' },
-  { id: 'blood', name: 'Blood Moon', icon: '\u{1F319}', desc: 'Dark ritual — aggressive, pulsing dread', bg: 'bg-red-900/40', border: 'border-red-600', ring: 'ring-red-500' },
-  { id: 'frost', name: 'Frost', icon: '\u{2744}\u{FE0F}', desc: 'Frozen wastes — ethereal, crystalline', bg: 'bg-blue-900/40', border: 'border-blue-600', ring: 'ring-blue-500' },
+  { id: 'swamp', name: 'Swamp', icon: '\u{1F47A}', desc: 'Goblin swamp — murky, squelchy, banjo', rules: 'Normal — no modifiers', bg: 'bg-green-900/40', border: 'border-green-600', ring: 'ring-green-500' },
+  { id: 'blood', name: 'Blood Moon', icon: '\u{1F319}', desc: 'Dark ritual — aggressive, pulsing dread', rules: '1.5x ATK | Last place goes Berserk (2x damage) | Spells cost 2x AP', bg: 'bg-red-900/40', border: 'border-red-600', ring: 'ring-red-500' },
+  { id: 'frost', name: 'Frost', icon: '\u{2744}\u{FE0F}', desc: 'Frozen wastes — ethereal, crystalline', rules: '1.5x DEF | Spells are free | -1 AP per turn (min 1)', bg: 'bg-blue-900/40', border: 'border-blue-600', ring: 'ring-blue-500' },
 ];
 
 export default function RoomScreen() {
@@ -28,7 +28,6 @@ export default function RoomScreen() {
         </h2>
         <p className="text-gray-400 text-center mb-1">
           Room: {currentRoom.id}
-          {currentRoom.quickGame && <span className="text-yellow-400 ml-2">(Quick Game - 5K SP)</span>}
         </p>
         <p className="text-gray-500 text-center text-sm mb-6">
           Waiting for players... ({currentRoom.players.length}/{currentRoom.maxPlayers})
@@ -120,10 +119,21 @@ export default function RoomScreen() {
           </div>
         )}
 
+        {/* Theme rules */}
+        {(() => {
+          const selected = THEME_OPTIONS.find(t => t.id === roomTheme);
+          return selected ? (
+            <div className="mt-2 text-center text-gray-400 text-xs px-2">
+              <span className="text-gray-500">Rules:</span> <span className="text-gray-300">{selected.rules}</span>
+            </div>
+          ) : null;
+        })()}
+
         {/* Non-host theme display */}
-        {!isHost && currentRoom.theme && currentRoom.theme !== 'swamp' && (
+        {!isHost && (
           <div className="mt-4 text-center text-gray-400 text-sm">
-            Theme: <span className="text-white font-bold">{THEME_OPTIONS.find(t => t.id === currentRoom.theme)?.name || currentRoom.theme}</span>
+            Theme: <span className="text-white font-bold">{THEME_OPTIONS.find(t => t.id === roomTheme)?.name || 'Swamp'}</span>
+            <div className="text-gray-500 text-xs mt-1">{THEME_OPTIONS.find(t => t.id === roomTheme)?.rules}</div>
           </div>
         )}
 
@@ -139,6 +149,21 @@ export default function RoomScreen() {
             </button>
             {showSettings && (
               <div className="mt-2 bg-gray-900/60 border border-gray-700 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-gray-300 text-sm">SP to Win</label>
+                  <select
+                    value={currentRoom.winSP || 10000}
+                    onChange={(e) => setRoomSettings({ winSP: Number(e.target.value) })}
+                    className="bg-gray-800 border border-gray-600 text-white rounded px-2 py-1 text-sm"
+                  >
+                    <option value={3000}>3,000</option>
+                    <option value={5000}>5,000</option>
+                    <option value={7500}>7,500</option>
+                    <option value={10000}>10,000</option>
+                    <option value={15000}>15,000</option>
+                    <option value={20000}>20,000</option>
+                  </select>
+                </div>
                 <div className="flex items-center justify-between">
                   <label className="text-gray-300 text-sm">Starting SP</label>
                   <select

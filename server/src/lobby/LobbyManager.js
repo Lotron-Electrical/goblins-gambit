@@ -88,7 +88,7 @@ export class LobbyManager {
     room.started = true;
     const playerIds = room.players.map(p => p.id);
     const playerNames = room.players.map(p => p.name);
-    const winSP = room.quickGame ? QUICK_WIN_SP : WIN_SP;
+    const winSP = room.winSP || WIN_SP;
 
     const engine = new GameEngine(playerIds, playerNames, winSP, room.theme, {
       startingSP: room.startingSP || 0,

@@ -3,19 +3,12 @@ import { useStore } from '../../store.js';
 import { soundManager } from '../../audio/SoundManager.js';
 import { ICONS } from './icons.js';
 
-const THEMES = [
-  { id: 'swamp', label: 'Swamp', color: '#1c2410' },
-  { id: 'blood', label: 'Blood Moon', color: '#2a0a0a' },
-  { id: 'frost', label: 'Frost', color: '#0a1a2a' },
-];
-
 export default function GameMenu() {
   const {
     menuOpen, setMenuOpen,
     muted, setMuted,
     musicMuted, setMusicMuted,
     animationsOff, setAnimationsOff,
-    theme, setTheme,
   } = useStore();
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -63,27 +56,6 @@ export default function GameMenu() {
           <ToggleRow label="Sound Effects" icon={ICONS.sound} active={!muted} onToggle={handleSfxToggle} />
           <ToggleRow label="Music" icon={ICONS.music} active={!musicMuted} onToggle={handleMusicToggle} />
           <ToggleRow label="Animations" icon={ICONS.sparkles} active={!animationsOff} onToggle={() => setAnimationsOff(!animationsOff)} />
-        </div>
-
-        {/* Theme selector */}
-        <div className="mb-5">
-          <div className="text-gray-400 text-sm mb-2">Theme</div>
-          <div className="flex gap-2">
-            {THEMES.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTheme(t.id)}
-                className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${
-                  theme === t.id
-                    ? 'ring-2 ring-[var(--color-gold)] text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-                style={{ backgroundColor: t.color }}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Actions */}

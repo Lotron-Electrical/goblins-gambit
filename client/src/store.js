@@ -29,7 +29,7 @@ export const useStore = create((set, get) => ({
   muted: JSON.parse(localStorage.getItem('gg_sfxMuted') || 'false'),
   musicMuted: JSON.parse(localStorage.getItem('gg_musicMuted') || 'false'),
   animationsOff: JSON.parse(localStorage.getItem('gg_animationsOff') || 'false'),
-  theme: localStorage.getItem('gg_theme') || 'swamp',
+  theme: 'swamp',
   hoveredCard: null,
   hoverPosition: null,
   graveyardOpen: false,
@@ -179,7 +179,6 @@ export const useStore = create((set, get) => ({
     set({ animationsOff });
   },
   setTheme: (theme) => {
-    localStorage.setItem('gg_theme', theme);
     if (theme === 'swamp') {
       document.documentElement.removeAttribute('data-theme');
     } else {
