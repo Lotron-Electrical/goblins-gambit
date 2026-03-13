@@ -5,7 +5,7 @@
 
 import { drawCardRaw, getOtherPlayerIds } from '../GameState.js';
 import { killCreature } from '../CombatResolver.js';
-import { getEffectiveStats, getOpponentCreatures, getOwnCreatures, getOpponentPlayers } from './helpers.js';
+import { getEffectiveStats, getOpponentCreatures, getOwnCreatures, getOpponentPlayers, getNextFreeSlot } from './helpers.js';
 import { MAX_HAND_SIZE, MAX_SWAMP_SIZE } from '../../../../shared/src/constants.js';
 
 // --- Smesh: 500 damage to a creature ---
@@ -183,6 +183,7 @@ export function judgment_steal(state, playerId, card, cardIdx, targetInfo) {
       creature._controller = playerId;
       creature._originalOwner = targetOwnerId;
       if (player.swamp.length < MAX_SWAMP_SIZE) {
+        creature._slot = getNextFreeSlot(player);
         player.swamp.push(creature);
         events.push({ type: 'card_moved', cardUid: creature.uid, from: targetOwnerId, to: playerId, reason: 'Judgment!' });
       } else {
@@ -370,6 +371,7 @@ export function snacc_control(state, playerId, card, cardIdx, targetInfo) {
     creature._controller = playerId;
     creature._snaccReturn = true; // flag to return at end of controller's next turn
     creature._hasAttacked = true; // cannot attack the turn it's stolen
+    creature._slot = getNextFreeSlot(player);
     player.swamp.push(creature);
     events.push({ type: 'card_moved', cardUid: creature.uid, from: targetOwnerId, to: playerId, reason: 'Snacc!' });
   }

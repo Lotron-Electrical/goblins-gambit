@@ -16,9 +16,7 @@ export default function CardChoiceModal() {
 
   const handleDismiss = () => {
     // Send a dummy choose to clear the pendingChoice on server
-    if (pending.cards.length > 0) {
-      chooseCard(pending.cards[0].uid);
-    }
+    chooseCard(pending.cards.length > 0 ? pending.cards[0].uid : '__dismiss__');
   };
 
   return (
@@ -29,6 +27,9 @@ export default function CardChoiceModal() {
         </h3>
         <p className="text-[14px] text-gray-300 mb-4">{pending.prompt}</p>
         <div className="grid grid-cols-3 gap-2">
+          {isPeek && pending.cards.length === 0 && (
+            <div className="col-span-3 text-center text-gray-500 py-4">Deck is empty!</div>
+          )}
           {pending.cards.map((card) => (
             <button
               key={card.uid}

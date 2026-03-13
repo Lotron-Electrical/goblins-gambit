@@ -131,6 +131,17 @@ export function getAllCreatures(state) {
 }
 
 /**
+ * Get the next free visual slot (0-4) for a player's swamp.
+ */
+export function getNextFreeSlot(player) {
+  const usedSlots = new Set(player.swamp.map(c => c._slot).filter(s => s != null));
+  for (let i = 0; i < 5; i++) {
+    if (!usedSlots.has(i)) return i;
+  }
+  return player.swamp.length;
+}
+
+/**
  * Get opponent players as targets.
  */
 export function getOpponentPlayers(state, playerId) {

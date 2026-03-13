@@ -6,6 +6,7 @@ import {
   getClientState,
 } from './GameState.js';
 import { resolvePlayCard, getEffectiveStats } from './EffectResolver.js';
+import { getNextFreeSlot } from './abilities/helpers.js';
 import { resolveAttack, killCreature } from './CombatResolver.js';
 import { activatedRegistry, hasActivatedAbility } from './abilities/index.js';
 import { cursed_set_bonus } from './abilities/armour.js';
@@ -220,6 +221,7 @@ export class GameEngine {
           delete creature._controller;
           delete creature._originalOwner;
           delete creature._hasAttacked;
+          creature._slot = getNextFreeSlot(origOwner);
           origOwner.swamp.push(creature);
           events.push({ type: 'card_moved', cardUid: creature.uid, from: playerId, to: origOwnerId, reason: 'Snacc returned' });
         } else {
@@ -298,6 +300,8 @@ export class GameEngine {
       for (const slot of ['head', 'body', 'feet']) {
         const armour = p.gear[slot];
         if (!armour || armour._turnsRemaining === undefined) continue;
+        // Skip degradation on the turn armour was played
+        if (armour._justEquipped) { delete armour._justEquipped; continue; }
         armour._turnsRemaining--;
         if (armour._turnsRemaining <= 0) {
           events.push({ type: 'destroy', cardUid: armour.uid, owner: pid, reason: `${armour.name} expired` });
@@ -368,7 +372,11 @@ export class GameEngine {
     const { cardUid, targetInfo } = action;
     const card = player.swamp.find(c => c.uid === cardUid);
     if (!card) return { success: false, error: 'Creature not on field' };
-    if (card._silenced) return { success: false, error: 'Creature is silenced!' };
+    if (card._silenced) {
+      // STFU penalty: still costs 1 AP when trying to use a silenced ability
+      if (player.ap >= 1) player.ap -= 1;
+      return { success: false, error: 'Creature is silenced! (1 AP wasted)' };
+    }
 
     const handler = activatedRegistry[card.abilityId];
     if (!handler) return { success: false, error: 'This creature has no activated ability' };

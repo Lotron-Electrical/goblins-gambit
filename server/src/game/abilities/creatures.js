@@ -5,7 +5,7 @@
 
 import { drawCardRaw, getOtherPlayerIds } from '../GameState.js';
 import { killCreature } from '../CombatResolver.js';
-import { getEffectiveStats, getOpponentCreatures, getOwnCreatures, getAllCreatures, getOpponentPlayers } from './helpers.js';
+import { getEffectiveStats, getOpponentCreatures, getOwnCreatures, getAllCreatures, getOpponentPlayers, getNextFreeSlot } from './helpers.js';
 import { MAX_SWAMP_SIZE } from '../../../../shared/src/constants.js';
 
 // --- Streamer: draw 1 card on play ---
@@ -184,6 +184,7 @@ export function harambe_plant(state, playerId, card, cardIdx, targetInfo) {
     card._controller = targetOwnerId;
     card._roundsRemaining = 1;
     card._harambeOwner = playerId; // who gets SP when it dies
+    card._slot = getNextFreeSlot(opponent);
     opponent.swamp.push(card);
     events.push({ type: 'card_moved', cardUid: card.uid, from: playerId, to: targetOwnerId, reason: 'Harambe planted!' });
   }

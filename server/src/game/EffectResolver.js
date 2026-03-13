@@ -4,7 +4,7 @@
  */
 
 import { onPlayRegistry } from './abilities/index.js';
-import { getEffectiveStats as _getEffectiveStats } from './abilities/helpers.js';
+import { getEffectiveStats as _getEffectiveStats, getNextFreeSlot } from './abilities/helpers.js';
 import { getLuckyShield, cursed_set_bonus } from './abilities/armour.js';
 import { MAX_SWAMP_SIZE, CARD_TYPE } from '../../../shared/src/constants.js';
 import { getOtherPlayerIds } from './GameState.js';
@@ -97,14 +97,14 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
     player.ap -= card.cost;
     player.hand.splice(cardIdx, 1);
 
-    // Support slot-based placement
+    // Support slot-based placement — assign visual slot position
     const slotIndex = targetInfo?.slotIndex;
     if (slotIndex != null && slotIndex >= 0 && slotIndex < MAX_SWAMP_SIZE) {
-      // splice handles out-of-bounds by appending — no clamping needed
-      player.swamp.splice(slotIndex, 0, card);
+      card._slot = slotIndex;
     } else {
-      player.swamp.push(card);
+      card._slot = getNextFreeSlot(player);
     }
+    player.swamp.push(card);
     events.push({ type: 'card_played', cardUid: card.uid, card, playerId, zone: 'swamp' });
   }
 
@@ -184,8 +184,9 @@ function resolveArmour(state, playerId, card, cardIdx) {
 
   player.ap -= card.cost;
   player.hand.splice(cardIdx, 1);
-  // Track durability countdown
+  // Track durability countdown (skip first tick so it lasts the full duration)
   card._turnsRemaining = card.durability;
+  card._justEquipped = true;
   player.gear[slot] = card;
   events.push({ type: 'equip_armour', cardUid: card.uid, card, playerId, slot });
 

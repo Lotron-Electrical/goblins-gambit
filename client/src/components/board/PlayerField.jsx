@@ -103,7 +103,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           <div className="text-[11px] text-gray-500 text-center mb-1">The Swamp</div>
           <div className="flex gap-1 justify-center min-h-[100px] bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-1">
             {Array.from({ length: 5 }).map((_, slotIdx) => {
-              const creature = player.swamp[slotIdx] || null;
+              const creature = player.swamp.find(c => c._slot === slotIdx) || null;
               const canPlace = !isOpponent && isMyTurn && !creature
                 && selectedCard && selectedCard._zone !== 'swamp'
                 && selectedCard.type === 'Creature';
