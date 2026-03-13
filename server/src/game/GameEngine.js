@@ -8,6 +8,7 @@ import {
 import { resolvePlayCard, getEffectiveStats } from './EffectResolver.js';
 import { getNextFreeSlot } from './abilities/helpers.js';
 import { resolveAttack, killCreature } from './CombatResolver.js';
+import { isLastPlace } from './abilities/helpers.js';
 import { activatedRegistry, hasActivatedAbility } from './abilities/index.js';
 import { cursed_set_bonus } from './abilities/armour.js';
 import {
@@ -17,20 +18,22 @@ import {
   GAME_PHASE,
   TURN_PHASE,
   ACTION,
+  THEME_EFFECTS,
 } from '../../../shared/src/constants.js';
 
-function getEncumbranceAP(handSize) {
-  if (handSize === 0) return 4;
-  if (handSize === 1) return 3;
+function getEncumbranceAP(handSize, baseAP = BASE_AP) {
+  if (handSize === 0) return Math.max(baseAP, 4);
+  if (handSize === 1) return Math.max(baseAP, 3);
   if (handSize >= 10) return 7;
   if (handSize >= 8) return 1;
-  return BASE_AP;
+  return baseAP;
 }
 
 export class GameEngine {
-  constructor(playerIds, playerNames, winSP) {
-    this.state = createGameState(playerIds, playerNames);
+  constructor(playerIds, playerNames, winSP, theme, settings = {}) {
+    this.state = createGameState(playerIds, playerNames, settings);
     if (winSP) this.state.winSP = winSP;
+    this.state.theme = theme || 'swamp';
     this.actionLog = [];
   }
 
@@ -198,6 +201,12 @@ export class GameEngine {
       const events = [];
       let damage = aStats.attack;
 
+      // Berserk: last-place player deals double damage (Blood Moon)
+      const themeEffects = THEME_EFFECTS[this.state.theme];
+      if (themeEffects?.berserkMultiplier > 1 && isLastPlace(this.state, playerId)) {
+        damage = Math.floor(damage * themeEffects.berserkMultiplier);
+      }
+
       events.push({
         type: 'attack',
         attacker: attackerUid,
@@ -219,6 +228,13 @@ export class GameEngine {
       if (damage > 0) {
         defenderPlayer.sp = Math.max(0, defenderPlayer.sp - damage);
         events.push({ type: 'sp_change', playerId: defenderOwnerId, amount: -damage, reason: 'Direct attack' });
+
+        // Attacker gains half the damage dealt as SP
+        const spGain = Math.floor(damage / 2);
+        if (spGain > 0) {
+          player.sp += spGain;
+          events.push({ type: 'sp_change', playerId, amount: spGain, reason: 'Direct attack bonus' });
+        }
       }
 
       this.logAction(playerId, 'attack', { attackerUid, defenderOwnerId, directAttack: true });
@@ -256,6 +272,21 @@ export class GameEngine {
     if (result.deadMemeTriggered) {
       this.state.pendingChoice = result.deadMemeChoice;
       this.state.turnPhase = TURN_PHASE.CHOOSE_CARD;
+
+      // Safety timeout: auto-pick first card after 20s to prevent permanent softlock
+      this._pendingChoiceTimeout = setTimeout(() => {
+        if (this.state.pendingChoice?.type === 'dead_meme') {
+          const cards = this.state.pendingChoice.cards;
+          if (cards.length > 0) {
+            this.handleCardChoice(this.state.pendingChoice.playerId, { cardUid: cards[0].uid });
+          } else {
+            this.state.pendingChoice = null;
+            this.state.turnPhase = TURN_PHASE.MAIN;
+          }
+          this.state.animations.push({ type: 'buff', text: 'Dead Meme choice timed out — auto-picked' });
+          if (this._onPendingChoiceTimeout) this._onPendingChoiceTimeout();
+        }
+      }, 20000);
     }
 
     this.logAction(playerId, 'attack', { attackerUid, defenderUid, defenderOwnerId });
@@ -388,8 +419,14 @@ export class GameEngine {
     const nextPlayer = getCurrentPlayer(this.state);
     const nextPlayerId = this.getCurrentPlayerId();
     const apPenalty = nextPlayer.apPenalty || 0;
-    nextPlayer.ap = Math.max(0, getEncumbranceAP(nextPlayer.hand.length) - apPenalty);
+    nextPlayer.ap = Math.max(0, getEncumbranceAP(nextPlayer.hand.length, this.state.baseAP) - apPenalty);
     nextPlayer.apPenalty = 0;
+
+    // Theme AP penalty (e.g. Frost: -1 AP per turn, minimum 1)
+    const themeAP = THEME_EFFECTS[this.state.theme];
+    if (themeAP?.apPenalty) {
+      nextPlayer.ap = Math.max(1, nextPlayer.ap - themeAP.apPenalty);
+    }
 
     // Hessian set bonus: extra AP
     const hessianCount = ['head', 'body', 'feet'].filter(s => nextPlayer.gear[s]?.set === 'hessian').length;
@@ -421,8 +458,12 @@ export class GameEngine {
       const np = getCurrentPlayer(this.state);
       const npId = this.getCurrentPlayerId();
       const apPen = np.apPenalty || 0;
-      np.ap = Math.max(0, getEncumbranceAP(np.hand.length) - apPen);
+      np.ap = Math.max(0, getEncumbranceAP(np.hand.length, this.state.baseAP) - apPen);
       np.apPenalty = 0;
+      // Theme AP penalty
+      if (themeAP?.apPenalty) {
+        np.ap = Math.max(1, np.ap - themeAP.apPenalty);
+      }
       for (const c of np.swamp) { delete c._silenced; }
       events.push({ type: 'turn_start', playerId: npId, turnNumber: this.state.turnNumber });
     }
@@ -573,6 +614,10 @@ export class GameEngine {
 
     this.state.pendingChoice = null;
     this.state.turnPhase = TURN_PHASE.MAIN;
+    if (this._pendingChoiceTimeout) {
+      clearTimeout(this._pendingChoiceTimeout);
+      this._pendingChoiceTimeout = null;
+    }
     this.state.animations.push(...events);
     return { success: true, events };
   }

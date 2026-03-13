@@ -3,41 +3,8 @@ import { useStore } from '../store.js';
 import { soundManager } from '../audio/SoundManager.js';
 import SparkleParticles from '../components/ui/SparkleParticles.jsx';
 
-const THEME_OPTIONS = [
-  {
-    id: 'swamp',
-    name: 'Swamp',
-    icon: '\u{1F438}',
-    desc: 'Goblin swamp — murky, squelchy, banjo',
-    accent: '#15803d',
-    bg: 'bg-green-900/40',
-    border: 'border-green-600',
-    ring: 'ring-green-500',
-  },
-  {
-    id: 'blood',
-    name: 'Blood Moon',
-    icon: '\u{1F319}',
-    desc: 'Dark ritual — aggressive, pulsing dread',
-    accent: '#c44040',
-    bg: 'bg-red-900/40',
-    border: 'border-red-600',
-    ring: 'ring-red-500',
-  },
-  {
-    id: 'frost',
-    name: 'Frost',
-    icon: '\u{2744}\u{FE0F}',
-    desc: 'Frozen wastes — ethereal, crystalline',
-    accent: '#40a0c4',
-    bg: 'bg-blue-900/40',
-    border: 'border-blue-600',
-    ring: 'ring-blue-500',
-  },
-];
-
 export default function LobbyScreen() {
-  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted, theme, setTheme } = useStore();
+  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted, theme } = useStore();
   const [name, setName] = useState(playerName || '');
   const [quickGame, setQuickGame] = useState(false);
 
@@ -95,28 +62,6 @@ export default function LobbyScreen() {
       </div>
 
       <div className="w-full max-w-md space-y-5 relative z-10">
-        {/* Theme selector */}
-        <div>
-          <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wide">Battlefield Theme</label>
-          <div className="grid grid-cols-3 gap-2">
-            {THEME_OPTIONS.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTheme(t.id)}
-                className={`relative rounded-lg border-2 px-2 py-3 text-center transition-all duration-300 ${
-                  theme === t.id
-                    ? `${t.border} ${t.bg} ring-2 ${t.ring} scale-[1.03]`
-                    : 'border-gray-700 bg-gray-900/60 hover:border-gray-500'
-                }`}
-              >
-                <div className="text-2xl mb-1">{t.icon}</div>
-                <div className={`text-sm font-bold ${theme === t.id ? 'text-white' : 'text-gray-400'}`}>{t.name}</div>
-                <div className="text-[10px] text-gray-500 leading-tight mt-0.5 hidden md:block">{t.desc}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div>
           <label className="block text-gray-300 text-sm mb-1">Your Name</label>
           <input

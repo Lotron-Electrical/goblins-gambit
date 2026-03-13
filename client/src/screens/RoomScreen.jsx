@@ -1,8 +1,16 @@
+import { useState } from 'react';
 import { useStore } from '../store.js';
 import { socket } from '../socket.js';
 
+const THEME_OPTIONS = [
+  { id: 'swamp', name: 'Swamp', icon: '\u{1F438}', desc: 'Goblin swamp — murky, squelchy, banjo', bg: 'bg-green-900/40', border: 'border-green-600', ring: 'ring-green-500' },
+  { id: 'blood', name: 'Blood Moon', icon: '\u{1F319}', desc: 'Dark ritual — aggressive, pulsing dread', bg: 'bg-red-900/40', border: 'border-red-600', ring: 'ring-red-500' },
+  { id: 'frost', name: 'Frost', icon: '\u{2744}\u{FE0F}', desc: 'Frozen wastes — ethereal, crystalline', bg: 'bg-blue-900/40', border: 'border-blue-600', ring: 'ring-blue-500' },
+];
+
 export default function RoomScreen() {
-  const { currentRoom, leaveRoom, toggleReady, startGame, addBot, removeBot } = useStore();
+  const { currentRoom, leaveRoom, toggleReady, startGame, addBot, removeBot, setRoomTheme, setRoomSettings, theme } = useStore();
+  const [showSettings, setShowSettings] = useState(false);
 
   if (!currentRoom) return null;
 
@@ -86,6 +94,98 @@ export default function RoomScreen() {
             </button>
           )}
         </div>
+
+        {/* Theme selector (host only) */}
+        {isHost && (
+          <div className="mt-4">
+            <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wide">Battlefield Theme</label>
+            <div className="grid grid-cols-3 gap-2">
+              {THEME_OPTIONS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setRoomTheme(t.id)}
+                  className={`relative rounded-lg border-2 px-2 py-3 text-center transition-all duration-300 ${
+                    theme === t.id
+                      ? `${t.border} ${t.bg} ring-2 ${t.ring} scale-[1.03]`
+                      : 'border-gray-700 bg-gray-900/60 hover:border-gray-500'
+                  }`}
+                >
+                  <div className="text-2xl mb-1">{t.icon}</div>
+                  <div className={`text-sm font-bold ${theme === t.id ? 'text-white' : 'text-gray-400'}`}>{t.name}</div>
+                  <div className="text-[10px] text-gray-500 leading-tight mt-0.5 hidden md:block">{t.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Non-host theme display */}
+        {!isHost && currentRoom.theme && currentRoom.theme !== 'swamp' && (
+          <div className="mt-4 text-center text-gray-400 text-sm">
+            Theme: <span className="text-white font-bold">{THEME_OPTIONS.find(t => t.id === currentRoom.theme)?.name || currentRoom.theme}</span>
+          </div>
+        )}
+
+        {/* Game Settings (host only) */}
+        {isHost && (
+          <div className="mt-4">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="w-full text-left text-gray-400 text-xs uppercase tracking-wide flex items-center justify-between hover:text-gray-300 transition"
+            >
+              <span>Game Settings</span>
+              <span>{showSettings ? '\u25B2' : '\u25BC'}</span>
+            </button>
+            {showSettings && (
+              <div className="mt-2 bg-gray-900/60 border border-gray-700 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-gray-300 text-sm">Starting SP</label>
+                  <select
+                    value={currentRoom.startingSP || 0}
+                    onChange={(e) => setRoomSettings({ startingSP: Number(e.target.value) })}
+                    className="bg-gray-800 border border-gray-600 text-white rounded px-2 py-1 text-sm"
+                  >
+                    <option value={0}>0</option>
+                    <option value={500}>500</option>
+                    <option value={1000}>1000</option>
+                    <option value={2000}>2000</option>
+                    <option value={5000}>5000</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-gray-300 text-sm">Max Players</label>
+                  <select
+                    value={currentRoom.maxPlayers || 6}
+                    onChange={(e) => setRoomSettings({ maxPlayers: Number(e.target.value) })}
+                    className="bg-gray-800 border border-gray-600 text-white rounded px-2 py-1 text-sm"
+                  >
+                    {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-gray-300 text-sm">Starting Hand</label>
+                  <select
+                    value={currentRoom.startingHandSize || 5}
+                    onChange={(e) => setRoomSettings({ startingHandSize: Number(e.target.value) })}
+                    className="bg-gray-800 border border-gray-600 text-white rounded px-2 py-1 text-sm"
+                  >
+                    {[3, 4, 5, 6, 7, 8].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-gray-300 text-sm">Base AP / Turn</label>
+                  <select
+                    value={currentRoom.baseAP || 2}
+                    onChange={(e) => setRoomSettings({ baseAP: Number(e.target.value) })}
+                    className="bg-gray-800 border border-gray-600 text-white rounded px-2 py-1 text-sm"
+                  >
+                    {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Add Bot button */}
         {isHost && !isFull && (

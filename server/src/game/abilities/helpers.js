@@ -3,6 +3,7 @@
  */
 
 import { getOtherPlayerIds } from '../GameState.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 
 /**
  * Get effective stats for a creature, accounting for buffs/debuffs.
@@ -85,7 +86,41 @@ export function getEffectiveStats(state, ownerId, card) {
   // Digital Artist: +100 temp shield per round
   defence += (card._tempShield || 0);
 
+  // Theme stat multipliers
+  const themeEffects = THEME_EFFECTS[state.theme];
+  if (themeEffects) {
+    if (themeEffects.atkMultiplier && themeEffects.atkMultiplier !== 1) {
+      attack = Math.floor(attack * themeEffects.atkMultiplier);
+    }
+    if (themeEffects.defMultiplier && themeEffects.defMultiplier !== 1) {
+      defence = Math.floor(defence * themeEffects.defMultiplier);
+    }
+  }
+
   return { attack: Math.max(0, attack), defence: Math.max(0, defence), sp: Math.max(0, sp) };
+}
+
+/**
+ * Check if a player qualifies for Berserk (last place, leader past halfway, gap >= 2000).
+ */
+export function isLastPlace(state, playerId) {
+  const players = Object.values(state.players);
+  if (players.length < 2) return false;
+
+  const spValues = players.map(p => p.sp);
+  const maxSP = Math.max(...spValues);
+  const minSP = Math.min(...spValues);
+  const mySP = state.players[playerId]?.sp ?? 0;
+  const halfWin = (state.winSP || 10000) / 2;
+
+  // Only activate when leader is past halfway and gap is >= 2000
+  if (maxSP < halfWin || (maxSP - minSP) < 2000) return false;
+
+  // Must be at minimum SP, and not everyone tied
+  const allTied = spValues.every(sp => sp === minSP);
+  if (allTied) return false;
+
+  return mySP === minSP;
 }
 
 /**

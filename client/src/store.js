@@ -18,6 +18,10 @@ export const useStore = create((set, get) => ({
   selectedCard: null,
   targetMode: false,
 
+  // Animation state
+  attackingCardUid: null,
+  defendingCardUid: null,
+
   // UI
   zoomedCard: null,
   helpOpen: false,
@@ -185,8 +189,20 @@ export const useStore = create((set, get) => ({
   },
   setHoveredCard: (card, position) => set({ hoveredCard: card, hoverPosition: position }),
   clearHoveredCard: () => set({ hoveredCard: null, hoverPosition: null }),
+  setAttackAnimation: (attackerUid, defenderUid) => set({ attackingCardUid: attackerUid, defendingCardUid: defenderUid }),
+  clearAttackAnimation: () => set({ attackingCardUid: null, defendingCardUid: null }),
   setGraveyardOpen: (open) => set({ graveyardOpen: open }),
   clearError: () => set({ error: null }),
+  setRoomSettings: (settings) => {
+    socket.emit(EVENTS.SET_ROOM_SETTINGS, { settings }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+  },
+  setRoomTheme: (theme) => {
+    socket.emit(EVENTS.SET_THEME, { theme }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+  },
   refreshRooms: () => {
     socket.emit(EVENTS.ROOM_LIST, null, (rooms) => {
       set({ rooms: rooms || [] });
@@ -206,6 +222,10 @@ socket.on('disconnect', () => {
 
 socket.on(EVENTS.ROOM_UPDATE, (room) => {
   useStore.setState({ currentRoom: room });
+  // Apply host's theme to all room members
+  if (room.theme) {
+    useStore.getState().setTheme(room.theme);
+  }
 });
 
 socket.on(EVENTS.ROOM_LIST, (rooms) => {

@@ -119,9 +119,18 @@ body::after {
     radial-gradient(circle at 10% 90%, rgba(10, 30, 55, 0.14) 0%, transparent 45%);
 }
 
+/* Sparkle border for selected cards */
+@keyframes sparkle-border {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(212, 160, 23, 0.4), 0 0 12px 4px rgba(212, 160, 23, 0.15); }
+  50% { box-shadow: 0 0 10px 4px rgba(251, 191, 36, 0.6), 0 0 20px 8px rgba(251, 191, 36, 0.25); }
+}
+.animate-sparkle-border {
+  animation: sparkle-border 1.2s ease-in-out infinite;
+}
+
 /* Reduced motion: disable animations */
 @media (prefers-reduced-motion: reduce) {
-  .animate-pulse, .animate-slide-in-right {
+  .animate-pulse, .animate-slide-in-right, .animate-sparkle-border {
     animation: none !important;
   }
   * {

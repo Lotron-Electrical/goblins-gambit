@@ -1,5 +1,6 @@
-import { getEffectiveStats } from './abilities/helpers.js';
+import { getEffectiveStats, isLastPlace } from './abilities/helpers.js';
 import { getLuckyShield } from './abilities/armour.js';
+import { THEME_EFFECTS } from '../../../shared/src/constants.js';
 
 /**
  * Resolve an attack from one creature against another.
@@ -87,7 +88,12 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
   let deadMemeTriggered = false;
   let deadMemeChoice = null;
 
-  const damage = aStats.attack;
+  const themeEffects = THEME_EFFECTS[state.theme];
+  let damage = aStats.attack;
+  // Berserk: last-place player deals double damage (Blood Moon)
+  if (themeEffects?.berserkMultiplier > 1 && isLastPlace(state, attackerId)) {
+    damage = Math.floor(damage * themeEffects.berserkMultiplier);
+  }
   const currentDef = dStats.defence;
 
   events.push({
@@ -119,7 +125,9 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
     events.push({ type: 'destroy', cardUid: defenderCard.uid, owner: defenderOwnerId });
     events.push({ type: 'sp_change', playerId: attackerId, amount: dSP, reason: 'Kill' });
 
-    // Check for Dead Meme death trigger BEFORE killing
+    killCreature(state, defenderOwnerId, defenderCard.uid);
+
+    // Check for Dead Meme death trigger AFTER killing (so Dead Meme itself is in graveyard)
     if (defenderCard.abilityId === 'dead_meme_revive' && !defenderCard._silenced) {
       const topGrave = state.graveyard.slice(-6);
       if (topGrave.length > 0) {
@@ -130,10 +138,11 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
           cards: topGrave,
           prompt: 'Dead Meme died! Choose a card from the graveyard to return to your hand',
         };
+      } else {
+        // Graveyard empty — notify player instead of silent failure
+        events.push({ type: 'buff', cardUid: defenderCard.uid, text: 'Dead Meme: No cards in graveyard to revive!' });
       }
     }
-
-    killCreature(state, defenderOwnerId, defenderCard.uid);
 
     // Wood Elf burn: additional 100 SP on kill
     if (attackerCard.abilityId === 'wood_elf_burn' && !attackerCard._silenced) {

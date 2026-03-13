@@ -76,7 +76,12 @@ export function setupSocketHandlers(io, lobby) {
       const result = engine.handleAction(botId, action);
 
       if (!result.success && !result.needsTarget) {
-        // Action failed — force end turn to prevent freeze
+        // Action failed — check if it's because a human has a pending choice
+        if (result.error === 'Waiting for another player to choose') {
+          // Don't force end turn — just wait for the human to respond
+          return;
+        }
+        // Otherwise force end turn to prevent freeze
         console.error(`Bot ${botId} action failed:`, result.error);
         if (botState.currentPlayerId === botId) {
           engine.handleAction(botId, { type: ACTION.END_TURN });
@@ -90,6 +95,12 @@ export function setupSocketHandlers(io, lobby) {
       }
 
       broadcastState(roomId, engine);
+
+      // Check if another bot needs to respond (e.g. Dead Meme graveyard pick)
+      const pendingBotRespondId = engine.state.pendingChoice?.playerId || engine.state.pendingTarget?.playerId;
+      if (pendingBotRespondId && botIds.has(pendingBotRespondId) && pendingBotRespondId !== botId) {
+        scheduleBotTick(roomId, engine, pendingBotRespondId, 600);
+      }
 
       if (result.gameOver) {
         io.to(roomId).emit(EVENTS.GAME_OVER, {
@@ -233,6 +244,44 @@ export function setupSocketHandlers(io, lobby) {
       callback?.({ success: true });
     });
 
+    socket.on(EVENTS.SET_ROOM_SETTINGS, ({ settings }, callback) => {
+      const roomId = lobby.getPlayerRoom(socket.id);
+      if (!roomId) return;
+      const room = lobby.getRoom(roomId);
+      if (!room || room.host !== socket.id) {
+        callback?.({ error: 'Only host can change settings' });
+        return;
+      }
+      if (room.started) {
+        callback?.({ error: 'Game already started' });
+        return;
+      }
+      // Validate and apply settings
+      if (settings.startingSP != null) room.startingSP = Math.max(0, Math.min(5000, Number(settings.startingSP) || 0));
+      if (settings.maxPlayers != null) room.maxPlayers = Math.max(2, Math.min(6, Number(settings.maxPlayers) || 6));
+      if (settings.startingHandSize != null) room.startingHandSize = Math.max(3, Math.min(10, Number(settings.startingHandSize) || 5));
+      if (settings.baseAP != null) room.baseAP = Math.max(1, Math.min(5, Number(settings.baseAP) || 2));
+      io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
+      callback?.({ success: true });
+    });
+
+    socket.on(EVENTS.SET_THEME, ({ theme }, callback) => {
+      const roomId = lobby.getPlayerRoom(socket.id);
+      if (!roomId) return;
+      const room = lobby.getRoom(roomId);
+      if (!room || room.host !== socket.id) {
+        callback?.({ error: 'Only host can set theme' });
+        return;
+      }
+      if (!['swamp', 'blood', 'frost'].includes(theme)) {
+        callback?.({ error: 'Invalid theme' });
+        return;
+      }
+      room.theme = theme;
+      io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
+      callback?.({ success: true });
+    });
+
     socket.on(EVENTS.START_GAME, (_, callback) => {
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) return;
@@ -247,6 +296,12 @@ export function setupSocketHandlers(io, lobby) {
         callback?.({ error: result.error });
         return;
       }
+
+      // Wire up pending choice timeout callback (broadcasts state + triggers bots)
+      result.engine._onPendingChoiceTimeout = () => {
+        broadcastState(roomId, result.engine);
+        runBotTurn(roomId, result.engine);
+      };
 
       // Send initial state to each human player
       for (const p of result.room.players) {

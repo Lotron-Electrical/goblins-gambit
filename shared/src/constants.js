@@ -11,6 +11,37 @@ export const RECONNECT_HOLD_SECONDS = 60;
 export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 6;
 
+// Theme gameplay effects
+export const THEME_EFFECTS = {
+  swamp: {
+    name: 'The Swamp',
+    atkMultiplier: 1,
+    defMultiplier: 1,
+    spellCostMultiplier: 1,
+    apPenalty: 0,
+    berserkMultiplier: 0,
+    description: 'Normal — no modifiers',
+  },
+  blood: {
+    name: 'Blood Moon',
+    atkMultiplier: 1.5,
+    defMultiplier: 1,
+    spellCostMultiplier: 2,
+    apPenalty: 0,
+    berserkMultiplier: 2,
+    description: '1.5x ATK, last place goes Berserk (2x damage), spells cost 2x AP',
+  },
+  frost: {
+    name: 'Frozen Wastes',
+    atkMultiplier: 1,
+    defMultiplier: 1.5,
+    spellCostMultiplier: 0,
+    berserkMultiplier: 0,
+    apPenalty: 1,
+    description: '1.5x DEF, spells are free, -1 AP per turn',
+  },
+};
+
 // Card types
 export const CARD_TYPE = {
   CREATURE: 'Creature',
@@ -89,6 +120,10 @@ export const EVENTS = {
   ANIMATION_EVENT: 'animation_event',
   TARGET_REQUEST: 'target_request',
   CARD_CHOICE: 'card_choice',
+
+  // Room settings
+  SET_THEME: 'set_theme',
+  SET_ROOM_SETTINGS: 'set_room_settings',
 
   // Bots
   ADD_BOT: 'add_bot',

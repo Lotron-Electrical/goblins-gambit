@@ -3,6 +3,12 @@ import CardOnField from './CardOnField.jsx';
 import { hasActivatedAbility } from '../ui/abilityInfo.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 
+const THEME_FIELD_NAME = {
+  swamp: 'The Swamp',
+  blood: 'The Blood Moon',
+  frost: 'The Frozen Wastes',
+};
+
 const CARD_TYPE_COLOR = {
   Creature: 'border-red-700',
   Magic: 'border-blue-700',
@@ -11,7 +17,7 @@ const CARD_TYPE_COLOR = {
 };
 
 export default function PlayerField({ player, playerId, isOpponent, isCurrentTurn, compact }) {
-  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard } = useStore();
+  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard, theme, attackingCardUid, defendingCardUid } = useStore();
   const isMobile = useIsMobile();
   const isCompact = compact || isMobile;
 
@@ -59,7 +65,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
   return (
     <div className={`rounded-lg ${isMobile ? 'p-1' : 'p-2'} transition ${
       isCurrentTurn ? 'bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40' : 'bg-gray-900/40'
-    }`}>
+    } ${gameState?.berserkPlayerIds?.includes(playerId) ? 'ring-1 ring-red-600/60 shadow-[0_0_12px_rgba(220,38,38,0.3)]' : ''}`}>
       {/* Player info bar */}
       <div
         className={`flex items-center justify-between mb-1 px-1 rounded ${
@@ -68,9 +74,12 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         onClick={handleDirectAttack}
       >
         <div className="flex items-center gap-1 md:gap-2 min-w-0">
-          <span className={`font-bold truncate ${isMobile ? 'text-[11px] max-w-[60px]' : 'text-[13px]'} ${isOpponent ? 'text-red-400' : 'text-green-400'}`}>
+          <span className={`font-bold truncate ${isMobile ? 'text-[11px] max-w-[100px]' : 'text-[13px] max-w-[140px]'} ${isOpponent ? 'text-red-400' : 'text-green-400'}`} title={player.name}>
             {player.name}
           </span>
+          {gameState?.berserkPlayerIds?.includes(playerId) && (
+            <span className={`text-red-500 font-bold animate-pulse ${isMobile ? 'text-[8px]' : 'text-[10px]'}`} title="Berserk — 2x damage!">BERSERK</span>
+          )}
           {isCurrentTurn && <span className={`text-[var(--color-gold)] ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>TURN</span>}
           {canDirectAttack && !isMobile && <span className="text-[10px] text-red-400 font-bold">ATTACK DIRECTLY</span>}
         </div>
@@ -123,8 +132,8 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
 
         {/* Swamp zone */}
         <div className="flex-1 min-w-0">
-          <div className={`text-gray-500 text-center mb-0.5 ${isMobile ? 'text-[9px]' : 'text-[11px] mb-1'}`}>The Swamp</div>
-          <div className={`flex gap-0.5 justify-center bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-0.5 md:p-1 ${
+          <div className={`text-gray-500 text-center mb-0.5 ${isMobile ? 'text-[9px]' : 'text-[11px] mb-1'}`}>{THEME_FIELD_NAME[theme] || 'The Swamp'}</div>
+          <div className={`flex gap-0.5 justify-center bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-0.5 md:p-1 overflow-hidden ${
             isMobile ? 'min-h-[70px]' : 'min-h-[100px] max-w-[600px] mx-auto'
           }`}>
             {Array.from({ length: 5 }).map((_, slotIdx) => {
@@ -158,6 +167,8 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                         isValidTarget={
                           gameState?.pendingTarget?.validTargets?.some(t => t.uid === creature.uid) || false
                         }
+                        isAttacking={attackingCardUid === creature.uid}
+                        isDefending={defendingCardUid === creature.uid}
                       />
                       {/* Activated ability button (own creatures only, on your turn) */}
                       {!isOpponent && isMyTurn && hasActivatedAbility(creature.abilityId) && !creature._silenced && (

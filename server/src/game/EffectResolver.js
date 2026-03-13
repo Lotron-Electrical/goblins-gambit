@@ -6,7 +6,7 @@
 import { onPlayRegistry } from './abilities/index.js';
 import { getEffectiveStats as _getEffectiveStats, getNextFreeSlot } from './abilities/helpers.js';
 import { getLuckyShield, cursed_set_bonus } from './abilities/armour.js';
-import { MAX_SWAMP_SIZE, CARD_TYPE } from '../../../shared/src/constants.js';
+import { MAX_SWAMP_SIZE, CARD_TYPE, THEME_EFFECTS } from '../../../shared/src/constants.js';
 import { getOtherPlayerIds } from './GameState.js';
 
 // Re-export getEffectiveStats so existing imports keep working
@@ -33,10 +33,20 @@ export function resolvePlayCard(state, playerId, cardUid, targetInfo) {
 
   if (!card) return { success: false, error: 'Card not found' };
 
-  // Check AP cost (skip for target resolution — already paid)
-  if (!isTargetResolution && card.cost > player.ap) {
-    return { success: false, error: `Need ${card.cost} AP, have ${player.ap}` };
+  // Apply theme spell cost multiplier for Magic cards
+  const themeEffects = THEME_EFFECTS[state.theme];
+  let effectiveCost = card.cost;
+  if (card.type === CARD_TYPE.MAGIC && themeEffects?.spellCostMultiplier !== undefined) {
+    effectiveCost = Math.floor(card.cost * themeEffects.spellCostMultiplier);
   }
+
+  // Check AP cost (skip for target resolution — already paid)
+  if (!isTargetResolution && effectiveCost > player.ap) {
+    return { success: false, error: `Need ${effectiveCost} AP, have ${player.ap}` };
+  }
+
+  // Store effective cost so resolution functions use it
+  card._effectiveCost = effectiveCost;
 
   // Check Rusty armour blocks
   if (!isTargetResolution) {
@@ -94,7 +104,7 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
     if (player.swamp.length >= MAX_SWAMP_SIZE) {
       return { success: false, error: 'Swamp is full (max 5 creatures)' };
     }
-    player.ap -= card.cost;
+    player.ap -= (card._effectiveCost ?? card.cost);
     player.hand.splice(cardIdx, 1);
 
     // Support slot-based placement — assign visual slot position
@@ -144,7 +154,7 @@ function resolveMagic(state, playerId, card, cardIdx, targetInfo, isTargetResolu
     const targetPlayer = state.players[targetInfo.targetOwnerId];
     if (targetPlayer?.swamp.some(c => c.abilityId === 'book_witch_shield' && !c._silenced)) {
       if (!isTargetResolution) {
-        player.ap -= card.cost;
+        player.ap -= (card._effectiveCost ?? card.cost);
         player.hand.splice(cardIdx, 1);
       }
       state.graveyard.push(card);
@@ -165,7 +175,7 @@ function resolveMagic(state, playerId, card, cardIdx, targetInfo, isTargetResolu
     if (card.cost === 0) {
       player.hand.splice(cardIdx, 1);
     } else {
-      player.ap -= card.cost;
+      player.ap -= (card._effectiveCost ?? card.cost);
       player.hand.splice(cardIdx, 1);
     }
   }
@@ -191,7 +201,7 @@ function resolveArmour(state, playerId, card, cardIdx) {
     events.push({ type: 'destroy', cardUid: player.gear[slot].uid, owner: playerId, reason: 'Replaced' });
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   // Track durability countdown (skip first tick so it lasts the full duration)
   card._turnsRemaining = card.durability;

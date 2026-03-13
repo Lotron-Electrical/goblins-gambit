@@ -25,7 +25,7 @@ export function smesh_damage(state, playerId, card, cardIdx, targetInfo) {
     };
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -63,7 +63,7 @@ export function savage_destroy(state, playerId, card, cardIdx, targetInfo) {
     };
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -97,7 +97,7 @@ export function ooft_buff(state, playerId, card, cardIdx, targetInfo) {
     };
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -128,7 +128,7 @@ export function thicc_buff(state, playerId, card, cardIdx, targetInfo) {
     };
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -169,7 +169,7 @@ export function judgment_steal(state, playerId, card, cardIdx, targetInfo) {
     }
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -218,7 +218,7 @@ export function yeet_discard(state, playerId, card, cardIdx, targetInfo) {
     }
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -256,7 +256,7 @@ export function ama_reveal(state, playerId, card, cardIdx, targetInfo) {
     }
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -303,7 +303,7 @@ export function finesse_steal(state, playerId, card, cardIdx, targetInfo) {
     }
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -329,7 +329,7 @@ export function woke_peek(state, playerId, card, cardIdx, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
@@ -365,7 +365,7 @@ export function snacc_control(state, playerId, card, cardIdx, targetInfo) {
     };
   }
 
-  player.ap -= card.cost;
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 

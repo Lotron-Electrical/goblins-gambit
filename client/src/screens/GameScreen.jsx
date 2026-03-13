@@ -18,6 +18,7 @@ import HelpPanel from '../components/ui/HelpPanel.jsx';
 import CardChoiceModal from '../components/ui/CardChoiceModal.jsx';
 import DamageNumber from '../components/ui/DamageNumber.jsx';
 import DiceRoll from '../components/ui/DiceRoll.jsx';
+import FieldParticles from '../components/ui/FieldParticles.jsx';
 import SPParticles from '../components/ui/SPParticles.jsx';
 import { motion } from 'framer-motion';
 
@@ -91,9 +92,18 @@ export default function GameScreen() {
   const damageIdRef = useRef(0);
   const spIdRef = useRef(0);
 
+  const { setAttackAnimation, clearAttackAnimation } = useStore();
+
   // Wire damage numbers to animation events
   useEffect(() => {
     if (!currentAnimation) return;
+
+    // Attack animation: set attacking/defending card UIDs
+    if (currentAnimation.type === 'attack' && currentAnimation.attacker) {
+      setAttackAnimation(currentAnimation.attacker, currentAnimation.defender);
+      setTimeout(() => clearAttackAnimation(), 350);
+    }
+
     // Stage played cards briefly in center
     if (currentAnimation.type === 'card_played' && currentAnimation.card && currentAnimation.card.type !== 'Creature') {
       const id = ++stagedIdRef.current;
@@ -178,12 +188,15 @@ export default function GameScreen() {
   return (
     <motion.div
       ref={boardRef}
-      className="h-dvh flex flex-col overflow-hidden select-none"
+      className="h-dvh flex flex-col overflow-hidden select-none relative"
       animate={isShaking || isScreenShake ? {
         x: [0, -4, 4, -3, 3, 0],
         transition: { duration: isScreenShake ? 0.25 : 0.15 }
       } : {}}
     >
+      {/* Field particles behind everything */}
+      <FieldParticles />
+
       {/* Opponent fields */}
       <div className="flex-1 overflow-auto p-1 md:p-2 pt-12 md:pt-14 min-h-0">
         <div

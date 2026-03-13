@@ -18,7 +18,7 @@ const TYPE_GLOW = {
   Tricks: '0 0 20px rgba(22, 163, 74, 0.5)',
 };
 
-export default function CardOnField({ card, isOpponent, onClick, isValidTarget, isAttacking }) {
+export default function CardOnField({ card, isOpponent, onClick, isValidTarget, isAttacking, isDefending }) {
   const { selectedCard, selectCard, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
   const [hovered, setHovered] = useState(false);
   const isSelected = selectedCard?.uid === card.uid;
@@ -60,14 +60,14 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
   const defPct = Math.min(100, (currentDef / maxDef) * 100);
   const defColor = defPct > 60 ? 'bg-green-500' : defPct > 30 ? 'bg-yellow-500' : 'bg-red-500';
 
-  const w = isMobile ? 'w-[70px]' : 'w-[110px]';
+  const w = isMobile ? 'max-w-[70px] w-full' : 'max-w-[110px] w-full';
   const h = isMobile ? 'h-[96px]' : 'h-[150px]';
 
   return (
     <motion.div
       className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer overflow-hidden ${
         TYPE_BORDER[card.type] || 'border-gray-600'
-      } ${isSelected ? 'ring-2 ring-[var(--color-gold)]' : ''} ${
+      } ${isSelected ? 'ring-2 ring-[var(--color-gold)] animate-sparkle-border' : ''} ${
         isValidTarget ? 'ring-2 ring-red-400 animate-pulse' : ''
       } ${invisible ? 'opacity-40' : ''}`}
       style={hovered && !invisible ? { boxShadow: TYPE_GLOW[card.type] } : undefined}
@@ -82,7 +82,11 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       onMouseMove={isMobile ? undefined : (e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
       onMouseLeave={isMobile ? undefined : () => { setHovered(false); clearHoveredCard(); }}
       whileHover={animationsOff || isMobile ? undefined : { scale: 1.05 }}
-      animate={animationsOff ? {} : (isAttacking ? { x: [0, 30, 0], transition: { duration: 0.35 } } : isSelected ? { scale: 1.05 } : {})}
+      animate={animationsOff ? {} : (
+        isAttacking ? { x: [0, 30, 0], transition: { duration: 0.35 } }
+        : isDefending ? { x: [0, -3, 3, -2, 2, 0], filter: ['brightness(1)', 'brightness(1.8)', 'brightness(1.4)', 'brightness(1)'], transition: { duration: 0.3 } }
+        : isSelected ? { scale: 1.05 } : {}
+      )}
       layout
     >
       {/* Card art — cropped to artwork only, hiding text portion */}
@@ -124,13 +128,22 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
         </div>
       )}
 
+      {/* Selected card name overlay */}
+      {isSelected && !invisible && (
+        <div className={`absolute top-1/2 left-0 right-0 -translate-y-1/2 bg-black/70 text-[var(--color-gold-bright)] text-center font-bold truncate px-0.5 ${
+          isMobile ? 'text-[7px] py-0' : 'text-[9px] py-0.5'
+        }`}>
+          {card.name}
+        </div>
+      )}
+
       {/* Stats + health bar at bottom */}
       {!invisible && card.type === 'Creature' && (
         <div className="absolute bottom-0 left-0 right-0">
-          <div className={`bg-black/80 flex justify-between px-1.5 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
-            <span className="text-red-400 font-bold">{ICONS.swords}{card._attackBuff ? (card.attack || 0) + card._attackBuff : card.attack ?? 0}</span>
-            <span className={`font-bold ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>{ICONS.shield}{currentDef}</span>
-            <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp ?? 0}</span>
+          <div className={`bg-black/80 grid grid-cols-3 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
+            <span className="text-red-400 font-bold text-center">{ICONS.swords}<br/>{card._attackBuff ? (card.attack || 0) + card._attackBuff : card.attack ?? 0}</span>
+            <span className={`font-bold text-center ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>{ICONS.shield}<br/>{currentDef}</span>
+            <span className="text-yellow-400 font-bold text-center">{ICONS.coin}<br/>{card.sp ?? 0}</span>
           </div>
           <div className="h-[3px]">
             <div className={`h-full ${defColor} transition-all duration-300`} style={{ width: `${defPct}%` }} />

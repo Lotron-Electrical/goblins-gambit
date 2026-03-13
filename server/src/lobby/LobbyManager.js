@@ -18,6 +18,7 @@ export class LobbyManager {
       players: [{ id: hostId, name: hostName, ready: false }],
       maxPlayers: options.maxPlayers || MAX_PLAYERS,
       quickGame: options.quickGame || false,
+      theme: 'swamp',
       started: false,
       createdAt: Date.now(),
     };
@@ -89,7 +90,11 @@ export class LobbyManager {
     const playerNames = room.players.map(p => p.name);
     const winSP = room.quickGame ? QUICK_WIN_SP : WIN_SP;
 
-    const engine = new GameEngine(playerIds, playerNames, winSP);
+    const engine = new GameEngine(playerIds, playerNames, winSP, room.theme, {
+      startingSP: room.startingSP || 0,
+      startingHandSize: room.startingHandSize,
+      baseAP: room.baseAP,
+    });
     this.games.set(roomId, engine);
 
     return { engine, room };

@@ -5,7 +5,9 @@ import {
   GAME_PHASE,
   TURN_PHASE,
   WIN_SP,
+  THEME_EFFECTS,
 } from '../../../shared/src/constants.js';
+import { isLastPlace } from './abilities/helpers.js';
 
 let nextGameId = 1;
 
@@ -28,13 +30,19 @@ export function createPlayerState(playerId, playerName) {
   };
 }
 
-export function createGameState(playerIds, playerNames) {
+export function createGameState(playerIds, playerNames, settings = {}) {
   const gameId = `game_${nextGameId++}`;
   const deck = shuffleDeck(buildDeck());
 
+  const startingSP = settings.startingSP || 0;
+  const startingHandSize = settings.startingHandSize || STARTING_HAND_SIZE;
+  const baseAP = settings.baseAP || BASE_AP;
+
   const players = {};
   for (let i = 0; i < playerIds.length; i++) {
-    players[playerIds[i]] = createPlayerState(playerIds[i], playerNames[i]);
+    const p = createPlayerState(playerIds[i], playerNames[i]);
+    p.sp = startingSP;
+    players[playerIds[i]] = p;
   }
 
   const state = {
@@ -53,18 +61,19 @@ export function createGameState(playerIds, playerNames) {
     pendingTarget: null,    // { playerId, action, validTargets, ... }
     pendingChoice: null,    // { playerId, cards, ... }
     animations: [],         // queued animation events for client
+    baseAP,                 // custom base AP for this game
   };
 
   // Deal starting hands
   for (const pid of playerIds) {
-    for (let i = 0; i < STARTING_HAND_SIZE; i++) {
+    for (let i = 0; i < startingHandSize; i++) {
       drawCardRaw(state, pid);
     }
   }
 
   // Give first player their AP
   const firstPlayer = state.turnOrder[0];
-  state.players[firstPlayer].ap = BASE_AP;
+  state.players[firstPlayer].ap = baseAP;
 
   return state;
 }
@@ -149,5 +158,30 @@ export function getClientState(state, playerId) {
       return evt;
     }),
     myId: playerId,
+    theme: state.theme || 'swamp',
+    berserkPlayerIds: getBerserkPlayerIds(state),
   };
+}
+
+/** Get IDs of players who are Berserk (last place in Blood Moon, only when leader is past halfway and gap >= 2000) */
+function getBerserkPlayerIds(state) {
+  const themeEffects = THEME_EFFECTS[state.theme];
+  if (!themeEffects?.berserkMultiplier || themeEffects.berserkMultiplier <= 1) return [];
+
+  const players = Object.entries(state.players);
+  if (players.length < 2) return [];
+
+  const spValues = players.map(([, p]) => p.sp);
+  const maxSP = Math.max(...spValues);
+  const minSP = Math.min(...spValues);
+  const halfWin = state.winSP / 2;
+
+  // Only activate when leader is past halfway and gap is >= 2000
+  if (maxSP < halfWin || (maxSP - minSP) < 2000) return [];
+
+  // All players tied at min SP go berserk (unless everyone is tied)
+  const allTied = spValues.every(sp => sp === minSP);
+  if (allTied) return [];
+
+  return players.filter(([, p]) => p.sp === minSP).map(([id]) => id);
 }
