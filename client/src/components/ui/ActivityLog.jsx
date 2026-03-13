@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store.js';
 
 const MAX_LOG_ENTRIES = 50;
@@ -54,19 +54,16 @@ export default function ActivityLog() {
   const [entries, setEntries] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   const scrollRef = useRef(null);
-  const processedRef = useRef(0);
+  const prevAnimationsRef = useRef(null);
 
   useEffect(() => {
     if (!gameState?.animations || gameState.animations.length === 0) return;
-
-    const newEvents = gameState.animations;
-    if (newEvents.length === processedRef.current) return;
-
-    const toProcess = newEvents.slice(processedRef.current);
-    processedRef.current = newEvents.length;
+    // Each action produces a new array reference — process the full batch
+    if (gameState.animations === prevAnimationsRef.current) return;
+    prevAnimationsRef.current = gameState.animations;
 
     const newEntries = [];
-    for (const evt of toProcess) {
+    for (const evt of gameState.animations) {
       const text = formatEvent(evt, gameState.players);
       if (text) {
         newEntries.push({
@@ -82,13 +79,6 @@ export default function ActivityLog() {
       setEntries(prev => [...prev, ...newEntries].slice(-MAX_LOG_ENTRIES));
     }
   }, [gameState?.animations, gameState?.players]);
-
-  // Reset when animations array resets (new state push)
-  useEffect(() => {
-    if (gameState?.animations?.length === 0) {
-      processedRef.current = 0;
-    }
-  }, [gameState?.animations?.length]);
 
   // Auto-scroll to bottom
   useEffect(() => {

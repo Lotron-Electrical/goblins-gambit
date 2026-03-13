@@ -278,19 +278,17 @@ export class GameEngine {
       delete this.state._revealedHands[playerId];
     }
 
-    // Armour durability countdown — check ALL players' gear
-    for (const [pid, p] of Object.entries(this.state.players)) {
-      for (const slot of ['head', 'body', 'feet']) {
-        const armour = p.gear[slot];
-        if (!armour || armour._turnsRemaining === undefined) continue;
-        // Skip degradation on the turn armour was played
-        if (armour._justEquipped) { delete armour._justEquipped; continue; }
-        armour._turnsRemaining--;
-        if (armour._turnsRemaining <= 0) {
-          events.push({ type: 'destroy', cardUid: armour.uid, owner: pid, reason: `${armour.name} expired` });
-          this.state.graveyard.push(armour);
-          p.gear[slot] = null;
-        }
+    // Armour durability countdown — only for the current player (expires per round, not per turn)
+    for (const slot of ['head', 'body', 'feet']) {
+      const armour = player.gear[slot];
+      if (!armour || armour._turnsRemaining === undefined) continue;
+      // Skip degradation on the turn armour was played
+      if (armour._justEquipped) { delete armour._justEquipped; continue; }
+      armour._turnsRemaining--;
+      if (armour._turnsRemaining <= 0) {
+        events.push({ type: 'destroy', cardUid: armour.uid, owner: playerId, reason: `${armour.name} expired` });
+        this.state.graveyard.push(armour);
+        player.gear[slot] = null;
       }
     }
 

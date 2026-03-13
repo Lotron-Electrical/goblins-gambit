@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from '../../store.js';
 import { ICONS } from './icons.js';
 
@@ -9,6 +10,7 @@ export default function GameHUD() {
   const myPlayer = gameState.players[gameState.myId];
   const isMyTurn = gameState.currentPlayerId === gameState.myId;
   const isEarlyTurn = gameState.turnNumber <= 3 && isMyTurn;
+  const [tipDismissed, setTipDismissed] = useState(false);
 
   return (
     <div className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
@@ -49,10 +51,11 @@ export default function GameHUD() {
       </div>
 
       {/* First-turn instruction */}
-      {isEarlyTurn && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-          <div className="bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2 text-[13px] text-gray-300 text-center max-w-sm">
-            Draw cards, play creatures to your swamp, and attack to earn SP!
+      {isEarlyTurn && !tipDismissed && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+          <div className="bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2 text-[13px] text-gray-300 text-center max-w-sm flex items-center gap-3">
+            <span>Draw cards, play creatures to your swamp, and attack to earn SP!</span>
+            <button onClick={() => setTipDismissed(true)} className="text-gray-500 hover:text-white shrink-0 leading-none">&times;</button>
           </div>
         </div>
       )}
