@@ -319,22 +319,29 @@ export class GameEngine {
 
     events.push({ type: 'turn_start', playerId: nextPlayerId, turnNumber: this.state.turnNumber });
 
-    // Check if next player's turn is skipped by Lagg
-    if (nextPlayer._drawSkip && nextPlayer._drawSkip > 0) {
-      nextPlayer._drawSkip--;
-      nextPlayer.ap = 0;
-      events.push({ type: 'turn_skipped', playerId: nextPlayerId, reason: 'Lagg!' });
+    // Skip turns for Lagg-affected or disconnected players (loop handles cascades)
+    let safetyLimit = this.state.turnOrder.length;
+    while (safetyLimit-- > 0) {
+      const cur = getCurrentPlayer(this.state);
+      const curId = this.getCurrentPlayerId();
+      const skipLagg = cur._drawSkip && cur._drawSkip > 0;
+      const skipDisconnected = cur.connected === false;
+      if (!skipLagg && !skipDisconnected) break;
 
-      // Advance to the player after
+      if (skipLagg) cur._drawSkip--;
+      cur.ap = 0;
+      const reason = skipLagg ? 'Lagg!' : 'Disconnected';
+      events.push({ type: 'turn_skipped', playerId: curId, reason });
+
       this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
       this.state.turnNumber++;
-      const skipNextPlayer = getCurrentPlayer(this.state);
-      const skipNextId = this.getCurrentPlayerId();
-      const skipApPenalty = skipNextPlayer.apPenalty || 0;
-      skipNextPlayer.ap = Math.max(0, BASE_AP - skipApPenalty);
-      skipNextPlayer.apPenalty = 0;
-      for (const c of skipNextPlayer.swamp) { delete c._silenced; }
-      events.push({ type: 'turn_start', playerId: skipNextId, turnNumber: this.state.turnNumber });
+      const np = getCurrentPlayer(this.state);
+      const npId = this.getCurrentPlayerId();
+      const apPen = np.apPenalty || 0;
+      np.ap = Math.max(0, BASE_AP - apPen);
+      np.apPenalty = 0;
+      for (const c of np.swamp) { delete c._silenced; }
+      events.push({ type: 'turn_start', playerId: npId, turnNumber: this.state.turnNumber });
     }
 
     this.logAction(playerId, 'end_turn', {});

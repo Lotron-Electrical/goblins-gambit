@@ -124,6 +124,15 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
       }
     }
 
+    // Gabber splash: capture adjacent indices BEFORE defender is removed from swamp
+    let gabberAdjacentCards = null;
+    if (attackerCard.abilityId === 'gabber_splash' && !attackerCard._silenced) {
+      const idx = defender.swamp.findIndex(c => c.uid === defenderCard.uid);
+      gabberAdjacentCards = [];
+      if (idx > 0) gabberAdjacentCards.push(defender.swamp[idx - 1]);
+      if (idx < defender.swamp.length - 1) gabberAdjacentCards.push(defender.swamp[idx + 1]);
+    }
+
     killCreature(state, defenderOwnerId, defenderCard.uid);
 
     // Wood Elf burn: additional 100 SP on kill
@@ -135,12 +144,17 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
     defenderCard._defenceDamage = (defenderCard._defenceDamage || 0) + damage;
   }
 
-  // Gabber splash: adjacent cards lose 100 DEF
-  if (attackerCard.abilityId === 'gabber_splash' && !attackerCard._silenced && !defenderKilled) {
-    const idx = defender.swamp.findIndex(c => c.uid === defenderCard.uid);
-    const adjacent = [];
-    if (idx > 0) adjacent.push(defender.swamp[idx - 1]);
-    if (idx < defender.swamp.length - 1) adjacent.push(defender.swamp[idx + 1]);
+  // Gabber splash: adjacent cards lose 100 DEF (fires regardless of whether defender died)
+  if (attackerCard.abilityId === 'gabber_splash' && !attackerCard._silenced) {
+    const adjacent = defenderKilled
+      ? (gabberAdjacentCards || [])
+      : (() => {
+          const idx = defender.swamp.findIndex(c => c.uid === defenderCard.uid);
+          const adj = [];
+          if (idx > 0) adj.push(defender.swamp[idx - 1]);
+          if (idx < defender.swamp.length - 1) adj.push(defender.swamp[idx + 1]);
+          return adj;
+        })();
     for (const adj of adjacent) {
       adj._defenceDamage = (adj._defenceDamage || 0) + 100;
       events.push({ type: 'damage', cardUid: adj.uid, amount: 100, reason: 'Gabber splash' });

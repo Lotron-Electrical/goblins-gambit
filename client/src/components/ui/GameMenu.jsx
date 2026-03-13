@@ -156,10 +156,7 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
       if (!res.ok) throw new Error('Failed to submit');
       setSubmitted(true);
     } catch (e) {
-      // Fallback: open GitHub directly
-      const url = `https://github.com/Lotron-Electrical/goblins-gambit/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=${encodeURIComponent(label)}`;
-      window.open(url, '_blank');
-      setSubmitted(true);
+      setSubmitError('Failed to submit. Check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -185,6 +182,7 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
             <input type="text" placeholder={type === 'bug' ? 'What went wrong?' : 'What would you like to see?'} value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm mb-3 focus:outline-none focus:border-[var(--color-gold)]" autoFocus />
             <textarea placeholder="Add any details... (optional)" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm mb-3 focus:outline-none focus:border-[var(--color-gold)] resize-none" />
             <p className="text-gray-500 text-[11px] mb-4">Your game context will be automatically attached.</p>
+            {submitError && <p className="text-red-400 text-[12px] mb-3">{submitError}</p>}
             <div className="flex gap-3">
               <button onClick={onClose} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded-lg transition">Cancel</button>
               <button onClick={handleSubmit} disabled={!title.trim() || submitting} className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-400 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-2 rounded-lg transition">{submitting ? 'Submitting...' : 'Submit'}</button>
