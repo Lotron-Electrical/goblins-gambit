@@ -40,6 +40,7 @@ export function thot_instakill(state, playerId, card, cardIdx, targetInfo) {
         },
       };
     }
+    events.push({ type: 'buff', text: 'No enemy creatures to destroy!' });
     return { success: true, events };
   }
 

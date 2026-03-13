@@ -10,7 +10,7 @@ const CARD_TYPE_COLOR = {
 };
 
 export default function PlayerField({ player, playerId, isOpponent, isCurrentTurn, compact }) {
-  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard } = useStore();
+  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard } = useStore();
 
   const handleCreatureClick = (creature) => {
     if (!isOpponent) return;
@@ -60,6 +60,16 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           <span className="text-gray-400">{player.handCount ?? player.hand?.length ?? 0} cards</span>
         </div>
       </div>
+
+      {/* SP progress bar (opponents) */}
+      {isOpponent && gameState?.winSP && (
+        <div className="h-1 rounded-full bg-gray-800 mx-1 mb-1">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-500"
+            style={{ width: `${Math.min(100, (player.sp / gameState.winSP) * 100)}%` }}
+          />
+        </div>
+      )}
 
       <div className="flex gap-2">
         {/* Gear zone */}
@@ -144,6 +154,27 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           </div>
         </div>
       </div>
+
+      {/* Revealed hand (AMA) */}
+      {isOpponent && player._revealed && player.hand?.length > 0 && (
+        <div className="mt-1 px-1">
+          <div className="text-[10px] text-purple-400 mb-0.5">Revealed Hand:</div>
+          <div className="flex gap-1 flex-wrap">
+            {player.hand.filter(c => !c.hidden).map((card) => (
+              <div
+                key={card.uid}
+                className="bg-gray-800 border border-purple-600/40 rounded px-2 py-1 text-[11px] cursor-pointer hover:border-purple-400 transition"
+                onClick={() => setZoomedCard(card)}
+                onMouseEnter={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
+                onMouseLeave={() => clearHoveredCard()}
+              >
+                <span className="text-white font-bold">{card.name}</span>
+                <span className="text-gray-400 ml-1">{card.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

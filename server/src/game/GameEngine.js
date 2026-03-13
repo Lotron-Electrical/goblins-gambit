@@ -159,6 +159,14 @@ export class GameEngine {
     const defenderPlayer = this.state.players[defenderOwnerId];
     if (!defenderPlayer) return { success: false, error: 'Invalid target player' };
 
+    const defenderCard = defenderPlayer.swamp.find(c => c.uid === defenderUid);
+    if (!defenderCard) return { success: false, error: 'Defender not on field' };
+
+    // Ghost: invisible creatures can't be targeted
+    if (defenderCard._invisible) {
+      return { success: false, error: 'Cannot attack an invisible creature' };
+    }
+
     const hasTaunt = defenderPlayer.swamp.find(c => c.abilityId === 'gamer_boy_taunt' && !c._silenced);
     if (hasTaunt && defenderUid !== hasTaunt.uid) {
       return { success: false, error: 'Must attack Gamer Boy first (taunt)' };
