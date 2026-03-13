@@ -16,6 +16,7 @@ export default function GameHUD() {
       <div className="flex items-center justify-between px-4 py-2 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
         <div className="flex items-center gap-4">
           <span className="font-display text-[var(--color-gold)] text-lg">Goblin's Gambit</span>
+          <span className="text-gray-600 text-[10px]">v{__APP_VERSION__}</span>
           <span className="text-gray-500 text-[12px]">Turn {gameState.turnNumber}</span>
           <span className="text-gray-500 text-[12px]">Deck: {gameState.deckCount}</span>
           <span className="text-gray-500 text-[12px]">Grave: {gameState.graveyardCount}</span>

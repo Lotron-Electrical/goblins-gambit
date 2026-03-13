@@ -31,6 +31,7 @@ export default function LobbyScreen() {
           Goblin's Gambit
         </h1>
         <p className="text-gray-400 text-lg">A card game of cunning and chaos</p>
+        <p className="text-gray-600 text-[11px] mt-1">v{__APP_VERSION__}</p>
       </div>
 
       <div className="w-full max-w-md space-y-6">

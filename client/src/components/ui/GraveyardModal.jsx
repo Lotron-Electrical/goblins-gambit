@@ -46,7 +46,7 @@ export default function GraveyardModal() {
           <div className="text-gray-500 text-center py-8">No cards in the graveyard</div>
         ) : (
           <div className="grid grid-cols-4 gap-2">
-            {graveyard.map((card, idx) => (
+            {[...graveyard].reverse().map((card, idx) => (
               <div
                 key={`${card.uid}-${idx}`}
                 className={`relative w-[120px] h-[168px] rounded-lg border-2 cursor-pointer overflow-hidden ${
