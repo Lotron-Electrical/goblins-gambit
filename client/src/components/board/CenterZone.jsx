@@ -23,34 +23,21 @@ function CardFace({ card, className = '', style = {}, small }) {
   const h = small ? 'h-[84px]' : 'h-[126px]';
   return (
     <div
-      className={`${w} ${h} rounded-lg border-2 overflow-hidden flex flex-col ${
+      className={`${w} ${h} rounded-lg border-2 overflow-hidden ${
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${className}`}
       style={style}
     >
-      <div className="relative w-full" style={{ height: '70%' }}>
-        {card.image ? (
-          <img
-            src={`/cards/${card.image}`}
-            alt={card.name}
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-800" />
-        )}
-        <div className="absolute inset-0 bg-black/30" />
-      </div>
-      <div className="bg-gray-950 px-1 py-0.5 flex flex-col justify-center flex-1">
-        <div className={`text-white font-bold truncate text-center ${small ? 'text-[7px]' : 'text-[9px]'}`}>{card.name}</div>
-        {card.type === 'Creature' && (
-          <div className={`text-center ${small ? 'text-[6px]' : 'text-[8px]'}`}>
-            <span className="text-red-400">{card.attack}</span>
-            <span className="text-gray-600 mx-0.5">/</span>
-            <span className="text-blue-400">{card.defence}</span>
-          </div>
-        )}
-      </div>
+      {card.image ? (
+        <img
+          src={`/cards/${card.image}`}
+          alt={card.name}
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
+      ) : (
+        <div className="w-full h-full bg-gray-800" />
+      )}
     </div>
   );
 }
@@ -146,36 +133,16 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                   TYPE_BORDER[card.type] || 'border-gray-600'
                 }`}
               >
-                <div className="relative w-full" style={{ height: '70%' }}>
-                  {card.image ? (
-                    <img
-                      src={`/cards/${card.image}`}
-                      alt={card.name}
-                      className="w-full h-full object-cover"
-                      draggable={false}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-800" />
-                  )}
-                  <div className={`absolute top-1 right-1 bg-blue-700 text-white font-bold w-4 h-4 rounded-full flex items-center justify-center ${
-                    isMobile ? 'text-[7px]' : 'text-[9px]'
-                  }`}>
-                    {card.cost}
-                  </div>
-                </div>
-                <div className="bg-gray-950/90 px-1 py-0.5 flex flex-col justify-center flex-1">
-                  <div className={`text-white font-bold truncate text-center ${isMobile ? 'text-[8px]' : 'text-[11px]'}`}>{card.name}</div>
-                  {card.type === 'Creature' && (
-                    <div className={`text-center mt-0.5 ${isMobile ? 'text-[7px]' : 'text-[9px]'}`}>
-                      <span className="text-red-400">ATK {card.attack}</span>
-                      <span className="text-gray-600 mx-1">/</span>
-                      <span className="text-blue-400">DEF {card.defence}</span>
-                    </div>
-                  )}
-                  {!isMobile && card.type !== 'Creature' && card.effect && (
-                    <div className="text-[8px] text-gray-400 text-center truncate mt-0.5">{card.effect}</div>
-                  )}
-                </div>
+                {card.image ? (
+                  <img
+                    src={`/cards/${card.image}`}
+                    alt={card.name}
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-800" />
+                )}
               </motion.div>
             ))}
           </AnimatePresence>

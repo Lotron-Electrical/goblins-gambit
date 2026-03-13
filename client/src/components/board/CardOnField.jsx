@@ -102,31 +102,6 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
         </div>
       )}
 
-      {/* Opaque bottom section for text */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gray-950/95 p-0.5">
-        <div className={`text-white font-bold truncate text-center leading-tight ${
-          isMobile ? 'text-[9px]' : 'text-[13px]'
-        }`}>
-          {invisible ? '???' : card.name}
-        </div>
-        {!invisible && card.type === 'Creature' && (
-          <div className={`flex justify-between px-0 mt-0.5 overflow-hidden ${isMobile ? 'text-[8px]' : 'text-[11px]'}`}>
-            <span className="text-red-400 font-bold flex items-center gap-0.5">
-              <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.swords}</span>{card._attackBuff ? <span className="text-green-400">{(card.attack || 0) + card._attackBuff}</span> : card.attack ?? 0}
-            </span>
-            <span className={`font-bold flex items-center gap-0.5 ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>
-              <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.shield}</span>
-              {card._defenceBuff && !card._defenceDamage
-                ? <span className="text-green-400">{currentDef}</span>
-                : currentDef}
-              {card._defenceDamage ? <span className={`text-gray-500 ${isMobile ? 'text-[5px]' : 'text-[7px]'}`}>/{card.defence}</span> : null}
-            </span>
-            <span className="text-yellow-400 font-bold flex items-center gap-0.5">
-              <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.coin}</span>{card.sp ?? 0}
-            </span>
-          </div>
-        )}
-      </div>
 
       {/* Ability indicator */}
       {!invisible && card.abilityId && (

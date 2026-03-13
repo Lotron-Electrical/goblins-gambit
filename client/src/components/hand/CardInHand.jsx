@@ -85,17 +85,15 @@ export default function CardInHand({ card, isSelected }) {
       animate={animationsOff ? {} : (isSelected ? { y: isMobile ? -6 : -12, scale: isMobile ? 1.02 : 1.05 } : {})}
       layout
     >
-      {/* Card art (top 70%) */}
-      <div className="absolute inset-0 h-[70%] overflow-hidden">
-        {card.image && (
-          <img
-            src={`/cards/${card.image}`}
-            alt={card.name}
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
-        )}
-      </div>
+      {/* Card art — full bleed */}
+      {card.image && (
+        <img
+          src={`/cards/${card.image}`}
+          alt={card.name}
+          className="absolute inset-0 w-full h-full object-cover"
+          draggable={false}
+        />
+      )}
 
       {/* Cost badge */}
       <div className={`absolute top-0.5 right-0.5 font-bold px-1 py-0.5 rounded z-10 ${
@@ -128,23 +126,6 @@ export default function CardInHand({ card, isSelected }) {
           REACT
         </div>
       )}
-
-      {/* 2px inner frame line */}
-      <div className="absolute left-0 right-0 top-[70%] h-[2px] bg-gray-600 z-10" />
-
-      {/* Opaque dark bottom section */}
-      <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gray-950 p-0.5 pt-1 flex flex-col justify-center">
-        <div className={`text-white font-bold truncate text-center leading-tight ${
-          isMobile ? 'text-[8px]' : 'text-[13px]'
-        }`}>{card.name}</div>
-        {card.type === 'Creature' && (
-          <div className={`flex justify-between px-0.5 mt-0.5 ${isMobile ? 'text-[8px]' : 'text-[12px] px-1'}`}>
-            <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
-            <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
-            <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>
-          </div>
-        )}
-      </div>
     </motion.div>
   );
 }
