@@ -84,7 +84,7 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
           {invisible ? '???' : card.name}
         </div>
         {!invisible && card.type === 'Creature' && (
-          <div className="flex justify-between text-[12px] px-0.5 mt-0.5">
+          <div className="flex justify-between text-[11px] px-0 mt-0.5 overflow-hidden">
             <span className="text-red-400 font-bold flex items-center gap-0.5">
               <span className="text-[8px]">{ICONS.swords}</span>{card._attackBuff ? <span className="text-green-400">{(card.attack || 0) + card._attackBuff}</span> : card.attack ?? 0}
             </span>

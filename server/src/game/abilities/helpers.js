@@ -60,21 +60,17 @@ export function getEffectiveStats(state, ownerId, card) {
     }
   }
 
-  // Motherdazer: adjacent allies get +200 DEF
+  // Motherdazer: adjacent allies (by slot position) get +200 DEF
   const player = state.players[ownerId];
   if (!player) return { attack: Math.max(0, attack), defence: Math.max(0, defence), sp: Math.max(0, sp) };
-  const idx = player.swamp.findIndex(c => c.uid === card.uid);
-  if (idx !== -1) {
-    const checkAdj = (adjIdx) => {
-      if (adjIdx >= 0 && adjIdx < player.swamp.length) {
-        const adj = player.swamp[adjIdx];
-        if (adj.abilityId === 'motherdazer_buff' && !adj._silenced) {
-          defence += 200;
-        }
-      }
-    };
-    checkAdj(idx - 1);
-    checkAdj(idx + 1);
+  const cardSlot = card._slot ?? player.swamp.findIndex(c => c.uid === card.uid);
+  for (const adj of player.swamp) {
+    if (adj.uid === card.uid) continue;
+    if (adj.abilityId !== 'motherdazer_buff' || adj._silenced) continue;
+    const adjSlot = adj._slot ?? player.swamp.findIndex(c => c.uid === adj.uid);
+    if (Math.abs(cardSlot - adjSlot) === 1) {
+      defence += 200;
+    }
   }
 
   // Gamblid: dynamic stats based on hand sizes
