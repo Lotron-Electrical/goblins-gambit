@@ -175,10 +175,58 @@ export class GameEngine {
       return { success: false, error: 'This creature already attacked this turn' };
     }
 
-    // Gamer Boy taunt check
     const defenderPlayer = this.state.players[defenderOwnerId];
     if (!defenderPlayer) return { success: false, error: 'Invalid target player' };
 
+    // --- Direct player attack (defenderUid matches the player ID) ---
+    if (defenderUid === defenderOwnerId) {
+      // Can only attack a player directly if they have no creatures
+      const visibleCreatures = defenderPlayer.swamp.filter(c => !c._invisible);
+      if (visibleCreatures.length > 0) {
+        return { success: false, error: 'Cannot attack player directly while they have creatures' };
+      }
+
+      // Ghost reveal on attack
+      if (attackerCard._invisible) {
+        attackerCard._invisible = false;
+      }
+
+      player.ap -= 1;
+      attackerCard._hasAttacked = true;
+
+      const aStats = getEffectiveStats(this.state, playerId, attackerCard);
+      const events = [];
+      let damage = aStats.attack;
+
+      events.push({
+        type: 'attack',
+        attacker: attackerUid,
+        defender: defenderOwnerId,
+        attackerOwner: playerId,
+        defenderOwner: defenderOwnerId,
+        directAttack: true,
+      });
+
+      // Shield absorbs damage first
+      if (defenderPlayer.playerShield > 0) {
+        const shieldDmg = Math.min(defenderPlayer.playerShield, damage);
+        defenderPlayer.playerShield -= shieldDmg;
+        damage -= shieldDmg;
+        events.push({ type: 'buff', cardUid: defenderOwnerId, text: `Shield absorbed ${shieldDmg} damage! (${defenderPlayer.playerShield} remaining)` });
+      }
+
+      // Remaining damage hits SP
+      if (damage > 0) {
+        defenderPlayer.sp = Math.max(0, defenderPlayer.sp - damage);
+        events.push({ type: 'sp_change', playerId: defenderOwnerId, amount: -damage, reason: 'Direct attack' });
+      }
+
+      this.logAction(playerId, 'attack', { attackerUid, defenderOwnerId, directAttack: true });
+      this.state.animations.push(...events);
+      return this.checkWin({ success: true, events });
+    }
+
+    // --- Normal creature attack ---
     const defenderCard = defenderPlayer.swamp.find(c => c.uid === defenderUid);
     if (!defenderCard) return { success: false, error: 'Defender not on field' };
 
@@ -289,10 +337,11 @@ export class GameEngine {
       }
     }
 
-    // Digital Artist +100 temp shield
+    // Digital Artist +100 temp shield (creature DEF) + 100 player shield
     for (const c of player.swamp) {
       if (c.abilityId === 'digital_artist_shield' && !c._silenced) {
         c._tempShield = (c._tempShield || 0) + 100;
+        player.playerShield += 100;
         events.push({ type: 'buff', cardUid: c.uid, text: '+100 shield' });
       }
     }
@@ -310,6 +359,15 @@ export class GameEngine {
       if (armour._justEquipped) { delete armour._justEquipped; continue; }
       armour._turnsRemaining--;
       if (armour._turnsRemaining <= 0) {
+        // Remove Lucky shield contribution when armour expires
+        if (armour.abilityId === 'lucky_shield') {
+          player.playerShield = Math.max(0, player.playerShield - (armour.shieldAmount || 0));
+          // Check if Lucky set bonus was active (all 3 pieces) — remove 500 bonus
+          const luckyBefore = ['head', 'body', 'feet'].filter(s => player.gear[s]?.abilityId === 'lucky_shield').length;
+          if (luckyBefore === 3) {
+            player.playerShield = Math.max(0, player.playerShield - 500);
+          }
+        }
         events.push({ type: 'destroy', cardUid: armour.uid, owner: playerId, reason: `${armour.name} expired` });
         this.state.graveyard.push(armour);
         player.gear[slot] = null;

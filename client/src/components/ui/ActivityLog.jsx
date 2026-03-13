@@ -12,7 +12,7 @@ function formatEvent(evt, players) {
     case 'draw_card':
       return `${name(evt.playerId)} drew ${evt.count || 1} card${(evt.count || 1) > 1 ? 's' : ''}`;
     case 'attack':
-      return `Attack!`;
+      return evt.directAttack ? `Direct attack on ${name(evt.defenderOwner)}!` : `Attack!`;
     case 'damage':
       return `${evt.amount} damage dealt`;
     case 'destroy':

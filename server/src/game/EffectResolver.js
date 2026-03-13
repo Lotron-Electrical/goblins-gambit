@@ -183,6 +183,10 @@ function resolveArmour(state, playerId, card, cardIdx) {
 
   // If slot already occupied, old armour goes to graveyard
   if (player.gear[slot]) {
+    // Remove Lucky shield contribution from old armour
+    if (player.gear[slot].abilityId === 'lucky_shield') {
+      player.playerShield = Math.max(0, player.playerShield - (player.gear[slot].shieldAmount || 0));
+    }
     state.graveyard.push(player.gear[slot]);
     events.push({ type: 'destroy', cardUid: player.gear[slot].uid, owner: playerId, reason: 'Replaced' });
   }
@@ -195,12 +199,23 @@ function resolveArmour(state, playerId, card, cardIdx) {
   player.gear[slot] = card;
   events.push({ type: 'equip_armour', cardUid: card.uid, card, playerId, slot });
 
+  // Lucky armour: add shield on equip
+  if (card.abilityId === 'lucky_shield') {
+    player.playerShield += card.shieldAmount || 0;
+  }
+
   // Check for set completion
   const set = card.set;
   if (set) {
     const pieces = ['head', 'body', 'feet'].filter(s => player.gear[s]?.set === set);
     if (pieces.length === 3) {
       events.push({ type: 'set_complete', set, playerId });
+
+      // Lucky set bonus: +500 player shield
+      if (set === 'lucky') {
+        player.playerShield += 500;
+        events.push({ type: 'buff', cardUid: card.uid, text: 'Lucky set bonus! +500 player shield' });
+      }
 
       // Cursed set bonus: choose opponent to swap SP
       if (set === 'cursed') {

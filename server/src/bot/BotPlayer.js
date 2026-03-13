@@ -254,7 +254,20 @@ function pickAttack(state, me) {
 
     // Find best target
     for (const opp of opponents) {
-      if (opp.swamp.length === 0) continue;
+      // Direct attack if opponent has no visible creatures
+      const visibleCreatures = opp.swamp.filter(c => !c._invisible);
+      if (visibleCreatures.length === 0) {
+        const myAtk = (creature.attack || 0) + (creature._attackBuff || 0);
+        if (myAtk > 0) {
+          return {
+            type: ACTION.ATTACK,
+            attackerUid: creature.uid,
+            defenderOwnerId: opp.id,
+            defenderUid: opp.id, // target the player directly
+          };
+        }
+        continue;
+      }
 
       // Check for taunt
       const taunt = opp.swamp.find(c => c.abilityId === 'gamer_boy_taunt' && !c._silenced);

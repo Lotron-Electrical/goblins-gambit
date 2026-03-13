@@ -23,6 +23,7 @@ export function createPlayerState(playerId, playerName) {
       feet: null,
     },
     apPenalty: 0,     // AP reduction next turn (e.g. Viper)
+    playerShield: 0,  // shield vs direct SP attacks (Lucky armour, Digital Artist)
     connected: true,
   };
 }

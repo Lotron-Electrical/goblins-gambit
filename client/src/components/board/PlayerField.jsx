@@ -42,19 +42,39 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
   const gearSlots = ['head', 'body', 'feet'];
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
 
+  // Direct attack: can target opponent player if they have no visible creatures
+  const visibleCreatures = player.swamp.filter(c => !c._invisible);
+  const canDirectAttack = isOpponent && isMyTurn && selectedCard && selectedCard._zone === 'swamp'
+    && visibleCreatures.length === 0 && !gameState?.pendingTarget;
+
+  const handleDirectAttack = () => {
+    if (canDirectAttack) {
+      attack(selectedCard.uid, playerId, playerId);
+    }
+  };
+
   return (
     <div className={`rounded-lg p-2 transition ${
       isCurrentTurn ? 'bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40' : 'bg-gray-900/40'
     }`}>
       {/* Player info bar */}
-      <div className="flex items-center justify-between mb-1 px-1">
+      <div
+        className={`flex items-center justify-between mb-1 px-1 rounded ${
+          canDirectAttack ? 'cursor-pointer ring-2 ring-red-500 animate-pulse bg-red-950/30 hover:bg-red-900/40' : ''
+        }`}
+        onClick={handleDirectAttack}
+      >
         <div className="flex items-center gap-2">
           <span className={`font-bold text-[13px] ${isOpponent ? 'text-red-400' : 'text-green-400'}`}>
             {player.name}
           </span>
           {isCurrentTurn && <span className="text-[11px] text-[var(--color-gold)]">TURN</span>}
+          {canDirectAttack && <span className="text-[10px] text-red-400 font-bold">ATTACK DIRECTLY</span>}
         </div>
         <div className="flex items-center gap-3 text-[13px]">
+          {player.playerShield > 0 && (
+            <span className="text-cyan-400 font-bold text-[13px]">{player.playerShield} Shield</span>
+          )}
           <span className="text-yellow-400 font-bold text-[15px]" data-player-sp={playerId}>{player.sp} SP</span>
           <span className="text-blue-300">{player.ap} AP</span>
           <span className="text-gray-400">{player.handCount ?? player.hand?.length ?? 0} cards</span>
