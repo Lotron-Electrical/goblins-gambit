@@ -3,7 +3,7 @@
  * All sounds generated programmatically — no audio files needed.
  */
 
-import { playDynamicLoop } from './MusicLayers.js';
+import { playDynamicLoop, getLoopDurationMs } from './MusicLayers.js';
 import { playMenuLoop, MENU_LOOP_MS } from './MenuMusic.js';
 
 class SoundManager {
@@ -21,6 +21,7 @@ class SoundManager {
     this.menuMusicPlaying = false;
     this.menuMusicNodes = null;
     this._menuMusicTimer = null;
+    this.theme = 'swamp';
   }
 
   /** Must be called from a user gesture (click/tap) to unlock AudioContext */
@@ -80,6 +81,10 @@ class SoundManager {
     this.targetIntensity = Math.max(0, Math.min(1, value));
   }
 
+  setTheme(theme) {
+    this.theme = theme || 'swamp';
+  }
+
   startMenuMusic() {
     if (this.menuMusicPlaying) return;
     if (!this.ctx) this.init();
@@ -132,8 +137,9 @@ class SoundManager {
 
   _scheduleAmbient() {
     if (!this.ambientPlaying || !this.ctx) return;
-    playSwampAmbient(this.ctx, this.muted ? 0 : 0.06);
-    // Ambient loop is ~10s
+    const vol = this.muted ? 0 : 0.06;
+    const ambientFn = AMBIENT_BY_THEME[this.theme] || playSwampAmbient;
+    ambientFn(this.ctx, vol);
     this.ambientTimer = setTimeout(() => this._scheduleAmbient(), 10000);
   }
 
@@ -148,16 +154,16 @@ class SoundManager {
     // Guard against NaN intensity
     if (!isFinite(this.intensity)) this.intensity = 0;
     try {
-      const nodes = playDynamicLoop(this.ctx, this.intensity, this.musicVolume);
+      const nodes = playDynamicLoop(this.ctx, this.intensity, this.musicVolume, this.theme);
       this.musicNodes = nodes;
     } catch (e) {
       // Prevent loop chain from breaking on audio errors
       console.warn('[SoundManager] music loop error:', e);
     }
-    // 8 bars at 140bpm = 8 * 4 * (60/140) = ~13714ms
+    const loopMs = getLoopDurationMs(this.theme);
     this._musicTimer = setTimeout(() => {
       this._scheduleLoop();
-    }, 13714);
+    }, loopMs);
   }
 
   setMuted(val) {
@@ -280,6 +286,157 @@ function playSwampAmbient(ctx, volume) {
     src.start(start);
   }
 }
+
+/**
+ * Blood moon ambient — howling wind, distant wolves, low drones.
+ */
+function playBloodAmbient(ctx, volume) {
+  const t = ctx.currentTime;
+
+  // Layer 1: Howling wind — filtered noise with slow volume swell
+  for (let i = 0; i < 3; i++) {
+    const start = t + Math.random() * 7;
+    const dur = 2 + Math.random() * 3;
+    const bufLen = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const bpf = ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(400 + Math.random() * 300, start);
+    bpf.Q.setValueAtTime(2, start);
+    const gain = ctx.createGain();
+    const windVol = volume * (0.15 + Math.random() * 0.1);
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(windVol, start + dur * 0.3);
+    gain.gain.setValueAtTime(windVol, start + dur * 0.7);
+    gain.gain.linearRampToValueAtTime(0, start + dur);
+    src.connect(bpf);
+    bpf.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(start);
+  }
+
+  // Layer 2: Wolf howl — sliding sine tone
+  if (Math.random() > 0.4) {
+    const start = t + 2 + Math.random() * 5;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(280, start);
+    osc.frequency.linearRampToValueAtTime(420, start + 0.8);
+    osc.frequency.linearRampToValueAtTime(350, start + 1.5);
+    osc.frequency.linearRampToValueAtTime(250, start + 2.5);
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(volume * 0.12, start + 0.3);
+    gain.gain.setValueAtTime(volume * 0.1, start + 1.5);
+    gain.gain.linearRampToValueAtTime(0, start + 2.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + 2.5);
+  }
+
+  // Layer 3: Low ominous drone
+  const droneStart = t;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(55, droneStart);
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(120, droneStart);
+  gain.gain.setValueAtTime(volume * 0.08, droneStart);
+  gain.gain.setValueAtTime(volume * 0.08, droneStart + 9);
+  gain.gain.linearRampToValueAtTime(0, droneStart + 10);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(droneStart);
+  osc.stop(droneStart + 10);
+}
+
+/**
+ * Frost ambient — icy wind, crystalline chimes, cracking sounds.
+ */
+function playFrostAmbient(ctx, volume) {
+  const t = ctx.currentTime;
+
+  // Layer 1: Arctic wind — very high filtered noise
+  for (let i = 0; i < 2; i++) {
+    const start = t + Math.random() * 5;
+    const dur = 3 + Math.random() * 4;
+    const bufLen = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const hpf = ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.setValueAtTime(3000, start);
+    const gain = ctx.createGain();
+    const windVol = volume * (0.08 + Math.random() * 0.06);
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(windVol, start + dur * 0.4);
+    gain.gain.setValueAtTime(windVol * 0.8, start + dur * 0.7);
+    gain.gain.linearRampToValueAtTime(0, start + dur);
+    src.connect(hpf);
+    hpf.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(start);
+  }
+
+  // Layer 2: Ice crystal chimes — high sine plinks
+  for (let i = 0; i < 6; i++) {
+    const start = t + Math.random() * 9;
+    const freq = 2000 + Math.random() * 3000;
+    const dur = 0.3 + Math.random() * 0.5;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, start);
+    const chimeVol = volume * (0.04 + Math.random() * 0.04);
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(chimeVol, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + dur);
+  }
+
+  // Layer 3: Ice cracking — short noise bursts with resonant filter
+  const crackCount = 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < crackCount; i++) {
+    const start = t + 1 + Math.random() * 8;
+    const bufLen = Math.floor(ctx.sampleRate * 0.04);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const bpf = ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(4000 + Math.random() * 2000, start);
+    bpf.Q.setValueAtTime(5, start);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(volume * 0.3, start);
+    gain.gain.linearRampToValueAtTime(0, start + 0.04);
+    src.connect(bpf);
+    bpf.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(start);
+  }
+}
+
+const AMBIENT_BY_THEME = {
+  swamp: playSwampAmbient,
+  blood: playBloodAmbient,
+  frost: playFrostAmbient,
+};
 
 const SOUNDS = {
   draw: (ctx) => {

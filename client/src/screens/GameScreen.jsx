@@ -26,11 +26,12 @@ export default function GameScreen() {
   const boardRef = useRef(null);
   const initRef = useRef(false);
 
-  // Apply saved theme on mount
+  // Apply saved theme on mount + sync to sound manager
   useEffect(() => {
     if (theme && theme !== 'swamp') {
       document.documentElement.setAttribute('data-theme', theme);
     }
+    soundManager.setTheme(theme);
     return () => {
       document.documentElement.removeAttribute('data-theme');
     };
