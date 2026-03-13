@@ -4,7 +4,7 @@ import { soundManager } from '../audio/SoundManager.js';
 import SparkleParticles from '../components/ui/SparkleParticles.jsx';
 
 export default function LobbyScreen() {
-  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted, theme } = useStore();
+  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted } = useStore();
   const [name, setName] = useState(playerName || '');
   const [quickGame, setQuickGame] = useState(false);
 
@@ -14,15 +14,11 @@ export default function LobbyScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // Apply theme on lobby mount
+  // Lobby always shows swamp theme — room controls the theme now
   useEffect(() => {
-    if (theme && theme !== 'swamp') {
-      document.documentElement.setAttribute('data-theme', theme);
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
-    soundManager.setTheme(theme);
-  }, [theme]);
+    document.documentElement.removeAttribute('data-theme');
+    soundManager.setTheme('swamp');
+  }, []);
 
   // Start menu music on first click, stop on unmount
   useEffect(() => {
