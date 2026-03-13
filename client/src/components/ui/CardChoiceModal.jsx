@@ -12,7 +12,7 @@ export default function CardChoiceModal() {
 
   if (!pending) return null;
 
-  const isPeek = pending.type === 'woke_peek';
+  const isPeek = pending.type === 'woke_peek' || pending.type === 'ama_reveal';
 
   const handleDismiss = () => {
     // Send a dummy choose to clear the pendingChoice on server
@@ -23,7 +23,7 @@ export default function CardChoiceModal() {
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 pointer-events-auto">
       <div className="bg-gray-900 border border-[var(--color-gold)] rounded-xl p-6 max-w-lg shadow-2xl">
         <h3 className="text-xl font-display text-[var(--color-gold)] mb-3">
-          {pending.type === 'dead_meme' ? 'Dead Meme Revive' : isPeek ? 'Woke - Deck Peek' : 'Choose a Card'}
+          {pending.type === 'dead_meme' ? 'Dead Meme Revive' : pending.type === 'ama_reveal' ? 'AMA - Hand Revealed' : isPeek ? 'Woke - Deck Peek' : 'Choose a Card'}
         </h3>
         <p className="text-[14px] text-gray-300 mb-4">{pending.prompt}</p>
         <div className="grid grid-cols-3 gap-2">

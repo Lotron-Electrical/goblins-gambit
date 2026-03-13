@@ -106,6 +106,11 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
     }
     player.swamp.push(card);
     events.push({ type: 'card_played', cardUid: card.uid, card, playerId, zone: 'swamp' });
+
+    // Strip placement-only targetInfo so ability handlers see null (not { slotIndex })
+    if (targetInfo && !targetInfo.targetOwnerId && !targetInfo.targetUid) {
+      targetInfo = null;
+    }
   }
 
   // Check Book Witch protection for targeted creature abilities

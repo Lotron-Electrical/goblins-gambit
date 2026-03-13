@@ -268,6 +268,14 @@ export function ama_reveal(state, playerId, card, cardIdx, targetInfo) {
     if (!state._revealedHands[playerId]) state._revealedHands[playerId] = [];
     state._revealedHands[playerId].push(targetOwnerId);
     events.push({ type: 'hand_revealed', viewerId: playerId, targetPlayerId: targetOwnerId, hand: targetPlayer.hand });
+
+    // Show revealed hand in choice modal so it's unmissable
+    state.pendingChoice = {
+      type: 'ama_reveal',
+      playerId,
+      cards: [...targetPlayer.hand],
+      prompt: `${targetPlayer.name}'s hand:`,
+    };
   }
   state.graveyard.push(card);
   return { success: true, events };

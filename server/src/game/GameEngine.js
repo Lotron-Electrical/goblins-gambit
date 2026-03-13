@@ -89,12 +89,6 @@ export class GameEngine {
       return { success: false, error: 'Need 1 AP to draw' };
     }
 
-    // Check Lagg draw skip (still costs AP)
-    if (player._drawSkip && player._drawSkip > 0) {
-      player._drawSkip--;
-      player.ap -= 1;
-      return { success: false, error: 'Draw skipped by Lagg! (1 AP wasted)' };
-    }
     if (player.hand.length >= MAX_HAND_SIZE) {
       return { success: false, error: 'Hand is full' };
     }
@@ -279,18 +273,6 @@ export class GameEngine {
       }
     }
 
-    // Armour durability tick — decrement each equipped piece, break at 0
-    for (const slot of ['head', 'body', 'feet']) {
-      const armour = player.gear[slot];
-      if (!armour) continue;
-      armour._durability = (armour._durability ?? armour.durability) - 1;
-      if (armour._durability <= 0) {
-        events.push({ type: 'destroy', cardUid: armour.uid, owner: playerId, reason: `${armour.name} broke` });
-        this.state.graveyard.push(armour);
-        player.gear[slot] = null;
-      }
-    }
-
     // Clear AMA reveals at end of turn
     if (this.state._revealedHands?.[playerId]) {
       delete this.state._revealedHands[playerId];
@@ -336,6 +318,24 @@ export class GameEngine {
     }
 
     events.push({ type: 'turn_start', playerId: nextPlayerId, turnNumber: this.state.turnNumber });
+
+    // Check if next player's turn is skipped by Lagg
+    if (nextPlayer._drawSkip && nextPlayer._drawSkip > 0) {
+      nextPlayer._drawSkip--;
+      nextPlayer.ap = 0;
+      events.push({ type: 'turn_skipped', playerId: nextPlayerId, reason: 'Lagg!' });
+
+      // Advance to the player after
+      this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
+      this.state.turnNumber++;
+      const skipNextPlayer = getCurrentPlayer(this.state);
+      const skipNextId = this.getCurrentPlayerId();
+      const skipApPenalty = skipNextPlayer.apPenalty || 0;
+      skipNextPlayer.ap = Math.max(0, BASE_AP - skipApPenalty);
+      skipNextPlayer.apPenalty = 0;
+      for (const c of skipNextPlayer.swamp) { delete c._silenced; }
+      events.push({ type: 'turn_start', playerId: skipNextId, turnNumber: this.state.turnNumber });
+    }
 
     this.logAction(playerId, 'end_turn', {});
     this.state.animations.push(...events);
