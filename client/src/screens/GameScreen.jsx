@@ -16,6 +16,7 @@ import GameOverModal from '../components/ui/GameOverModal.jsx';
 import GraveyardModal from '../components/ui/GraveyardModal.jsx';
 import HelpPanel from '../components/ui/HelpPanel.jsx';
 import CardChoiceModal from '../components/ui/CardChoiceModal.jsx';
+import ActivityLog from '../components/ui/ActivityLog.jsx';
 import DamageNumber from '../components/ui/DamageNumber.jsx';
 import DiceRoll from '../components/ui/DiceRoll.jsx';
 import SPParticles from '../components/ui/SPParticles.jsx';
@@ -73,6 +74,9 @@ export default function GameScreen() {
     gameState?.animations
   );
 
+  // Staged card (briefly shown in center when played)
+  const [stagedCard, setStagedCard] = useState(null);
+
   // VFX state
   const [activeDamages, setActiveDamages] = useState([]);
   const [spEvents, setSPEvents] = useState([]);
@@ -83,6 +87,12 @@ export default function GameScreen() {
   // Wire damage numbers to animation events
   useEffect(() => {
     if (!currentAnimation) return;
+    // Stage played cards briefly in center
+    if (currentAnimation.type === 'card_played' && currentAnimation.card) {
+      setStagedCard(currentAnimation.card);
+      setTimeout(() => setStagedCard(null), 1200);
+    }
+
     if (currentAnimation.type === 'damage' && currentAnimation.amount) {
       const cardUid = currentAnimation.targetUid || currentAnimation.cardUid;
       // Find card DOM element position
@@ -193,6 +203,7 @@ export default function GameScreen() {
         deckCount={gameState.deckCount}
         graveyardCount={gameState.graveyardCount}
         graveyard={gameState.graveyard || []}
+        stagedCard={stagedCard}
       />
 
       {/* My field */}
@@ -232,6 +243,9 @@ export default function GameScreen() {
 
       {/* Help panel */}
       <HelpPanel />
+
+      {/* Activity log */}
+      <ActivityLog />
 
       {/* Card play announcement */}
       <CardAnnouncement announcement={announcement} />

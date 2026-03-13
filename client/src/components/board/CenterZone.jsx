@@ -1,11 +1,19 @@
 import { useStore } from '../../store.js';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function CenterZone({ deckCount, graveyardCount, graveyard }) {
+const TYPE_BORDER = {
+  Creature: 'border-red-600',
+  Magic: 'border-blue-600',
+  Armour: 'border-gray-500',
+  Tricks: 'border-green-600',
+};
+
+export default function CenterZone({ deckCount, graveyardCount, graveyard, stagedCard }) {
   const { setGraveyardOpen, setZoomedCard } = useStore();
   const topGraveyardCard = graveyard?.length > 0 ? graveyard[graveyard.length - 1] : null;
 
   return (
-    <div className="flex-shrink-0 h-[80px] mx-4 flex items-center justify-center gap-8">
+    <div className="flex-shrink-0 h-[80px] mx-4 flex items-center justify-center gap-8 relative">
       {/* Deck stack */}
       <div className="flex flex-col items-center gap-1">
         <div className="relative w-[70px] h-[50px]">
@@ -76,6 +84,33 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard }) {
         </div>
         <span className="text-gray-400 text-[11px]">Graveyard</span>
       </div>
+
+      {/* Staged card — briefly shown when a card is played */}
+      <AnimatePresence>
+        {stagedCard && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className={`absolute left-1/2 -translate-x-1/2 w-[90px] h-[65px] rounded-lg border-2 overflow-hidden shadow-2xl z-10 ${
+              TYPE_BORDER[stagedCard.type] || 'border-gray-600'
+            }`}
+          >
+            {stagedCard.image && (
+              <img
+                src={`/cards/${stagedCard.image}`}
+                alt={stagedCard.name}
+                className="absolute inset-0 w-full h-full object-cover"
+                draggable={false}
+              />
+            )}
+            <div className="absolute bottom-0 left-0 right-0 bg-gray-950/90 px-1 py-0.5">
+              <div className="text-white text-[10px] font-bold truncate text-center">{stagedCard.name}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
