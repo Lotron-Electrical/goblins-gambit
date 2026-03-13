@@ -33,11 +33,9 @@ export default function CardZoom() {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Card art — cropped to artwork only */}
-          <div className="relative h-[200px] overflow-hidden">
-            {card.image && (
-              <img src={`/cards/${card.image}`} alt={card.name} className="w-full h-[155%] object-cover object-top" draggable={false} />
-            )}
-          </div>
+          {card.image && (
+            <img src={`/cards/${card.image}`} alt={card.name} className="w-full" style={{ clipPath: 'inset(0 0 32% 0)' }} draggable={false} />
+          )}
 
           {/* Card info */}
           <div className="p-3 space-y-2">
@@ -126,16 +124,15 @@ export default function CardZoom() {
       </button>
 
       {/* Card art — cropped to artwork only */}
-      <div className="relative h-[200px] overflow-hidden shrink-0">
-        {card.image && (
-          <img
-            src={`/cards/${card.image}`}
-            alt={card.name}
-            className="w-full h-[155%] object-cover object-top"
-            draggable={false}
-          />
-        )}
-      </div>
+      {card.image && (
+        <img
+          src={`/cards/${card.image}`}
+          alt={card.name}
+          className="w-full shrink-0"
+          style={{ clipPath: 'inset(0 0 32% 0)' }}
+          draggable={false}
+        />
+      )}
 
       {/* Card info */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">

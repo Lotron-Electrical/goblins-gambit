@@ -124,19 +124,17 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
         </div>
       )}
 
-      {/* Stats bar at bottom */}
+      {/* Stats + health bar at bottom */}
       {!invisible && card.type === 'Creature' && (
-        <div className={`absolute bottom-0 left-0 right-0 bg-black/70 flex justify-between px-1 ${isMobile ? 'text-[8px] py-0' : 'text-[11px] py-0.5'}`}>
-          <span className="text-red-400 font-bold">{card._attackBuff ? (card.attack || 0) + card._attackBuff : card.attack ?? 0}</span>
-          <span className={`font-bold ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>{currentDef}</span>
-          <span className="text-yellow-400 font-bold">{card.sp ?? 0}</span>
-        </div>
-      )}
-
-      {/* DEF health bar at very bottom */}
-      {!invisible && card.type === 'Creature' && (
-        <div className="absolute bottom-0 left-0 right-0 h-[3px]">
-          <div className={`h-full ${defColor} transition-all duration-300`} style={{ width: `${defPct}%` }} />
+        <div className="absolute bottom-0 left-0 right-0">
+          <div className={`bg-black/80 flex justify-between px-1.5 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
+            <span className="text-red-400 font-bold">{ICONS.swords}{card._attackBuff ? (card.attack || 0) + card._attackBuff : card.attack ?? 0}</span>
+            <span className={`font-bold ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>{ICONS.shield}{currentDef}</span>
+            <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp ?? 0}</span>
+          </div>
+          <div className="h-[3px]">
+            <div className={`h-full ${defColor} transition-all duration-300`} style={{ width: `${defPct}%` }} />
+          </div>
         </div>
       )}
     </motion.div>
