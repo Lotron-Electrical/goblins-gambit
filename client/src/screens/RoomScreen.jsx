@@ -9,8 +9,9 @@ const THEME_OPTIONS = [
 ];
 
 export default function RoomScreen() {
-  const { currentRoom, leaveRoom, toggleReady, startGame, addBot, removeBot, setRoomTheme, setRoomSettings, theme } = useStore();
+  const { currentRoom, leaveRoom, toggleReady, startGame, addBot, removeBot, setRoomTheme, setRoomSettings } = useStore();
   const [showSettings, setShowSettings] = useState(false);
+  const roomTheme = currentRoom?.theme || 'swamp';
 
   if (!currentRoom) return null;
 
@@ -105,13 +106,13 @@ export default function RoomScreen() {
                   key={t.id}
                   onClick={() => setRoomTheme(t.id)}
                   className={`relative rounded-lg border-2 px-2 py-3 text-center transition-all duration-300 ${
-                    theme === t.id
+                    roomTheme === t.id
                       ? `${t.border} ${t.bg} ring-2 ${t.ring} scale-[1.03]`
                       : 'border-gray-700 bg-gray-900/60 hover:border-gray-500'
                   }`}
                 >
                   <div className="text-2xl mb-1">{t.icon}</div>
-                  <div className={`text-sm font-bold ${theme === t.id ? 'text-white' : 'text-gray-400'}`}>{t.name}</div>
+                  <div className={`text-sm font-bold ${roomTheme === t.id ? 'text-white' : 'text-gray-400'}`}>{t.name}</div>
                   <div className="text-[10px] text-gray-500 leading-tight mt-0.5 hidden md:block">{t.desc}</div>
                 </button>
               ))}
