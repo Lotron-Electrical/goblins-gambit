@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../store.js';
 import { ICONS } from './icons.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
@@ -11,8 +11,20 @@ export default function GameHUD() {
 
   const myPlayer = gameState.players[gameState.myId];
   const isMyTurn = gameState.currentPlayerId === gameState.myId;
-  const isEarlyTurn = gameState.turnNumber <= 3 && isMyTurn;
   const [tipDismissed, setTipDismissed] = useState(false);
+  const [tipFading, setTipFading] = useState(false);
+  const initialAnimRef = useRef(gameState.animations);
+  const showTip = !tipDismissed && gameState.turnNumber <= 3;
+
+  // Auto-fade on first action
+  useEffect(() => {
+    if (tipDismissed || !showTip) return;
+    if (gameState.animations && gameState.animations !== initialAnimRef.current && gameState.animations.length > 0) {
+      setTipFading(true);
+      const timer = setTimeout(() => setTipDismissed(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.animations, tipDismissed, showTip]);
 
   return (
     <div className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
@@ -66,14 +78,14 @@ export default function GameHUD() {
         </div>
       </div>
 
-      {/* First-turn instruction */}
-      {isEarlyTurn && !tipDismissed && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+      {/* First-turn instruction — fades out on first action */}
+      {showTip && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto transition-opacity duration-700 ${tipFading ? 'opacity-0' : 'opacity-100'}`}>
           <div className={`bg-gray-900/90 border border-gray-700 rounded-lg px-3 py-2 text-gray-300 text-center flex items-center gap-3 ${
             isMobile ? 'text-[11px] max-w-[280px]' : 'text-[13px] max-w-sm'
           }`}>
             <span>Draw cards, play creatures to your swamp, and attack to earn SP!</span>
-            <button onClick={() => setTipDismissed(true)} className="text-gray-500 hover:text-white shrink-0 leading-none">&times;</button>
+            <button onClick={() => { setTipFading(true); setTimeout(() => setTipDismissed(true), 700); }} className="text-gray-500 hover:text-white shrink-0 leading-none">&times;</button>
           </div>
         </div>
       )}
