@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store.js';
+import { soundManager } from '../audio/SoundManager.js';
 
 export default function LobbyScreen() {
-  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms } = useStore();
+  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted } = useStore();
   const [name, setName] = useState(playerName || '');
   const [quickGame, setQuickGame] = useState(false);
 
@@ -11,6 +12,20 @@ export default function LobbyScreen() {
     const interval = setInterval(refreshRooms, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Start menu music on first click, stop on unmount
+  useEffect(() => {
+    const handler = () => {
+      soundManager.init();
+      if (!musicMuted) soundManager.startMenuMusic();
+      document.removeEventListener('click', handler);
+    };
+    document.addEventListener('click', handler);
+    return () => {
+      document.removeEventListener('click', handler);
+      soundManager.stopMenuMusic();
+    };
+  }, [musicMuted]);
 
   const handleCreate = () => {
     if (!name.trim()) return;

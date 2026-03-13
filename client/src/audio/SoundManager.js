@@ -4,6 +4,7 @@
  */
 
 import { playDynamicLoop } from './MusicLayers.js';
+import { playMenuLoop, MENU_LOOP_MS } from './MenuMusic.js';
 
 class SoundManager {
   constructor() {
@@ -17,6 +18,9 @@ class SoundManager {
     this.targetIntensity = 0;
     this.ambientPlaying = false;
     this.ambientTimer = null;
+    this.menuMusicPlaying = false;
+    this.menuMusicNodes = null;
+    this._menuMusicTimer = null;
   }
 
   /** Must be called from a user gesture (click/tap) to unlock AudioContext */
@@ -74,6 +78,39 @@ class SoundManager {
 
   setIntensity(value) {
     this.targetIntensity = Math.max(0, Math.min(1, value));
+  }
+
+  startMenuMusic() {
+    if (this.menuMusicPlaying) return;
+    if (!this.ctx) this.init();
+    if (!this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.menuMusicPlaying = true;
+    this._scheduleMenuLoop();
+  }
+
+  stopMenuMusic() {
+    this.menuMusicPlaying = false;
+    if (this.menuMusicNodes) {
+      this.menuMusicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+      this.menuMusicNodes = null;
+    }
+    if (this._menuMusicTimer) {
+      clearTimeout(this._menuMusicTimer);
+      this._menuMusicTimer = null;
+    }
+  }
+
+  _scheduleMenuLoop() {
+    if (!this.menuMusicPlaying || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    try {
+      const nodes = playMenuLoop(this.ctx, this.muted ? 0 : this.musicVolume);
+      this.menuMusicNodes = nodes;
+    } catch (e) {
+      console.warn('[SoundManager] menu music error:', e);
+    }
+    this._menuMusicTimer = setTimeout(() => this._scheduleMenuLoop(), MENU_LOOP_MS);
   }
 
   startAmbient() {
