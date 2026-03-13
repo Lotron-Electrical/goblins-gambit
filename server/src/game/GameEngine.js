@@ -285,6 +285,20 @@ export class GameEngine {
       delete this.state._revealedHands[playerId];
     }
 
+    // Armour durability countdown — check ALL players' gear
+    for (const [pid, p] of Object.entries(this.state.players)) {
+      for (const slot of ['head', 'body', 'feet']) {
+        const armour = p.gear[slot];
+        if (!armour || armour._turnsRemaining === undefined) continue;
+        armour._turnsRemaining--;
+        if (armour._turnsRemaining <= 0) {
+          events.push({ type: 'destroy', cardUid: armour.uid, owner: pid, reason: `${armour.name} expired` });
+          this.state.graveyard.push(armour);
+          p.gear[slot] = null;
+        }
+      }
+    }
+
     // Advance to next player
     this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
     this.state.turnNumber++;
