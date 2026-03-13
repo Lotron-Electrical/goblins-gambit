@@ -181,7 +181,7 @@ export default function GameScreen() {
             gridTemplateColumns:
               opponents.length <= 3
                 ? `repeat(${opponents.length}, 1fr)`
-                : `repeat(auto-fill, minmax(280px, 1fr))`,
+                : `repeat(${Math.ceil(opponents.length / 2)}, 1fr)`,
           }}
         >
           {opponents.map(({ id, player }) => (
