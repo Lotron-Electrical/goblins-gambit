@@ -53,6 +53,17 @@ export class GameEngine {
       return this.handleCardChoice(playerId, action);
     }
 
+    // Reaction cards can be played on any player's turn
+    const REACTION_ABILITIES = ['stfu_silence'];
+    if (action.type === ACTION.PLAY_CARD && playerId !== this.getCurrentPlayerId()) {
+      const reactPlayer = state.players[playerId];
+      const reactCard = reactPlayer?.hand.find(c => c.uid === action.cardUid);
+      if (reactCard && REACTION_ABILITIES.includes(reactCard.abilityId)) {
+        return this.handlePlayCard(reactPlayer, playerId, action);
+      }
+      return { success: false, error: 'Not your turn' };
+    }
+
     // All other actions must be from current player
     if (playerId !== this.getCurrentPlayerId()) {
       return { success: false, error: 'Not your turn' };

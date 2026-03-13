@@ -17,13 +17,16 @@ const TYPE_BORDER_STYLE = {
   Tricks: 'border-dotted',
 };
 
+const REACTION_ABILITIES = ['stfu_silence'];
+
 export default function CardInHand({ card, isSelected }) {
   const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
+  const isReaction = REACTION_ABILITIES.includes(card.abilityId);
 
   const handleClick = () => {
-    if (!isMyTurn) return;
-    if (isSelected) {
+    if (!isMyTurn && !isReaction) return;
+    if (isSelected || (!isMyTurn && isReaction)) {
       // Creatures are placed via swamp slot click, not double-click
       if (card.type === 'Creature') return;
       playCard(card.uid);
@@ -38,7 +41,7 @@ export default function CardInHand({ card, isSelected }) {
   };
 
   const costText = card.cost === 0 ? 'FREE' : `${card.cost} AP`;
-  const canAfford = isMyTurn && (card.cost === 0 || (gameState?.players[gameState.myId]?.ap >= card.cost));
+  const canAfford = (isMyTurn || isReaction) && (card.cost === 0 || (gameState?.players[gameState.myId]?.ap >= card.cost));
 
   return (
     <motion.div
@@ -85,6 +88,13 @@ export default function CardInHand({ card, isSelected }) {
       {card.abilityId && (
         <div className="absolute top-8 left-1 w-5 h-5 bg-yellow-600/80 rounded-full flex items-center justify-center z-10">
           <span className="text-[10px]">{ICONS.lightning}</span>
+        </div>
+      )}
+
+      {/* REACT badge — shown on reaction cards during opponent's turn */}
+      {isReaction && !isMyTurn && (
+        <div className="absolute top-8 right-1 bg-orange-500 text-white text-[9px] font-bold px-1 py-0.5 rounded z-10 animate-pulse">
+          REACT
         </div>
       )}
 
