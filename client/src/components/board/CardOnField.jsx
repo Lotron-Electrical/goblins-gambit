@@ -18,7 +18,7 @@ const TYPE_GLOW = {
 };
 
 export default function CardOnField({ card, isOpponent, onClick, isValidTarget, isAttacking }) {
-  const { selectedCard, selectCard, setZoomedCard } = useStore();
+  const { selectedCard, selectCard, setZoomedCard, setHoveredCard, clearHoveredCard } = useStore();
   const [hovered, setHovered] = useState(false);
   const isSelected = selectedCard?.uid === card.uid;
   const invisible = card._invisible;
@@ -44,16 +44,18 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
 
   return (
     <motion.div
-      className={`relative w-[90px] h-[120px] rounded-lg border-2 cursor-pointer overflow-hidden ${
+      className={`relative w-[110px] h-[150px] rounded-lg border-2 cursor-pointer overflow-hidden ${
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${isSelected ? 'ring-2 ring-[var(--color-gold)]' : ''} ${
         isValidTarget ? 'ring-2 ring-red-400 animate-pulse' : ''
       } ${invisible ? 'opacity-40' : ''}`}
       style={hovered && !invisible ? { boxShadow: TYPE_GLOW[card.type] } : undefined}
+      data-card-hover
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={(e) => { setHovered(true); setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' }); }}
+      onMouseMove={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
+      onMouseLeave={() => { setHovered(false); clearHoveredCard(); }}
       whileHover={{ scale: 1.05 }}
       animate={isAttacking ? { x: [0, 30, 0], transition: { duration: 0.35 } } : isSelected ? { scale: 1.05 } : {}}
       layout
@@ -77,11 +79,11 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
 
       {/* Opaque bottom section for text */}
       <div className="absolute bottom-0 left-0 right-0 bg-gray-950/95 p-1">
-        <div className="text-white text-[11px] font-bold truncate text-center leading-tight">
+        <div className="text-white text-[13px] font-bold truncate text-center leading-tight">
           {invisible ? '???' : card.name}
         </div>
         {!invisible && card.type === 'Creature' && (
-          <div className="flex justify-between text-[10px] px-0.5 mt-0.5">
+          <div className="flex justify-between text-[12px] px-0.5 mt-0.5">
             <span className="text-red-400 font-bold flex items-center gap-0.5">
               <span className="text-[8px]">{ICONS.swords}</span>{card._attackBuff ? <span className="text-green-400">{(card.attack || 0) + card._attackBuff}</span> : card.attack ?? 0}
             </span>

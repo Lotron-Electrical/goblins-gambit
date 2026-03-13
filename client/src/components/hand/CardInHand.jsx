@@ -18,12 +18,14 @@ const TYPE_BORDER_STYLE = {
 };
 
 export default function CardInHand({ card, isSelected }) {
-  const { selectCard, playCard, gameState, setZoomedCard } = useStore();
+  const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard } = useStore();
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
 
   const handleClick = () => {
     if (!isMyTurn) return;
     if (isSelected) {
+      // Creatures are placed via swamp slot click, not double-click
+      if (card.type === 'Creature') return;
       playCard(card.uid);
     } else {
       selectCard(card);
@@ -40,13 +42,17 @@ export default function CardInHand({ card, isSelected }) {
 
   return (
     <motion.div
-      className={`relative w-[100px] h-[140px] rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden ${
+      className={`relative w-[130px] h-[182px] rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden ${
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${TYPE_BORDER_STYLE[card.type] || ''} ${
         isSelected ? 'ring-2 ring-[var(--color-gold)] z-10' : ''
       } ${!canAfford ? 'opacity-50' : ''}`}
+      data-card-hover
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      onMouseEnter={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
+      onMouseMove={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
+      onMouseLeave={clearHoveredCard}
       whileHover={{ y: -12, scale: 1.05 }}
       animate={isSelected ? { y: -12, scale: 1.05 } : {}}
       layout
@@ -64,21 +70,21 @@ export default function CardInHand({ card, isSelected }) {
       </div>
 
       {/* Cost badge */}
-      <div className={`absolute top-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded z-10 ${
+      <div className={`absolute top-1 right-1 text-[12px] font-bold px-1.5 py-0.5 rounded z-10 ${
         card.cost === 0 ? 'bg-green-700 text-white' : 'bg-blue-800 text-blue-200'
       }`}>
         {costText}
       </div>
 
       {/* Type icon badge */}
-      <div className="absolute top-1 left-1 text-[12px] bg-black/60 w-5 h-5 rounded-full flex items-center justify-center z-10">
+      <div className="absolute top-1 left-1 text-[14px] bg-black/60 w-6 h-6 rounded-full flex items-center justify-center z-10">
         {TYPE_ICON[card.type]}
       </div>
 
       {/* Ability indicator */}
       {card.abilityId && (
-        <div className="absolute top-7 left-1 w-4 h-4 bg-yellow-600/80 rounded-full flex items-center justify-center z-10">
-          <span className="text-[8px]">{ICONS.lightning}</span>
+        <div className="absolute top-8 left-1 w-5 h-5 bg-yellow-600/80 rounded-full flex items-center justify-center z-10">
+          <span className="text-[10px]">{ICONS.lightning}</span>
         </div>
       )}
 
@@ -87,9 +93,9 @@ export default function CardInHand({ card, isSelected }) {
 
       {/* Opaque dark bottom section */}
       <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gray-950 p-1 pt-1.5 flex flex-col justify-center">
-        <div className="text-white text-[11px] font-bold truncate text-center leading-tight">{card.name}</div>
+        <div className="text-white text-[13px] font-bold truncate text-center leading-tight">{card.name}</div>
         {card.type === 'Creature' && (
-          <div className="flex justify-between text-[10px] px-1 mt-0.5">
+          <div className="flex justify-between text-[12px] px-1 mt-0.5">
             <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
             <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
             <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>

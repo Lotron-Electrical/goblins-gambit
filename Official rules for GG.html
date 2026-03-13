@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Official Rules for Goblins Gambit</title>
+  <style>
+    @media print {
+      body { margin: 0; }
+      .page-break { page-break-before: always; }
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 30px;
+      color: #1a1a1a;
+      line-height: 1.6;
+      background: #fff;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.2em;
+      color: #2d5016;
+      border-bottom: 3px solid #2d5016;
+      padding-bottom: 15px;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      font-size: 1.5em;
+      color: #2d5016;
+      border-bottom: 2px solid #c5d9a4;
+      padding-bottom: 8px;
+      margin-top: 35px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      color: #3d6b1e;
+      margin-top: 25px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 30px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0 25px 0;
+      font-size: 0.9em;
+    }
+
+    th {
+      background-color: #2d5016;
+      color: #fff;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f4f8f0;
+    }
+
+    tr:hover {
+      background-color: #e8f0dc;
+    }
+
+    ul, ol {
+      margin: 10px 0;
+      padding-left: 25px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    strong {
+      color: #1a1a1a;
+    }
+
+    em {
+      color: #555;
+    }
+
+    .card-type-red { color: #c0392b; font-weight: bold; }
+    .card-type-blue { color: #2471a3; font-weight: bold; }
+    .card-type-black { color: #1a1a1a; font-weight: bold; }
+    .card-type-green { color: #27ae60; font-weight: bold; }
+
+    .set-bonus {
+      background: #f0f7e6;
+      border-left: 4px solid #2d5016;
+      padding: 8px 15px;
+      margin: 10px 0;
+      font-style: italic;
+      color: #3d6b1e;
+    }
+
+    .combat-step {
+      background: #fdf6e3;
+      border-left: 4px solid #d4a017;
+      padding: 8px 15px;
+      margin: 8px 0;
+    }
+
+    .cleanup-step {
+      background: #f0f4f8;
+      border-left: 4px solid #34639a;
+      padding: 8px 15px;
+      margin: 8px 0;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 15px;
+      border-top: 2px solid #c5d9a4;
+      font-style: italic;
+      color: #888;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Official Rules for Goblins Gambit</h1>
+
+  <!-- OVERVIEW -->
+  <h2>Overview</h2>
+  <p>Goblins Gambit is a multiplayer card game for <strong>2&ndash;6 players</strong>. Players summon creatures, cast spells, equip armour, and perform tricks to earn <strong>Sock Points (SP)</strong>. The first player to reach <strong>10,000 SP</strong> wins (or 5,000 SP in Quick mode).</p>
+
+  <hr>
+
+  <!-- SETUP -->
+  <h2>Setup</h2>
+  <ul>
+    <li>Each player starts with <strong>5 cards</strong> drawn from a shared deck.</li>
+    <li>Each player begins with <strong>0 SP</strong> and <strong>2 Action Points (AP)</strong> per turn.</li>
+    <li>Turn order is determined at game start and cycles through all players.</li>
+  </ul>
+
+  <hr>
+
+  <!-- TURN ACTIONS -->
+  <h2>Turn Actions</h2>
+  <p>Each action costs <strong>1 AP</strong> unless otherwise noted:</p>
+  <table>
+    <thead>
+      <tr><th>Action</th><th>AP Cost</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Draw Card</strong></td><td>1</td><td>Draw a card from the deck (max hand size: 10)</td></tr>
+      <tr><td><strong>Play Card</strong></td><td>Card cost (usually 1)</td><td>Play a card from your hand</td></tr>
+      <tr><td><strong>Attack</strong></td><td>1</td><td>Attack an opponent's creature with one of yours</td></tr>
+      <tr><td><strong>Use Ability</strong></td><td>Varies</td><td>Activate a creature's special ability</td></tr>
+      <tr><td><strong>Buy AP</strong></td><td>1,000 SP</td><td>Spend 1,000 SP to gain +1 AP this turn</td></tr>
+      <tr><td><strong>End Turn</strong></td><td>0</td><td>End your turn and pass to the next player</td></tr>
+    </tbody>
+  </table>
+  <p>Players receive <strong>2 AP</strong> at the start of each turn.</p>
+
+  <hr>
+
+  <!-- CARD TYPES -->
+  <h2>Card Types</h2>
+  <p>There are four card types, each with a colour:</p>
+  <ul>
+    <li><span class="card-type-red">Creatures (Red)</span> &mdash; Summoned to your Swamp (field). Can attack, defend, and have abilities.</li>
+    <li><span class="card-type-blue">Magic (Blue)</span> &mdash; One-time spells with immediate effects.</li>
+    <li><span class="card-type-black">Armour (Black)</span> &mdash; Equipment for your gear slots (head, body, feet). Has durability.</li>
+    <li><span class="card-type-green">Tricks (Green)</span> &mdash; Skateboard tricks that earn SP directly.</li>
+  </ul>
+
+  <hr>
+
+  <!-- CREATURES -->
+  <h2>Creatures</h2>
+  <p>Each creature has ATK (attack), DEF (defence), and SP (points awarded when killed). Maximum <strong>5 creatures</strong> on your field at once.</p>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>ATK</th><th>DEF</th><th>SP</th><th>Ability</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Happy Hippy</td><td>200</td><td>300</td><td>200</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Ablerrt</td><td>300</td><td>600</td><td>400</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Stoner</td><td>400</td><td>200</td><td>420</td><td>Spend 1 AP: grant temp shield to your creatures</td><td>3</td></tr>
+      <tr><td>BBQ Master</td><td>0</td><td>1,000</td><td>500</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Programmer</td><td>400</td><td>600</td><td>500</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Sparky</td><td>800</td><td>100</td><td>500</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>The Milkman</td><td>500</td><td>500</td><td>500</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Homosapien</td><td>1,000</td><td>0</td><td>500</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>The Russian</td><td>600</td><td>600</td><td>800</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Strong Goblin</td><td>800</td><td>800</td><td>1,100</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Rock God</td><td>600</td><td>900</td><td>1,100</td><td>&mdash;</td><td>1</td></tr>
+      <tr><td>Lesser Goblin</td><td>200</td><td>400</td><td>400</td><td>+200 DEF to King Goblin; +100 ATK if King Goblin present</td><td>6</td></tr>
+      <tr><td>King Goblin</td><td>1,000</td><td>100</td><td>1,000</td><td>+100 ATK per Lesser Goblin on your field</td><td>1</td></tr>
+      <tr><td>Thief</td><td>100</td><td>500</td><td>200</td><td>Spend 1 AP: steal 200 SP from any opponent</td><td>1</td></tr>
+      <tr><td>King of Thieves</td><td>100</td><td>100</td><td>500</td><td>Spend 2 AP: steal 500 SP from any opponent</td><td>1</td></tr>
+      <tr><td>Troll</td><td>300</td><td>300</td><td>300</td><td>Spend 1 AP: rotate any creature's stats (ATK&rarr;DEF&rarr;SP&rarr;ATK)</td><td>1</td></tr>
+      <tr><td>Saving Grace</td><td>300</td><td>300</td><td>300</td><td>Targets 3 creatures for 100 ATK each OR 1 for 300 ATK</td><td>1</td></tr>
+      <tr><td>Gabber</td><td>200</td><td>500</td><td>400</td><td>Adjacent creatures to target take 100 DEF splash damage</td><td>1</td></tr>
+      <tr><td>Motherdazer</td><td>200</td><td>400</td><td>400</td><td>Adjacent friendly creatures get +200 DEF</td><td>1</td></tr>
+      <tr><td>Book Witch</td><td>300</td><td>300</td><td>500</td><td>Protects owner from spells while in play</td><td>1</td></tr>
+      <tr><td>Swapeewee</td><td>0</td><td>1,000</td><td>500</td><td>ATK and DEF swap every turn</td><td>1</td></tr>
+      <tr><td>Dead Meme</td><td>100</td><td>800</td><td>500</td><td>When killed: choose 1 card from top 6 in graveyard</td><td>1</td></tr>
+      <tr><td>Twitch Streamer</td><td>100</td><td>800</td><td>500</td><td>Draw 1 card when played</td><td>1</td></tr>
+      <tr><td>Grencle</td><td>100</td><td>600</td><td>500</td><td>All opponents' creatures lose 100 ATK while active</td><td>1</td></tr>
+      <tr><td>Viper</td><td>300</td><td>100</td><td>500</td><td>Attacker loses 1 AP next round</td><td>1</td></tr>
+      <tr><td>Nerd</td><td>100</td><td>500</td><td>500</td><td>+100 ATK whenever owner draws a card</td><td>1</td></tr>
+      <tr><td>Nerdet</td><td>500</td><td>100</td><td>500</td><td>+100 DEF whenever owner draws a card</td><td>1</td></tr>
+      <tr><td>Zucc</td><td>200</td><td>400</td><td>600</td><td>Steal 1 opponent's armour piece when played</td><td>2</td></tr>
+      <tr><td>Wood Elf</td><td>600</td><td>300</td><td>600</td><td>+100 bonus SP on kill</td><td>1</td></tr>
+      <tr><td>Crack Head</td><td>200</td><td>1,000</td><td>800</td><td>Attacks 2 creatures at once (200 damage each)</td><td>1</td></tr>
+      <tr><td>Harambe</td><td>1,000</td><td>1,000</td><td>1,000</td><td>Placed in opponent's field; dies after 1 round; you get the SP</td><td>1</td></tr>
+      <tr><td>Digital Artist</td><td>500</td><td>500</td><td>1,000</td><td>+100 temp DEF shield per round active</td><td>1</td></tr>
+      <tr><td>Ghost</td><td>800</td><td>100</td><td>1,000</td><td>Invisible until it attacks</td><td>1</td></tr>
+      <tr><td>Rhy Bear</td><td>800</td><td>600</td><td>1,000</td><td>Full 800 ATK to 1 target OR 400 ATK split between 2</td><td>1</td></tr>
+      <tr><td>Tik Tok Thot</td><td>0</td><td>0</td><td>1,000</td><td>Instant kill an opponent's creature when played</td><td>1</td></tr>
+      <tr><td>Gamer Boy</td><td>0</td><td>2,000</td><td>1,500</td><td>Taunt: must be attacked first while in play</td><td>1</td></tr>
+      <tr><td>Catfish</td><td>0</td><td>0</td><td>0</td><td>Copies stats of first creature that attacks it</td><td>1</td></tr>
+      <tr><td>Karen</td><td>0</td><td>0</td><td>500</td><td>Instant kills any creature that attacks it (both die)</td><td>1</td></tr>
+      <tr><td>Gamblid</td><td>*</td><td>*</td><td>*</td><td>ATK = avg opponent hand size &times; 100, DEF = own hand &times; 100, SP = ATK + DEF</td><td>1</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+
+  <!-- MAGIC CARDS -->
+  <h2>Magic Cards</h2>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Cost</th><th>Effect</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Ooft</td><td>1</td><td>Add 200 ATK to a creature</td><td>2</td></tr>
+      <tr><td>Thicc</td><td>1</td><td>Add 500 DEF to a creature</td><td>2</td></tr>
+      <tr><td>Judgment</td><td>1</td><td>If your SP = 1,000, steal all of 1 opponent's creatures</td><td>2</td></tr>
+      <tr><td>Smesh</td><td>1</td><td>500 instant damage to a creature</td><td>2</td></tr>
+      <tr><td>Savage</td><td>2</td><td>Destroy an opponent's creature</td><td>3</td></tr>
+      <tr><td>Yeet</td><td>1</td><td>Destroy a card in opponent's hand</td><td>1</td></tr>
+      <tr><td>AMA</td><td>1</td><td>View an opponent's hand</td><td>1</td></tr>
+      <tr><td>Finesse</td><td>1</td><td>Steal 1 card from an opponent's hand</td><td>2</td></tr>
+      <tr><td>Woke</td><td>1</td><td>View next 5 cards on the deck</td><td>1</td></tr>
+      <tr><td>Snacc</td><td>1</td><td>Gain control of opponent's creature for 1 turn</td><td>1</td></tr>
+      <tr><td>Lerker</td><td>0</td><td>Roll 2d6, draw that many cards</td><td>1</td></tr>
+      <tr><td>STFU</td><td>0</td><td>Silence a creature's ability for 1 turn</td><td>2</td></tr>
+      <tr><td>Lagg</td><td>0</td><td>Skip an opponent's next turn</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- TRICKS -->
+  <h2>Tricks</h2>
+  <p>All tricks cost <strong>0 AP</strong> and grant SP directly.</p>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>SP Earned</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Ollie</td><td>300</td><td>1</td></tr>
+      <tr><td>50 - 50</td><td>400</td><td>1</td></tr>
+      <tr><td>Kickflip</td><td>500</td><td>1</td></tr>
+      <tr><td>Crooked Grind</td><td>500</td><td>1</td></tr>
+      <tr><td>Big Spin</td><td>600</td><td>1</td></tr>
+      <tr><td>Feeble Grind</td><td>700</td><td>1</td></tr>
+      <tr><td>Darkslide</td><td>800</td><td>1</td></tr>
+      <tr><td>The 900</td><td>900</td><td>1</td></tr>
+      <tr><td>Hardflip</td><td>1,000</td><td>1</td></tr>
+      <tr><td>Laser Flip</td><td>1,000</td><td>1</td></tr>
+      <tr><td>Christ Air</td><td>2,000</td><td>1</td></tr>
+      <tr><td>H.O.R.S.E</td><td>2d6 &times; 100</td><td>1</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ARMOUR -->
+  <h2>Armour</h2>
+  <p>Armour equips to <strong>head</strong>, <strong>body</strong>, or <strong>feet</strong> slots (max 3 pieces). Each piece has durability that decreases over turns.</p>
+
+  <h3>Cursed Set</h3>
+  <div class="set-bonus">Set Bonus (3/3): Swap your total SP with an opponent</div>
+  <p>Individual Cursed pieces have <strong>no effect</strong> on their own. Wearing 2 pieces also grants <strong>no bonus</strong>. Only when all 3 Cursed pieces are equipped simultaneously (Cursed Beanie + Cursed Singlet + Cursed Crocs) does the set bonus activate, allowing you to <strong>swap your total SP with 1 opponent</strong> of your choice.</p>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Slot</th><th>Durability</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Cursed Beanie</td><td>Head</td><td>3</td><td>2</td></tr>
+      <tr><td>Cursed Singlet</td><td>Body</td><td>5</td><td>2</td></tr>
+      <tr><td>Cursed Crocs</td><td>Feet</td><td>1</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Hessian Set</h3>
+  <div class="set-bonus">Set Bonus: 2/3 pieces = 2 AP/round, 3/3 pieces = 3 AP/round</div>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Slot</th><th>Durability</th><th>Effect</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Hessian Cap</td><td>Head</td><td>3</td><td>Extra AP costs 150 SP less</td><td>2</td></tr>
+      <tr><td>Hessian Sack</td><td>Body</td><td>3</td><td>Extra AP costs 250 SP less</td><td>2</td></tr>
+      <tr><td>Hessian Slippers</td><td>Feet</td><td>3</td><td>Extra AP costs 100 SP less</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Rusty Set</h3>
+  <div class="set-bonus">Set Bonus (3/3): Opponents can't play Creature (red) cards</div>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Slot</th><th>Durability</th><th>Effect</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Rusty Bucket</td><td>Head</td><td>3</td><td>Opponents can't play Tricks (green)</td><td>2</td></tr>
+      <tr><td>Rusty Barrel</td><td>Body</td><td>3</td><td>Opponents can't play Armour (black)</td><td>2</td></tr>
+      <tr><td>Rusty Mugs</td><td>Feet</td><td>3</td><td>Opponents can't play Magic (blue)</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Lucky Set</h3>
+  <div class="set-bonus">Set Bonus (3/3): Extra 500 SP shield</div>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Slot</th><th>Durability</th><th>Effect</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Lucky Headband</td><td>Head</td><td>3</td><td>+150 SP shield</td><td>2</td></tr>
+      <tr><td>Lucky Chestplate</td><td>Body</td><td>3</td><td>+250 SP shield</td><td>2</td></tr>
+      <tr><td>Lucky Socks</td><td>Feet</td><td>3</td><td>+100 SP shield</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Crystal Set</h3>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Slot</th><th>Durability</th><th>Effect</th><th>Copies</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Crystal Helm</td><td>Head</td><td>5</td><td>Gain 200 SP each round</td><td>2</td></tr>
+      <tr><td>Crystal Plate</td><td>Body</td><td>5</td><td>Gain 300 SP each round</td><td>2</td></tr>
+      <tr><td>Crystal Socks</td><td>Feet</td><td>5</td><td>Gain 100 SP each round</td><td>2</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+
+  <!-- COMBAT RESOLUTION -->
+  <h2>Combat Resolution</h2>
+  <p>When a creature attacks another:</p>
+
+  <div class="combat-step"><strong>1. Stoner Shield</strong> &mdash; If the defender has a temp shield from Stoner, the entire attack is absorbed and the shield is consumed.</div>
+  <div class="combat-step"><strong>2. Karen Counter</strong> &mdash; If the defender is Karen (not silenced), the attacker is instantly killed. Karen also dies. The Karen owner gets the attacker's SP.</div>
+  <div class="combat-step"><strong>3. Catfish Mimic</strong> &mdash; If the defender is Catfish and hasn't mimicked yet (not silenced), it copies the attacker's ATK, DEF, and SP. Combat continues with new stats.</div>
+  <div class="combat-step"><strong>4. Damage Calculation</strong> &mdash; Attacker deals damage equal to its ATK against defender's DEF.
+    <ul>
+      <li>If ATK &ge; remaining DEF: defender is <strong>destroyed</strong>. Attacker gains defender's SP.</li>
+      <li>If ATK &lt; remaining DEF: defender takes temporary defence damage (tracked between turns).</li>
+    </ul>
+  </div>
+  <div class="combat-step"><strong>5. Viper Sting</strong> &mdash; If defender is Viper (not silenced), the attacker's owner loses 1 AP next round.</div>
+  <div class="combat-step"><strong>6. Wood Elf Burn</strong> &mdash; If the attacker is Wood Elf (not silenced) and kills the defender, owner gains an extra 100 SP.</div>
+  <div class="combat-step"><strong>7. Gabber Splash</strong> &mdash; If the attacker is Gabber (not silenced), creatures adjacent to the defender take 100 DEF damage. Adjacent creatures can die from splash.</div>
+
+  <h3>Multi-Target Attacks</h3>
+  <ul>
+    <li><strong>Crack Head:</strong> Attacks 2 creatures simultaneously for 200 damage each.</li>
+    <li><strong>Rhy Bear:</strong> Can deal 800 damage to 1 creature OR split 400 damage between 2 creatures.</li>
+  </ul>
+
+  <hr>
+
+  <!-- SPECIAL MECHANICS -->
+  <h2>Special Mechanics</h2>
+
+  <h3>Taunt</h3>
+  <p>Gamer Boy has <strong>taunt</strong> &mdash; while it's on the field, opponents must attack it before any other creature.</p>
+
+  <h3>Invisibility</h3>
+  <p>Ghost is <strong>invisible</strong> until it attacks. Invisible creatures cannot be targeted by attacks or abilities.</p>
+
+  <h3>Silence (STFU)</h3>
+  <p>A silenced creature loses all ability effects for 1 turn. This cancels: counter-kills, stat copying, AP penalties, burn effects, splash damage, synergy buffs, and all activated abilities.</p>
+
+  <h3>Control Transfer</h3>
+  <ul>
+    <li><strong>Harambe:</strong> Placed in an opponent's swamp. Dies automatically after 1 round. The original owner receives the SP.</li>
+    <li><strong>Snacc:</strong> Steal an opponent's creature for 1 turn. It returns at your end of turn. The stolen creature cannot attack the turn it's stolen.</li>
+    <li><strong>Judgment:</strong> If your SP is exactly 1,000, steal all of one opponent's creatures (up to your swamp limit of 5).</li>
+  </ul>
+
+  <h3>Synergy</h3>
+  <ul>
+    <li><strong>King Goblin + Lesser Goblins:</strong> King gains +100 ATK per Lesser Goblin on your field. Each Lesser Goblin gains +100 ATK if King is present and +200 DEF to King.</li>
+    <li><strong>Grencle:</strong> Aura that reduces all opponents' creatures' ATK by 100.</li>
+    <li><strong>Motherdazer:</strong> Adjacent friendly creatures gain +200 DEF.</li>
+    <li><strong>Nerd/Nerdet:</strong> Gain +100 ATK/DEF respectively each time the owner draws a card.</li>
+  </ul>
+
+  <h3>Spell Protection</h3>
+  <p><strong>Book Witch</strong> protects its owner from targeted spells while in play.</p>
+
+  <hr>
+
+  <!-- END-OF-TURN CLEANUP -->
+  <h2>End-of-Turn Cleanup</h2>
+  <p>At the end of each turn, the following occurs in order:</p>
+
+  <div class="cleanup-step"><strong>1. Snacc Return</strong> &mdash; Creatures stolen via Snacc return to their original owner.</div>
+  <div class="cleanup-step"><strong>2. Harambe Timer</strong> &mdash; Harambe's round counter decrements; if expired, Harambe dies and original owner gets SP.</div>
+  <div class="cleanup-step"><strong>3. Swapeewee Swap</strong> &mdash; Swapeewee's ATK and DEF swap.</div>
+  <div class="cleanup-step"><strong>4. Digital Artist Shield</strong> &mdash; Digital Artist gains +100 temp DEF.</div>
+  <div class="cleanup-step"><strong>5. Crystal Armour Income</strong> &mdash; Crystal set pieces grant SP income.</div>
+  <div class="cleanup-step"><strong>6. Armour Durability</strong> &mdash; All equipped armour loses 1 durability. Pieces at 0 are destroyed.</div>
+  <div class="cleanup-step"><strong>7. Silence Expires</strong> &mdash; STFU silence wears off.</div>
+  <div class="cleanup-step"><strong>8. Temporary Buffs Clear</strong> &mdash; Attack/defence buffs from spells reset.</div>
+  <div class="cleanup-step"><strong>9. AP Reset</strong> &mdash; Next player receives 2 base AP (modified by Hessian set bonus and Viper penalties).</div>
+
+  <div class="footer">
+    This document should be updated when game rules change.
+  </div>
+
+</body>
+</html>

@@ -96,7 +96,16 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
     }
     player.ap -= card.cost;
     player.hand.splice(cardIdx, 1);
-    player.swamp.push(card);
+
+    // Support slot-based placement
+    const slotIndex = targetInfo?.slotIndex;
+    if (slotIndex != null && slotIndex >= 0 && slotIndex < MAX_SWAMP_SIZE) {
+      // Insert at the requested position (clamped to current length)
+      const insertAt = Math.min(slotIndex, player.swamp.length);
+      player.swamp.splice(insertAt, 0, card);
+    } else {
+      player.swamp.push(card);
+    }
     events.push({ type: 'card_played', cardUid: card.uid, card, playerId, zone: 'swamp' });
   }
 
@@ -176,6 +185,8 @@ function resolveArmour(state, playerId, card, cardIdx) {
 
   player.ap -= card.cost;
   player.hand.splice(cardIdx, 1);
+  // Initialize runtime durability counter
+  card._durability = card.durability;
   player.gear[slot] = card;
   events.push({ type: 'equip_armour', cardUid: card.uid, card, playerId, slot });
 

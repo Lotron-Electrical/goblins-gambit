@@ -1,8 +1,14 @@
+import { useEffect } from 'react';
 import { useStore } from '../../store.js';
 
 export default function CardChoiceModal() {
-  const { gameState, chooseCard } = useStore();
+  const { gameState, chooseCard, clearHoveredCard } = useStore();
   const pending = gameState?.pendingChoice;
+
+  // Clear any lingering hover preview when modal opens
+  useEffect(() => {
+    if (pending) clearHoveredCard();
+  }, [pending, clearHoveredCard]);
 
   if (!pending) return null;
 

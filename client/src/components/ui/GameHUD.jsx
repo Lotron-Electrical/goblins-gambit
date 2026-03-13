@@ -4,7 +4,7 @@ import { soundManager } from '../../audio/SoundManager.js';
 import { ICONS } from './icons.js';
 
 export default function GameHUD() {
-  const { gameState, drawCard, endTurn, buyAP, setHelpOpen, muted, setMuted } = useStore();
+  const { gameState, setHelpOpen, muted, setMuted } = useStore();
   const [musicOn, setMusicOn] = useState(true);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -40,6 +40,11 @@ export default function GameHUD() {
           <span className="text-gray-500 text-[12px]">Grave: {gameState.graveyardCount}</span>
         </div>
         <div className="flex items-center gap-3">
+          {isMyTurn && (
+            <span className="bg-[var(--color-gold)]/90 text-black font-display text-sm px-3 py-0.5 rounded shadow animate-pulse">
+              YOUR TURN
+            </span>
+          )}
           <span className="text-yellow-400 font-bold text-[16px]">{myPlayer.sp} / {gameState.winSP} SP</span>
           <span className="text-blue-300 font-bold text-[14px]">{myPlayer.ap} AP</span>
           {/* Help button */}
@@ -86,30 +91,7 @@ export default function GameHUD() {
         </div>
       )}
 
-      {/* Action buttons (bottom right) */}
-      {isMyTurn && (
-        <div className="fixed bottom-[170px] right-4 flex flex-col gap-2 pointer-events-auto z-30">
-          <button
-            onClick={drawCard}
-            disabled={myPlayer.ap < 1}
-            className="bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition text-[13px]"
-          >
-            Draw (1 AP)
-          </button>
-          <button
-            onClick={buyAP}
-            className="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition text-[13px]"
-          >
-            Buy AP ({myPlayer.sp >= 1000 ? '1000' : myPlayer.sp} SP)
-          </button>
-          <button
-            onClick={endTurn}
-            className="bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg shadow-lg transition text-[14px]"
-          >
-            End Turn
-          </button>
-        </div>
-      )}
+      {/* Action buttons moved to HandBar */}
 
       {/* SP Progress bar */}
       <div className="fixed top-12 left-0 right-0 pointer-events-none">

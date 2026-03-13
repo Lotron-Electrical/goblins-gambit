@@ -10,7 +10,7 @@ const CARD_TYPE_COLOR = {
 };
 
 export default function PlayerField({ player, playerId, isOpponent, isCurrentTurn, compact }) {
-  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard } = useStore();
+  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard } = useStore();
 
   const handleCreatureClick = (creature) => {
     if (!isOpponent) return;
@@ -63,7 +63,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
 
       <div className="flex gap-2">
         {/* Gear zone */}
-        <div className={`flex flex-col gap-1 ${compact ? 'w-16' : 'w-24'} shrink-0`}>
+        <div className={`flex flex-col gap-1 ${compact ? 'w-20' : 'w-28'} shrink-0 min-w-0`}>
           <div className="text-[11px] text-gray-500 text-center">Gear</div>
           {gearSlots.map((slot) => {
             const armour = player.gear[slot];
@@ -78,7 +78,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                 {armour ? (
                   <div className="text-center px-1">
                     <div className="text-purple-300 font-medium truncate text-[10px]">{armour.name}</div>
-                    {!compact && <div className="text-gray-400 text-[9px]">D:{armour.durability}</div>}
+                    {!compact && <div className="text-gray-400 text-[9px]">{armour._durability ?? armour.durability}/{armour.durability}</div>}
                   </div>
                 ) : (
                   <span className="text-gray-700 text-[10px]">{slot}</span>
@@ -91,33 +91,56 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         {/* Swamp zone */}
         <div className="flex-1">
           <div className="text-[11px] text-gray-500 text-center mb-1">The Swamp</div>
-          <div className="flex gap-1 justify-center min-h-[80px] flex-wrap">
-            {player.swamp.length === 0 ? (
-              <div className="text-gray-700 text-[12px] self-center">Empty</div>
-            ) : (
-              player.swamp.map((creature) => (
-                <div key={creature.uid} className="relative">
-                  <CardOnField
-                    card={creature}
-                    isOpponent={isOpponent}
-                    onClick={() => handleCreatureClick(creature)}
-                    isValidTarget={
-                      gameState?.pendingTarget?.validTargets?.some(t => t.uid === creature.uid) || false
+          <div className="flex gap-1 justify-center min-h-[100px] bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-1">
+            {Array.from({ length: 5 }).map((_, slotIdx) => {
+              const creature = player.swamp[slotIdx] || null;
+              const canPlace = !isOpponent && isMyTurn && !creature
+                && selectedCard && selectedCard._zone !== 'swamp'
+                && selectedCard.type === 'Creature';
+
+              return (
+                <div
+                  key={slotIdx}
+                  className={`relative flex-1 min-w-0 rounded border ${
+                    creature
+                      ? 'border-transparent'
+                      : canPlace
+                        ? 'border-dashed border-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15'
+                        : 'border-dashed border-gray-700/50 bg-gray-900/20'
+                  } min-h-[90px] flex items-center justify-center transition`}
+                  onClick={() => {
+                    if (canPlace) {
+                      playCard(selectedCard.uid, { slotIndex: slotIdx });
                     }
-                  />
-                  {/* Activated ability button (own creatures only, on your turn) */}
-                  {!isOpponent && isMyTurn && hasActivatedAbility(creature.abilityId) && !creature._silenced && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleAbilityClick(creature); }}
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-yellow-600 hover:bg-yellow-500 text-[9px] text-black font-bold px-1.5 py-0.5 rounded shadow z-10"
-                      title="Use ability"
-                    >
-                      {'\u26A1'} Use
-                    </button>
+                  }}
+                >
+                  {creature ? (
+                    <div className="relative">
+                      <CardOnField
+                        card={creature}
+                        isOpponent={isOpponent}
+                        onClick={() => handleCreatureClick(creature)}
+                        isValidTarget={
+                          gameState?.pendingTarget?.validTargets?.some(t => t.uid === creature.uid) || false
+                        }
+                      />
+                      {/* Activated ability button (own creatures only, on your turn) */}
+                      {!isOpponent && isMyTurn && hasActivatedAbility(creature.abilityId) && !creature._silenced && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleAbilityClick(creature); }}
+                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-yellow-600 hover:bg-yellow-500 text-[9px] text-black font-bold px-1.5 py-0.5 rounded shadow z-10"
+                          title="Use ability"
+                        >
+                          {'\u26A1'} Use
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-gray-700 text-[10px]">{canPlace ? 'Place here' : ''}</span>
                   )}
                 </div>
-              ))
-            )}
+              );
+            })}
           </div>
         </div>
       </div>

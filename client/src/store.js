@@ -22,6 +22,9 @@ export const useStore = create((set, get) => ({
   zoomedCard: null,
   helpOpen: false,
   muted: false,
+  hoveredCard: null,
+  hoverPosition: null,
+  graveyardOpen: false,
 
   // Actions
   setPlayerName: (name) => set({ playerName: name }),
@@ -155,6 +158,9 @@ export const useStore = create((set, get) => ({
   setZoomedCard: (card) => set({ zoomedCard: card }),
   setHelpOpen: (open) => set({ helpOpen: open }),
   setMuted: (muted) => set({ muted }),
+  setHoveredCard: (card, position) => set({ hoveredCard: card, hoverPosition: position }),
+  clearHoveredCard: () => set({ hoveredCard: null, hoverPosition: null }),
+  setGraveyardOpen: (open) => set({ graveyardOpen: open }),
   clearError: () => set({ error: null }),
   refreshRooms: () => {
     socket.emit(EVENTS.ROOM_LIST, null, (rooms) => {
@@ -182,7 +188,26 @@ socket.on(EVENTS.ROOM_LIST, (rooms) => {
 });
 
 socket.on(EVENTS.GAME_STATE, (state) => {
-  useStore.setState({ gameState: state, screen: 'game' });
+  const current = useStore.getState();
+  const hoveredUid = current.hoveredCard?.uid;
+
+  // Clear stale hover if the hovered card is no longer on any field or hand
+  let clearHover = false;
+  if (hoveredUid && state) {
+    const allCards = [];
+    for (const p of Object.values(state.players)) {
+      allCards.push(...(p.swamp || []), ...(p.hand || []));
+    }
+    if (!allCards.some(c => c.uid === hoveredUid)) {
+      clearHover = true;
+    }
+  }
+
+  useStore.setState({
+    gameState: state,
+    screen: 'game',
+    ...(clearHover ? { hoveredCard: null, hoverPosition: null } : {}),
+  });
 });
 
 socket.on(EVENTS.GAME_ERROR, ({ error }) => {

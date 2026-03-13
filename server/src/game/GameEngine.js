@@ -268,6 +268,18 @@ export class GameEngine {
       }
     }
 
+    // Armour durability tick — decrement each equipped piece, break at 0
+    for (const slot of ['head', 'body', 'feet']) {
+      const armour = player.gear[slot];
+      if (!armour) continue;
+      armour._durability = (armour._durability ?? armour.durability) - 1;
+      if (armour._durability <= 0) {
+        events.push({ type: 'destroy', cardUid: armour.uid, owner: playerId, reason: `${armour.name} broke` });
+        this.state.graveyard.push(armour);
+        player.gear[slot] = null;
+      }
+    }
+
     // Clear AMA reveals at end of turn
     if (this.state._revealedHands?.[playerId]) {
       delete this.state._revealedHands[playerId];

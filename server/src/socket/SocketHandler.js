@@ -16,50 +16,79 @@ export function setupSocketHandlers(io, lobby) {
   }
 
   function runBotTurn(roomId, engine) {
-    const currentId = engine.getCurrentPlayerId();
-    if (!botIds.has(currentId)) return;
-
-    // Small delay to feel natural
-    const tick = () => {
-      const botState = engine.getStateForPlayer(currentId);
-      if (botState.phase !== 'playing') return;
-
-      // Check if bot needs to respond to pending target/choice
-      const needsResponse = botState.pendingTarget?.playerId === currentId
-        || botState.pendingChoice?.playerId === currentId;
-
-      if (botState.currentPlayerId !== currentId && !needsResponse) return;
-
-      const action = decideBotAction(botState);
-      if (!action) return;
-
-      const result = engine.handleAction(currentId, action);
-      broadcastState(roomId, engine);
-
-      if (result.gameOver) {
-        io.to(roomId).emit(EVENTS.GAME_OVER, {
-          winner: result.winner,
-          winnerName: engine.state.players[result.winner].name,
-        });
-        return;
+    const botId = engine.getCurrentPlayerId();
+    if (!botIds.has(botId)) {
+      // Current player isn't a bot, but check if any bot has a pending response
+      const state = engine.state;
+      const pendingBotId = state.pendingTarget?.playerId || state.pendingChoice?.playerId;
+      if (pendingBotId && botIds.has(pendingBotId)) {
+        scheduleBotTick(roomId, engine, pendingBotId, 600);
       }
+      return;
+    }
 
-      // If bot ended turn, check if next player is also a bot
-      if (action.type === ACTION.END_TURN) {
+    scheduleBotTick(roomId, engine, botId, 1000 + Math.random() * 500);
+  }
+
+  function scheduleBotTick(roomId, engine, botId, delay) {
+    setTimeout(() => botTick(roomId, engine, botId), delay);
+  }
+
+  function botTick(roomId, engine, botId) {
+    if (!botIds.has(botId)) return;
+
+    const botState = engine.getStateForPlayer(botId);
+    if (botState.phase !== 'playing') return;
+
+    // Check if bot needs to respond to pending target/choice
+    const needsResponse = botState.pendingTarget?.playerId === botId
+      || botState.pendingChoice?.playerId === botId;
+
+    if (botState.currentPlayerId !== botId && !needsResponse) return;
+
+    const action = decideBotAction(botState);
+    if (!action) {
+      // Bot is stuck — force end turn to prevent freeze
+      if (botState.currentPlayerId === botId) {
+        engine.handleAction(botId, { type: ACTION.END_TURN });
+        broadcastState(roomId, engine);
         const nextId = engine.getCurrentPlayerId();
         if (botIds.has(nextId)) {
-          setTimeout(tick, 800);
+          scheduleBotTick(roomId, engine, nextId, 800);
         }
-        return;
       }
+      return;
+    }
 
-      // Continue bot's turn if it still has actions
-      if (botState.currentPlayerId === currentId || needsResponse) {
-        setTimeout(tick, 600 + Math.random() * 400);
+    const result = engine.handleAction(botId, action);
+    broadcastState(roomId, engine);
+
+    if (result.gameOver) {
+      io.to(roomId).emit(EVENTS.GAME_OVER, {
+        winner: result.winner,
+        winnerName: engine.state.players[result.winner].name,
+      });
+      return;
+    }
+
+    // If bot ended turn, check if next player is also a bot
+    if (action.type === ACTION.END_TURN) {
+      const nextId = engine.getCurrentPlayerId();
+      if (botIds.has(nextId)) {
+        scheduleBotTick(roomId, engine, nextId, 800);
       }
-    };
+      return;
+    }
 
-    setTimeout(tick, 1000 + Math.random() * 500);
+    // Re-fetch state after action to check current situation
+    const updatedState = engine.getStateForPlayer(botId);
+    const stillNeedsAction = updatedState.currentPlayerId === botId
+      || updatedState.pendingTarget?.playerId === botId
+      || updatedState.pendingChoice?.playerId === botId;
+
+    if (stillNeedsAction) {
+      scheduleBotTick(roomId, engine, botId, 600 + Math.random() * 400);
+    }
   }
 
   io.on('connection', (socket) => {

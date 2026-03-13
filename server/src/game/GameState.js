@@ -126,6 +126,11 @@ export function getClientState(state, playerId) {
     turnPhase: state.turnPhase,
     deckCount: state.deck.length,
     graveyardCount: state.graveyard.length,
+    graveyard: state.graveyard.map(c => ({
+      uid: c.uid, id: c.id, name: c.name, type: c.type,
+      image: c.image, attack: c.attack, defence: c.defence,
+      sp: c.sp, cost: c.cost, effect: c.effect, abilityId: c.abilityId,
+    })),
     players,
     turnOrder: state.turnOrder,
     currentTurnIndex: state.currentTurnIndex,

@@ -1,15 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store.js';
-import { usePlayerLayout } from '../hooks/usePlayerLayout.js';
 import { useAnimationQueue } from '../hooks/useAnimationQueue.js';
 import { soundManager } from '../audio/SoundManager.js';
 import PlayerField from '../components/board/PlayerField.jsx';
+import CenterZone from '../components/board/CenterZone.jsx';
 import HandBar from '../components/hand/HandBar.jsx';
 import GameHUD from '../components/ui/GameHUD.jsx';
 import TargetPicker from '../components/ui/TargetPicker.jsx';
 import CardZoom from '../components/ui/CardZoom.jsx';
+import CardHoverPreview from '../components/ui/CardHoverPreview.jsx';
 import CardAnnouncement from '../components/ui/CardAnnouncement.jsx';
 import GameOverModal from '../components/ui/GameOverModal.jsx';
+import GraveyardModal from '../components/ui/GraveyardModal.jsx';
 import HelpPanel from '../components/ui/HelpPanel.jsx';
 import CardChoiceModal from '../components/ui/CardChoiceModal.jsx';
 import { motion } from 'framer-motion';
@@ -45,20 +47,9 @@ export default function GameScreen() {
   const myPlayer = gameState.players[myId];
   const isMyTurn = gameState.currentPlayerId === myId;
 
-  const { positions, layout } = usePlayerLayout(gameState.turnOrder, myId);
-
-  // Organize opponents by position
   const opponents = Object.entries(gameState.players)
     .filter(([id]) => id !== myId)
-    .map(([id, player]) => ({
-      id,
-      player,
-      position: positions[id] || 'top',
-    }));
-
-  const topOpponents = opponents.filter(o => o.position.startsWith('top'));
-  const leftOpponent = opponents.find(o => o.position === 'left');
-  const rightOpponent = opponents.find(o => o.position === 'right');
+    .map(([id, player]) => ({ id, player }));
 
   // Screen shake on big damage
   const isShaking = currentAnimation?.type === 'damage' && currentAnimation.amount >= 500;
@@ -75,83 +66,37 @@ export default function GameScreen() {
         transition: { duration: isScreenShake ? 0.25 : 0.15 }
       } : {}}
     >
-      {/* Turn banner */}
-      {isMyTurn && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 animate-pulse">
-          <div className="bg-[var(--color-gold)]/90 text-black font-display text-2xl px-8 py-2 rounded-lg shadow-lg">
-            YOUR TURN
-          </div>
-        </div>
-      )}
-
       {/* Opponent fields */}
-      <div className="flex-1 flex flex-col overflow-auto">
-        {/* Side + top layout for 4+ players */}
-        {(leftOpponent || rightOpponent) ? (
-          <div className="flex flex-1">
-            {/* Left opponent */}
-            {leftOpponent && (
-              <div className="w-48 shrink-0 p-1">
-                <PlayerField
-                  player={leftOpponent.player}
-                  playerId={leftOpponent.id}
-                  isOpponent={true}
-                  isCurrentTurn={gameState.currentPlayerId === leftOpponent.id}
-                  compact={true}
-                />
-              </div>
-            )}
-
-            {/* Top opponents (center) */}
-            <div className="flex-1 flex flex-col gap-1 p-2">
-              <div className={`flex gap-1 ${topOpponents.length > 2 ? 'justify-between' : 'justify-center'}`}>
-                {topOpponents.map(({ id, player }) => (
-                  <div key={id} className="flex-1 max-w-md">
-                    <PlayerField
-                      player={player}
-                      playerId={id}
-                      isOpponent={true}
-                      isCurrentTurn={gameState.currentPlayerId === id}
-                      compact={compact}
-                    />
-                  </div>
-                ))}
-              </div>
+      <div className="flex-1 overflow-auto p-2">
+        <div
+          className="grid gap-2 h-full"
+          style={{
+            gridTemplateColumns:
+              opponents.length <= 3
+                ? `repeat(${opponents.length}, 1fr)`
+                : `repeat(auto-fill, minmax(280px, 1fr))`,
+          }}
+        >
+          {opponents.map(({ id, player }) => (
+            <div key={id} className="min-w-0">
+              <PlayerField
+                player={player}
+                playerId={id}
+                isOpponent={true}
+                isCurrentTurn={gameState.currentPlayerId === id}
+                compact={compact}
+              />
             </div>
-
-            {/* Right opponent */}
-            {rightOpponent && (
-              <div className="w-48 shrink-0 p-1">
-                <PlayerField
-                  player={rightOpponent.player}
-                  playerId={rightOpponent.id}
-                  isOpponent={true}
-                  isCurrentTurn={gameState.currentPlayerId === rightOpponent.id}
-                  compact={true}
-                />
-              </div>
-            )}
-          </div>
-        ) : (
-          // 2-3 players: opponents across top
-          <div className={`flex gap-1 p-2 ${topOpponents.length > 1 ? 'justify-between' : 'justify-center'}`}>
-            {topOpponents.map(({ id, player }) => (
-              <div key={id} className={topOpponents.length > 1 ? 'flex-1 max-w-md' : 'flex-1'}>
-                <PlayerField
-                  player={player}
-                  playerId={id}
-                  isOpponent={true}
-                  isCurrentTurn={gameState.currentPlayerId === id}
-                  compact={compact}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px bg-[var(--color-gold)]/30 mx-4" />
+      {/* Center zone: deck + graveyard */}
+      <CenterZone
+        deckCount={gameState.deckCount}
+        graveyardCount={gameState.graveyardCount}
+        graveyard={gameState.graveyard || []}
+      />
 
       {/* My field */}
       <div className="p-2">
@@ -180,6 +125,12 @@ export default function GameScreen() {
 
       {/* Card zoom panel */}
       <CardZoom />
+
+      {/* Card hover preview */}
+      <CardHoverPreview />
+
+      {/* Graveyard modal */}
+      <GraveyardModal />
 
       {/* Help panel */}
       <HelpPanel />

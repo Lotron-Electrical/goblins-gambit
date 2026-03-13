@@ -40,7 +40,7 @@ export function resolveAttack(state, attackerId, attackerUid, defenderOwnerId, d
     return { defenderKilled: false, attackerKilled: false, spGained: 0, events };
   }
 
-  // --- Karen counter-kill: instakills any creature that attacks her ---
+  // --- Karen counter-kill: instakills any creature that attacks her, then Karen dies too ---
   if (defenderCard.abilityId === 'karen_counter' && !defenderCard._silenced) {
     attackerKilled = true;
     events.push({
@@ -51,7 +51,10 @@ export function resolveAttack(state, attackerId, attackerUid, defenderOwnerId, d
     spGained = aSP;
     events.push({ type: 'sp_change', playerId: defenderOwnerId, amount: aSP, reason: 'Karen kill' });
     killCreature(state, attackerId, attackerUid);
-    return { defenderKilled: false, attackerKilled: true, spGained, events };
+    // Karen sacrifices herself after counter-killing
+    killCreature(state, defenderOwnerId, defenderCard.uid);
+    events.push({ type: 'destroy', cardUid: defenderUid, owner: defenderOwnerId, reason: 'Karen sacrifice' });
+    return { defenderKilled: true, attackerKilled: true, spGained, events };
   }
 
   // --- Catfish mimic: first attack copies attacker's stats ---
