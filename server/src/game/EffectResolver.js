@@ -100,9 +100,8 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
     // Support slot-based placement
     const slotIndex = targetInfo?.slotIndex;
     if (slotIndex != null && slotIndex >= 0 && slotIndex < MAX_SWAMP_SIZE) {
-      // Insert at the requested position (clamped to current length)
-      const insertAt = Math.min(slotIndex, player.swamp.length);
-      player.swamp.splice(insertAt, 0, card);
+      // splice handles out-of-bounds by appending — no clamping needed
+      player.swamp.splice(slotIndex, 0, card);
     } else {
       player.swamp.push(card);
     }
@@ -204,9 +203,11 @@ function resolveArmour(state, playerId, card, cardIdx) {
           cursed_set_bonus(state, playerId, otherIds[0], events);
         } else if (otherIds.length > 1) {
           // Need to choose opponent
-          const validTargets = otherIds.map(id => ({
-            ownerId: id, uid: id, name: state.players[id].name,
-          }));
+          const validTargets = otherIds
+            .filter(id => state.players[id])
+            .map(id => ({
+              ownerId: id, uid: id, name: state.players[id].name,
+            }));
           return {
             success: true, events, needsTarget: true,
             targetRequest: {

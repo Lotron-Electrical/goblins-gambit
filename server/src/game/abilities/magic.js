@@ -327,6 +327,15 @@ export function woke_peek(state, playerId, card, cardIdx, targetInfo) {
   const topCards = state.deck.slice(-5).reverse(); // top of deck is end of array
   events.push({ type: 'deck_peek', playerId, cards: topCards });
   state.graveyard.push(card);
+
+  // Show peeked cards in choice modal (read-only peek, no selection)
+  state.pendingChoice = {
+    type: 'woke_peek',
+    playerId,
+    cards: topCards,
+    prompt: 'Top 5 cards on the deck:',
+  };
+
   return { success: true, events };
 }
 
@@ -353,8 +362,9 @@ export function snacc_control(state, playerId, card, cardIdx, targetInfo) {
 
   const { targetOwnerId, targetUid } = targetInfo;
   const targetPlayer = state.players[targetOwnerId];
-  const targetIdx = targetPlayer?.swamp.findIndex(c => c.uid === targetUid);
-  if (targetIdx !== undefined && targetIdx !== -1 && player.swamp.length < MAX_SWAMP_SIZE) {
+  if (!targetPlayer) { state.graveyard.push(card); return { success: true, events }; }
+  const targetIdx = targetPlayer.swamp.findIndex(c => c.uid === targetUid);
+  if (targetIdx !== -1 && player.swamp.length < MAX_SWAMP_SIZE) {
     const [creature] = targetPlayer.swamp.splice(targetIdx, 1);
     creature._originalOwner = targetOwnerId;
     creature._controller = playerId;

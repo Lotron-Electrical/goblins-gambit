@@ -31,63 +31,103 @@ export function setupSocketHandlers(io, lobby) {
   }
 
   function scheduleBotTick(roomId, engine, botId, delay) {
+    if (pendingBotTicks.has(botId)) return; // prevent duplicate scheduling
+    pendingBotTicks.add(botId);
     setTimeout(() => botTick(roomId, engine, botId), delay);
   }
 
+  // Track pending bot ticks to prevent duplicates
+  const pendingBotTicks = new Set();
+
   function botTick(roomId, engine, botId) {
-    if (!botIds.has(botId)) return;
+    pendingBotTicks.delete(botId);
 
-    const botState = engine.getStateForPlayer(botId);
-    if (botState.phase !== 'playing') return;
+    try {
+      if (!botIds.has(botId)) return;
 
-    // Check if bot needs to respond to pending target/choice
-    const needsResponse = botState.pendingTarget?.playerId === botId
-      || botState.pendingChoice?.playerId === botId;
+      const botState = engine.getStateForPlayer(botId);
+      if (botState.phase !== 'playing') return;
 
-    if (botState.currentPlayerId !== botId && !needsResponse) return;
+      // Check if bot needs to respond to pending target/choice
+      const needsResponse = botState.pendingTarget?.playerId === botId
+        || botState.pendingChoice?.playerId === botId;
 
-    const action = decideBotAction(botState);
-    if (!action) {
-      // Bot is stuck — force end turn to prevent freeze
-      if (botState.currentPlayerId === botId) {
-        engine.handleAction(botId, { type: ACTION.END_TURN });
+      if (botState.currentPlayerId !== botId && !needsResponse) return;
+
+      const action = decideBotAction(botState);
+      if (!action) {
+        // Bot is stuck — force end turn to prevent freeze
+        if (botState.currentPlayerId === botId) {
+          engine.handleAction(botId, { type: ACTION.END_TURN });
+          broadcastState(roomId, engine);
+          const nextId = engine.getCurrentPlayerId();
+          if (botIds.has(nextId)) {
+            scheduleBotTick(roomId, engine, nextId, 800);
+          }
+        }
+        return;
+      }
+
+      const result = engine.handleAction(botId, action);
+
+      if (!result.success && !result.needsTarget) {
+        // Action failed — force end turn to prevent freeze
+        console.error(`Bot ${botId} action failed:`, result.error);
+        if (botState.currentPlayerId === botId) {
+          engine.handleAction(botId, { type: ACTION.END_TURN });
+        }
         broadcastState(roomId, engine);
         const nextId = engine.getCurrentPlayerId();
         if (botIds.has(nextId)) {
           scheduleBotTick(roomId, engine, nextId, 800);
         }
+        return;
       }
-      return;
-    }
 
-    const result = engine.handleAction(botId, action);
-    broadcastState(roomId, engine);
+      broadcastState(roomId, engine);
 
-    if (result.gameOver) {
-      io.to(roomId).emit(EVENTS.GAME_OVER, {
-        winner: result.winner,
-        winnerName: engine.state.players[result.winner].name,
-      });
-      return;
-    }
-
-    // If bot ended turn, check if next player is also a bot
-    if (action.type === ACTION.END_TURN) {
-      const nextId = engine.getCurrentPlayerId();
-      if (botIds.has(nextId)) {
-        scheduleBotTick(roomId, engine, nextId, 800);
+      if (result.gameOver) {
+        io.to(roomId).emit(EVENTS.GAME_OVER, {
+          winner: result.winner,
+          winnerName: engine.state.players[result.winner]?.name || 'Unknown',
+        });
+        return;
       }
-      return;
-    }
 
-    // Re-fetch state after action to check current situation
-    const updatedState = engine.getStateForPlayer(botId);
-    const stillNeedsAction = updatedState.currentPlayerId === botId
-      || updatedState.pendingTarget?.playerId === botId
-      || updatedState.pendingChoice?.playerId === botId;
+      // If bot ended turn, check if next player is also a bot
+      if (action.type === ACTION.END_TURN) {
+        const nextId = engine.getCurrentPlayerId();
+        if (botIds.has(nextId)) {
+          scheduleBotTick(roomId, engine, nextId, 800);
+        }
+        return;
+      }
 
-    if (stillNeedsAction) {
-      scheduleBotTick(roomId, engine, botId, 600 + Math.random() * 400);
+      // Re-fetch state after action to check current situation
+      const updatedState = engine.getStateForPlayer(botId);
+      const stillNeedsAction = updatedState.currentPlayerId === botId
+        || updatedState.pendingTarget?.playerId === botId
+        || updatedState.pendingChoice?.playerId === botId;
+
+      if (stillNeedsAction) {
+        scheduleBotTick(roomId, engine, botId, 600 + Math.random() * 400);
+      }
+    } catch (err) {
+      console.error(`Bot ${botId} tick crashed:`, err);
+      // Recover: force end turn so game doesn't freeze
+      try {
+        const currentId = engine.getCurrentPlayerId();
+        if (currentId === botId) {
+          engine.handleAction(botId, { type: ACTION.END_TURN });
+        }
+        broadcastState(roomId, engine);
+        const nextId = engine.getCurrentPlayerId();
+        if (botIds.has(nextId)) {
+          scheduleBotTick(roomId, engine, nextId, 800);
+        }
+      } catch (e) {
+        console.error('Bot crash recovery also failed:', e);
+      }
     }
   }
 

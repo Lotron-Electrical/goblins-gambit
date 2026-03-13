@@ -50,6 +50,7 @@ export function activate_thief_steal(state, playerId, card, targetInfo) {
   player.ap -= 1;
   const { targetOwnerId } = targetInfo;
   const target = state.players[targetOwnerId];
+  if (!target) return { success: false, error: 'Target player not found' };
   const stealAmount = Math.min(200, target.sp);
   target.sp -= stealAmount;
   player.sp += stealAmount;
@@ -84,6 +85,7 @@ export function activate_king_thief_steal(state, playerId, card, targetInfo) {
   player.ap -= 2;
   const { targetOwnerId } = targetInfo;
   const target = state.players[targetOwnerId];
+  if (!target) return { success: false, error: 'Target player not found' };
   const stealAmount = Math.min(500, target.sp);
   target.sp -= stealAmount;
   player.sp += stealAmount;

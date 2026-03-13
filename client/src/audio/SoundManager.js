@@ -78,22 +78,12 @@ class SoundManager {
     if (!this.musicPlaying || !this.ctx) return;
     // Smooth interpolation toward target
     this.intensity += (this.targetIntensity - this.intensity) * 0.4;
-    const nodes = playDynamicLoop(this.ctx, this.intensity, this.muted ? 0 : this.musicVolume);
+    const nodes = playDynamicLoop(this.ctx, this.intensity, this.musicVolume);
     this.musicNodes = nodes;
-    // 8 bars at 140bpm = ~13.7s
+    // 8 bars at 140bpm = 8 * 4 * (60/140) = ~13714ms
     this._musicTimer = setTimeout(() => {
       this._scheduleLoop();
-    }, 13500);
-  }
-
-  toggleMute() {
-    this.muted = !this.muted;
-    // If music is playing, restart it to pick up new volume (or silence it)
-    if (this.musicPlaying) {
-      this.stopMusic();
-      if (!this.muted) this.startMusic();
-    }
-    return this.muted;
+    }, 13714);
   }
 
   setMuted(val) {

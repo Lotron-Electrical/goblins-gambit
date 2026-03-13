@@ -124,6 +124,9 @@ export function zucc_steal(state, playerId, card, cardIdx, targetInfo) {
   // Steal the armour piece
   const { targetOwnerId, targetUid } = targetInfo;
   const targetPlayer = state.players[targetOwnerId];
+  if (!targetPlayer) {
+    return { success: false, events, error: 'Target player not found' };
+  }
   for (const slot of ['head', 'body', 'feet']) {
     if (targetPlayer.gear[slot]?.uid === targetUid) {
       const stolen = targetPlayer.gear[slot];
@@ -174,6 +177,7 @@ export function harambe_plant(state, playerId, card, cardIdx, targetInfo) {
   // Place in opponent's swamp
   const { targetOwnerId } = targetInfo;
   const opponent = state.players[targetOwnerId];
+  if (!opponent) return { success: false, events, error: 'Target player not found' };
   if (opponent.swamp.length < MAX_SWAMP_SIZE) {
     card._originalOwner = playerId;
     card._controller = targetOwnerId;

@@ -176,7 +176,11 @@ export const useStore = create((set, get) => ({
   },
   setTheme: (theme) => {
     localStorage.setItem('gg_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'swamp') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
     set({ theme });
   },
   setHoveredCard: (card, position) => set({ hoveredCard: card, hoverPosition: position }),

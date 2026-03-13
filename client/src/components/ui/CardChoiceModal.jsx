@@ -12,19 +12,32 @@ export default function CardChoiceModal() {
 
   if (!pending) return null;
 
+  const isPeek = pending.type === 'woke_peek';
+
+  const handleDismiss = () => {
+    // Send a dummy choose to clear the pendingChoice on server
+    if (pending.cards.length > 0) {
+      chooseCard(pending.cards[0].uid);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 pointer-events-auto">
       <div className="bg-gray-900 border border-[var(--color-gold)] rounded-xl p-6 max-w-lg shadow-2xl">
         <h3 className="text-xl font-display text-[var(--color-gold)] mb-3">
-          {pending.type === 'dead_meme' ? 'Dead Meme Revive' : 'Choose a Card'}
+          {pending.type === 'dead_meme' ? 'Dead Meme Revive' : isPeek ? 'Woke - Deck Peek' : 'Choose a Card'}
         </h3>
         <p className="text-[14px] text-gray-300 mb-4">{pending.prompt}</p>
         <div className="grid grid-cols-3 gap-2">
           {pending.cards.map((card) => (
             <button
               key={card.uid}
-              onClick={() => chooseCard(card.uid)}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-[var(--color-gold)] rounded-lg p-3 transition text-center"
+              onClick={() => !isPeek && chooseCard(card.uid)}
+              className={`border rounded-lg p-3 transition text-center ${
+                isPeek
+                  ? 'bg-gray-800 border-gray-600 cursor-default'
+                  : 'bg-gray-800 hover:bg-gray-700 border-gray-700 hover:border-[var(--color-gold)] cursor-pointer'
+              }`}
             >
               <div className="text-white font-bold text-[13px] truncate">{card.name}</div>
               <div className="text-[11px] text-gray-400">{card.type}</div>
@@ -38,6 +51,14 @@ export default function CardChoiceModal() {
             </button>
           ))}
         </div>
+        {isPeek && (
+          <button
+            onClick={handleDismiss}
+            className="mt-4 w-full bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-2 rounded-lg transition"
+          >
+            Got it
+          </button>
+        )}
       </div>
     </div>
   );

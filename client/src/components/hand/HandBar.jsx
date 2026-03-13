@@ -10,6 +10,17 @@ export default function HandBar() {
   const hand = myPlayer?.hand || [];
   const isMyTurn = gameState.currentPlayerId === gameState.myId;
 
+  // Compute effective Buy AP cost (Hessian discount)
+  let buyAPCost = 1000;
+  for (const slot of ['head', 'body', 'feet']) {
+    const armour = myPlayer.gear?.[slot];
+    if (armour?.abilityId === 'hessian_discount') {
+      buyAPCost -= armour.discountAmount || 0;
+    }
+  }
+  buyAPCost = Math.max(0, buyAPCost);
+  const canBuyAP = myPlayer.sp >= buyAPCost;
+
   return (
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2">
       <div className="flex gap-1 justify-center items-end overflow-x-auto pb-1 pr-40">
@@ -35,9 +46,10 @@ export default function HandBar() {
           </button>
           <button
             onClick={buyAP}
-            className="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition text-[13px] whitespace-nowrap"
+            disabled={!canBuyAP}
+            className="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition text-[13px] whitespace-nowrap"
           >
-            Buy AP ({myPlayer.sp >= 1000 ? '1000' : myPlayer.sp} SP)
+            Buy AP ({buyAPCost} SP)
           </button>
           <button
             onClick={endTurn}

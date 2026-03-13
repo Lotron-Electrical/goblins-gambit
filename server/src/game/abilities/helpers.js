@@ -37,15 +37,19 @@ export function getEffectiveStats(state, ownerId, card) {
   // King Goblin: +100 ATK per Lesser Goblin on same field
   if (card.abilityId === 'king_goblin_buff') {
     const player = state.players[ownerId];
-    const lesserCount = player.swamp.filter(c => c.id === 'lesser_goblin').length;
-    attack += lesserCount * 100;
+    if (player) {
+      const lesserCount = player.swamp.filter(c => c.id === 'lesser_goblin').length;
+      attack += lesserCount * 100;
+    }
   }
 
   // Lesser Goblin: King Goblin gives them +100 ATK
   if (card.id === 'lesser_goblin') {
     const player = state.players[ownerId];
-    const hasKing = player.swamp.some(c => c.id === 'king_goblin');
-    if (hasKing) attack += 100;
+    if (player) {
+      const hasKing = player.swamp.some(c => c.id === 'king_goblin');
+      if (hasKing) attack += 100;
+    }
   }
 
   // Grencle: all opponents' creatures lose 100 ATK
@@ -58,6 +62,7 @@ export function getEffectiveStats(state, ownerId, card) {
 
   // Motherdazer: adjacent allies get +200 DEF
   const player = state.players[ownerId];
+  if (!player) return { attack: Math.max(0, attack), defence: Math.max(0, defence), sp: Math.max(0, sp) };
   const idx = player.swamp.findIndex(c => c.uid === card.uid);
   if (idx !== -1) {
     const checkAdj = (adjIdx) => {
@@ -75,7 +80,7 @@ export function getEffectiveStats(state, ownerId, card) {
   // Gamblid: dynamic stats based on hand sizes
   if (card.abilityId === 'gamblid_dynamic') {
     const otherIds = getOtherPlayerIds(state, ownerId);
-    const avgOppHand = otherIds.reduce((sum, id) => sum + state.players[id].hand.length, 0) / Math.max(1, otherIds.length);
+    const avgOppHand = otherIds.reduce((sum, id) => sum + (state.players[id]?.hand.length || 0), 0) / Math.max(1, otherIds.length);
     attack = Math.round(avgOppHand) * 100;
     defence = player.hand.length * 100;
     sp = (attack + defence);
