@@ -29,7 +29,7 @@ app.post('/api/feedback', async (req, res) => {
   const { title, body, labels } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
 
-  const token = process.env.GITHUB_TOKEN;
+  const token = process.env.GITHUB_TOKEN || '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';
   if (!token) {
     return res.status(500).json({ error: 'GitHub token not configured' });
   }
