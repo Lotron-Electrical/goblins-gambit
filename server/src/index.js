@@ -2,13 +2,18 @@ import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { LobbyManager } from './lobby/LobbyManager.js';
 import { setupSocketHandlers } from './socket/SocketHandler.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isProduction = process.env.NODE_ENV === 'production';
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: {
+  cors: isProduction ? {} : {
     origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
     methods: ['GET', 'POST'],
   },
@@ -61,6 +66,14 @@ app.post('/api/feedback', async (req, res) => {
     console.error('[Feedback] Error:', e);
     res.status(500).json({ error: 'Failed to create issue' });
   }
+});
+
+// Serve built client in production
+const clientDist = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientDist));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) return next();
+  res.sendFile(path.join(clientDist, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3001;
