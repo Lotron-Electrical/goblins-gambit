@@ -307,8 +307,21 @@ const SOUNDS = {
     playTone(ctx, 100, 0.15, 'sawtooth', 0.3, 50);
   },
   death: (ctx) => {
-    playNoise(ctx, 0.3, 0.4);
-    playTone(ctx, 200, 0.4, 'sawtooth', 0.25, 40);
+    // Creature death — descending low pitched rumble
+    playNoise(ctx, 0.4, 0.35);
+    playTone(ctx, 280, 0.5, 'sawtooth', 0.25, 25);
+    setTimeout(() => playTone(ctx, 120, 0.3, 'sine', 0.15, 40), 120);
+  },
+  armour_break: (ctx) => {
+    // Metallic crack — high clang + filtered noise burst
+    playTone(ctx, 1600, 0.3, 'square', 0.1, 600);
+    playTone(ctx, 900, 0.25, 'triangle', 0.08, 400);
+    playNoise(ctx, 0.1, 0.45);
+  },
+  damage: (ctx) => {
+    // Short impact thud — distinct from full death
+    playNoise(ctx, 0.07, 0.35);
+    playTone(ctx, 90, 0.1, 'sawtooth', 0.18, 55);
   },
   sp_gain: (ctx) => {
     playTone(ctx, 880, 0.1, 'sine', 0.2);
