@@ -1,15 +1,17 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../../store.js';
 import { ICONS, TYPE_ICON } from './icons.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 export default function CardHoverPreview() {
   const { hoveredCard, hoverPosition, clearHoveredCard } = useStore();
   const [visible, setVisible] = useState(false);
   const [delayedCard, setDelayedCard] = useState(null);
   const [delayedPos, setDelayedPos] = useState(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (hoveredCard) {
+    if (hoveredCard && !isMobile) {
       const timer = setTimeout(() => {
         setDelayedCard(hoveredCard);
         setDelayedPos(hoverPosition);
@@ -21,11 +23,11 @@ export default function CardHoverPreview() {
       setDelayedCard(null);
       setDelayedPos(null);
     }
-  }, [hoveredCard, hoverPosition]);
+  }, [hoveredCard, hoverPosition, isMobile]);
 
   // Safety net: if mouse isn't over a card element, clear stale hover state
   useEffect(() => {
-    if (!hoveredCard) return;
+    if (!hoveredCard || isMobile) return;
     const handleMouseMove = (e) => {
       const target = e.target;
       if (!target.closest('[data-card-hover]')) {
@@ -39,9 +41,10 @@ export default function CardHoverPreview() {
       clearTimeout(timer);
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [hoveredCard, clearHoveredCard]);
+  }, [hoveredCard, clearHoveredCard, isMobile]);
 
-  if (!visible || !delayedCard || !delayedPos) return null;
+  // Don't render on mobile — use CardZoom (long-press) instead
+  if (isMobile || !visible || !delayedCard || !delayedPos) return null;
 
   const card = delayedCard;
   const previewW = 200;

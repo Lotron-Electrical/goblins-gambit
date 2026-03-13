@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useStore } from '../../store.js';
 import { ICONS } from './icons.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 export default function GameHUD() {
   const { gameState, setHelpOpen, setMenuOpen } = useStore();
+  const isMobile = useIsMobile();
 
   if (!gameState) return null;
 
@@ -15,26 +17,38 @@ export default function GameHUD() {
   return (
     <div className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
-        <div className="flex items-center gap-4">
-          <span className="font-display text-[var(--color-gold)] text-lg">Goblin's Gambit</span>
-          <span className="text-gray-600 text-[10px]">v{__APP_VERSION__}</span>
-          <span className="text-gray-500 text-[12px]">Turn {gameState.turnNumber}</span>
-          <span className="text-gray-500 text-[12px]">Deck: {gameState.deckCount}</span>
-          <span className="text-gray-500 text-[12px]">Grave: {gameState.graveyardCount}</span>
+      <div className={`flex items-center justify-between ${isMobile ? 'px-2 py-1.5' : 'px-4 py-2'} bg-gray-950/90 border-b border-gray-800 pointer-events-auto`}>
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          {!isMobile && (
+            <>
+              <span className="font-display text-[var(--color-gold)] text-lg">Goblin's Gambit</span>
+              <span className="text-gray-600 text-[10px]">v{__APP_VERSION__}</span>
+            </>
+          )}
+          <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>Turn {gameState.turnNumber}</span>
+          {!isMobile && (
+            <>
+              <span className="text-gray-500 text-[12px]">Deck: {gameState.deckCount}</span>
+              <span className="text-gray-500 text-[12px]">Grave: {gameState.graveyardCount}</span>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 md:gap-3">
           {isMyTurn && (
-            <span className="bg-[var(--color-gold)]/90 text-black font-display text-sm px-3 py-0.5 rounded shadow animate-pulse">
+            <span className={`bg-[var(--color-gold)]/90 text-black font-display rounded shadow animate-pulse ${
+              isMobile ? 'text-[10px] px-2 py-0.5' : 'text-sm px-3 py-0.5'
+            }`}>
               YOUR TURN
             </span>
           )}
-          <span className="text-yellow-400 font-bold text-[16px]">{myPlayer.sp} / {gameState.winSP} SP</span>
-          <span className="text-blue-300 font-bold text-[14px]">{myPlayer.ap} AP</span>
+          <span className={`text-yellow-400 font-bold ${isMobile ? 'text-[12px]' : 'text-[16px]'}`}>{myPlayer.sp}/{gameState.winSP}</span>
+          <span className={`text-blue-300 font-bold ${isMobile ? 'text-[11px]' : 'text-[14px]'}`}>{myPlayer.ap} AP</span>
           {/* Help button */}
           <button
             onClick={() => setHelpOpen(true)}
-            className="w-8 h-8 flex items-center justify-center text-[14px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition"
+            className={`flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition ${
+              isMobile ? 'w-7 h-7 text-[12px]' : 'w-8 h-8 text-[14px]'
+            }`}
             title="Help"
           >
             ?
@@ -42,7 +56,9 @@ export default function GameHUD() {
           {/* Menu button (gear) */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="w-8 h-8 flex items-center justify-center text-[14px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition"
+            className={`flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition ${
+              isMobile ? 'w-7 h-7 text-[12px]' : 'w-8 h-8 text-[14px]'
+            }`}
             title="Settings"
           >
             {ICONS.gear}
@@ -53,7 +69,9 @@ export default function GameHUD() {
       {/* First-turn instruction */}
       {isEarlyTurn && !tipDismissed && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
-          <div className="bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2 text-[13px] text-gray-300 text-center max-w-sm flex items-center gap-3">
+          <div className={`bg-gray-900/90 border border-gray-700 rounded-lg px-3 py-2 text-gray-300 text-center flex items-center gap-3 ${
+            isMobile ? 'text-[11px] max-w-[280px]' : 'text-[13px] max-w-sm'
+          }`}>
             <span>Draw cards, play creatures to your swamp, and attack to earn SP!</span>
             <button onClick={() => setTipDismissed(true)} className="text-gray-500 hover:text-white shrink-0 leading-none">&times;</button>
           </div>

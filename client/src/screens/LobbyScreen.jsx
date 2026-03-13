@@ -44,7 +44,7 @@ export default function LobbyScreen() {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
       <SparkleParticles />
       <div className="text-center mb-12 relative z-10">
-        <h1 className="text-6xl font-display text-[var(--color-gold-bright)] drop-shadow-[0_0_30px_rgba(212,160,23,0.5)] mb-2">
+        <h1 className="text-3xl md:text-6xl font-display text-[var(--color-gold-bright)] drop-shadow-[0_0_30px_rgba(212,160,23,0.5)] mb-2">
           Goblin's Gambit
         </h1>
         <p className="text-gray-400 text-lg">A card game of cunning and chaos</p>

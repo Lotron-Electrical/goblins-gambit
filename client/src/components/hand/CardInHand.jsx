@@ -1,6 +1,8 @@
+import { useRef, useCallback } from 'react';
 import { useStore } from '../../store.js';
 import { motion } from 'framer-motion';
 import { ICONS, TYPE_ICON } from '../ui/icons.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 const TYPE_BORDER = {
   Creature: 'border-red-600 hover:border-red-400',
@@ -23,6 +25,8 @@ export default function CardInHand({ card, isSelected }) {
   const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
   const isReaction = REACTION_ABILITIES.includes(card.abilityId);
+  const isMobile = useIsMobile();
+  const longPressTimer = useRef(null);
 
   const handleClick = () => {
     if (!isMyTurn && !isReaction) return;
@@ -40,12 +44,30 @@ export default function CardInHand({ card, isSelected }) {
     setZoomedCard(card);
   };
 
+  // Long-press to zoom on mobile
+  const handleTouchStart = useCallback((e) => {
+    longPressTimer.current = setTimeout(() => {
+      setZoomedCard(card);
+      longPressTimer.current = null;
+    }, 400);
+  }, [card, setZoomedCard]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
   const costText = card.cost === 0 ? 'FREE' : `${card.cost} AP`;
   const canAfford = (isMyTurn || isReaction) && (card.cost === 0 || (gameState?.players[gameState.myId]?.ap >= card.cost));
 
+  const w = isMobile ? 'w-[80px]' : 'w-[130px]';
+  const h = isMobile ? 'h-[112px]' : 'h-[182px]';
+
   return (
     <motion.div
-      className={`relative w-[130px] h-[182px] rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden ${
+      className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden ${
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${TYPE_BORDER_STYLE[card.type] || ''} ${
         isSelected ? 'ring-2 ring-[var(--color-gold)] z-10' : ''
@@ -53,11 +75,14 @@ export default function CardInHand({ card, isSelected }) {
       data-card-hover
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      onMouseEnter={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
-      onMouseMove={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
-      onMouseLeave={clearHoveredCard}
-      whileHover={animationsOff ? undefined : { y: -12, scale: 1.05, zIndex: 50 }}
-      animate={animationsOff ? {} : (isSelected ? { y: -12, scale: 1.05 } : {})}
+      onTouchStart={isMobile ? handleTouchStart : undefined}
+      onTouchEnd={isMobile ? handleTouchEnd : undefined}
+      onTouchCancel={isMobile ? handleTouchEnd : undefined}
+      onMouseEnter={isMobile ? undefined : (e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
+      onMouseMove={isMobile ? undefined : (e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
+      onMouseLeave={isMobile ? undefined : clearHoveredCard}
+      whileHover={animationsOff || isMobile ? undefined : { y: -12, scale: 1.05, zIndex: 50 }}
+      animate={animationsOff ? {} : (isSelected ? { y: isMobile ? -6 : -12, scale: isMobile ? 1.02 : 1.05 } : {})}
       layout
     >
       {/* Card art (top 70%) */}
@@ -73,27 +98,33 @@ export default function CardInHand({ card, isSelected }) {
       </div>
 
       {/* Cost badge */}
-      <div className={`absolute top-1 right-1 text-[12px] font-bold px-1.5 py-0.5 rounded z-10 ${
-        card.cost === 0 ? 'bg-green-700 text-white' : 'bg-blue-800 text-blue-200'
-      }`}>
+      <div className={`absolute top-0.5 right-0.5 font-bold px-1 py-0.5 rounded z-10 ${
+        isMobile ? 'text-[8px]' : 'text-[12px] px-1.5'
+      } ${card.cost === 0 ? 'bg-green-700 text-white' : 'bg-blue-800 text-blue-200'}`}>
         {costText}
       </div>
 
       {/* Type icon badge */}
-      <div className="absolute top-1 left-1 text-[14px] bg-black/60 w-6 h-6 rounded-full flex items-center justify-center z-10">
+      <div className={`absolute top-0.5 left-0.5 bg-black/60 rounded-full flex items-center justify-center z-10 ${
+        isMobile ? 'text-[10px] w-4 h-4' : 'text-[14px] w-6 h-6'
+      }`}>
         {TYPE_ICON[card.type]}
       </div>
 
       {/* Ability indicator */}
       {card.abilityId && (
-        <div className="absolute top-8 left-1 w-5 h-5 bg-yellow-600/80 rounded-full flex items-center justify-center z-10">
-          <span className="text-[10px]">{ICONS.lightning}</span>
+        <div className={`absolute left-0.5 bg-yellow-600/80 rounded-full flex items-center justify-center z-10 ${
+          isMobile ? 'top-5 w-3.5 h-3.5' : 'top-8 w-5 h-5'
+        }`}>
+          <span className={isMobile ? 'text-[7px]' : 'text-[10px]'}>{ICONS.lightning}</span>
         </div>
       )}
 
       {/* REACT badge — shown on reaction cards during opponent's turn */}
       {isReaction && !isMyTurn && (
-        <div className="absolute top-8 right-1 bg-orange-500 text-white text-[9px] font-bold px-1 py-0.5 rounded z-10 animate-pulse">
+        <div className={`absolute right-0.5 bg-orange-500 text-white font-bold px-1 py-0.5 rounded z-10 animate-pulse ${
+          isMobile ? 'top-5 text-[6px]' : 'top-8 text-[9px]'
+        }`}>
           REACT
         </div>
       )}
@@ -102,10 +133,12 @@ export default function CardInHand({ card, isSelected }) {
       <div className="absolute left-0 right-0 top-[70%] h-[2px] bg-gray-600 z-10" />
 
       {/* Opaque dark bottom section */}
-      <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gray-950 p-1 pt-1.5 flex flex-col justify-center">
-        <div className="text-white text-[13px] font-bold truncate text-center leading-tight">{card.name}</div>
+      <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gray-950 p-0.5 pt-1 flex flex-col justify-center">
+        <div className={`text-white font-bold truncate text-center leading-tight ${
+          isMobile ? 'text-[8px]' : 'text-[13px]'
+        }`}>{card.name}</div>
         {card.type === 'Creature' && (
-          <div className="flex justify-between text-[12px] px-1 mt-0.5">
+          <div className={`flex justify-between px-0.5 mt-0.5 ${isMobile ? 'text-[8px]' : 'text-[12px] px-1'}`}>
             <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
             <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
             <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>

@@ -1,6 +1,7 @@
 import { useStore } from '../../store.js';
 import { hasActivatedAbility } from './abilityInfo.js';
 import { ICONS, TYPE_ICON } from './icons.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 const TYPE_COLOR = {
   Creature: 'border-red-600 bg-red-950/90',
@@ -11,6 +12,7 @@ const TYPE_COLOR = {
 
 export default function CardZoom() {
   const { zoomedCard, setZoomedCard, gameState } = useStore();
+  const isMobile = useIsMobile();
 
   if (!zoomedCard) return null;
   const card = zoomedCard;
@@ -19,6 +21,100 @@ export default function CardZoom() {
   const maxDef = 2000;
   const maxSp = 1500;
 
+  if (isMobile) {
+    // Full-screen overlay on mobile
+    return (
+      <div
+        className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+        onClick={() => setZoomedCard(null)}
+      >
+        <div
+          className="w-full max-w-[300px] bg-gray-950 rounded-xl border-2 border-gray-700 overflow-hidden shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Card art */}
+          <div className={`relative h-[160px] border-b-2 ${TYPE_COLOR[card.type] || 'border-gray-600'} overflow-hidden`}>
+            {card.image && (
+              <img src={`/cards/${card.image}`} alt={card.name} className="w-full h-full object-cover" draggable={false} />
+            )}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent h-16" />
+          </div>
+
+          {/* Card info */}
+          <div className="p-3 space-y-2">
+            <div>
+              <h3 className="font-display text-[16px] text-white leading-tight">{card.name}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[13px]">{TYPE_ICON[card.type]}</span>
+                <span className="text-[13px] text-gray-400">{card.type}</span>
+                {card.cost !== undefined && (
+                  <span className={`text-[13px] ml-auto font-bold ${card.cost === 0 ? 'text-green-400' : 'text-blue-300'}`}>
+                    {card.cost === 0 ? 'FREE' : `${card.cost} AP`}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {card.type === 'Creature' && (() => {
+              const currentAtk = (card.attack || 0) + (card._attackBuff || 0);
+              const currentHP = Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0));
+              const baseHP = card.defence || 0;
+              return (
+                <div className="space-y-1.5">
+                  <StatBar label="Attack" value={currentAtk} max={maxAtk} color="bg-red-500" buffed={card._attackBuff > 0} />
+                  <StatBar label="Health" value={currentHP} max={baseHP || 1} color="bg-blue-500" damaged={card._defenceDamage > 0} suffix={` / ${baseHP}`} />
+                  <StatBar label="SP" value={card.sp ?? 0} max={maxSp} color="bg-yellow-500" />
+                </div>
+              );
+            })()}
+
+            {card.type === 'Armour' && (
+              <div className="text-[13px] text-gray-300 space-y-1">
+                <div>Slot: <span className="text-white capitalize">{card.slot}</span></div>
+                <div>Set: <span className="text-purple-300 capitalize">{card.set}</span></div>
+                {card.shieldAmount && <div>Shield: <span className="text-green-400">+{card.shieldAmount}</span></div>}
+                {card.incomeAmount && <div>Income: <span className="text-yellow-400">+{card.incomeAmount} SP/turn</span></div>}
+                {card.discountAmount && <div>Discount: <span className="text-blue-400">-{card.discountAmount} SP</span></div>}
+                {card.blockedType && <div>Blocks: <span className="text-red-400">{card.blockedType}</span></div>}
+              </div>
+            )}
+
+            {card.effect && (
+              <div className="text-[13px] text-gray-200 leading-relaxed border-t border-gray-800 pt-2">
+                {card.effect}
+              </div>
+            )}
+
+            {card.abilityId && (
+              <div className="text-[11px] text-yellow-400 flex items-center gap-1">
+                <span>{ICONS.lightning}</span>
+                {hasActivatedAbility(card.abilityId) ? 'Activated ability (use on your turn)' : 'Special ability'}
+              </div>
+            )}
+
+            {(card._silenced || card._stonerShield || card._invisible || card._snaccReturn) && (
+              <div className="border-t border-gray-800 pt-2 space-y-1">
+                {card._silenced && <div className="text-[11px] text-red-400">{ICONS.muted} Silenced</div>}
+                {card._stonerShield && <div className="text-[11px] text-green-400">{ICONS.shield} Shield Active</div>}
+                {card._invisible && <div className="text-[11px] text-gray-400">{ICONS.ghost} Invisible</div>}
+                {card._snaccReturn && <div className="text-[11px] text-purple-400">{ICONS.clock} Returns to owner next turn</div>}
+              </div>
+            )}
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={() => setZoomedCard(null)}
+            className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 text-[14px] transition"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: side panel
   return (
     <div className="fixed right-0 top-0 bottom-0 w-[260px] z-40 flex flex-col shadow-2xl border-l-2 border-gray-700 bg-gray-950/95 animate-slide-in-right">
       {/* Close button */}

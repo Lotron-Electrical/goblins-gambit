@@ -177,14 +177,14 @@ export default function GameScreen() {
   return (
     <motion.div
       ref={boardRef}
-      className="h-screen flex flex-col overflow-hidden select-none"
+      className="h-dvh flex flex-col overflow-hidden select-none"
       animate={isShaking || isScreenShake ? {
         x: [0, -4, 4, -3, 3, 0],
         transition: { duration: isScreenShake ? 0.25 : 0.15 }
       } : {}}
     >
       {/* Opponent fields */}
-      <div className="flex-1 overflow-auto p-2 pt-14 min-h-0">
+      <div className="flex-1 overflow-auto p-1 md:p-2 pt-12 md:pt-14 min-h-0">
         <div
           className="grid gap-2"
           style={{
@@ -217,7 +217,7 @@ export default function GameScreen() {
       />
 
       {/* My field */}
-      <div className="p-2 shrink-0">
+      <div className="p-1 md:p-2 shrink-0">
         <PlayerField
           player={myPlayer}
           playerId={myId}

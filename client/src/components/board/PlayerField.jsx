@@ -1,6 +1,7 @@
 import { useStore } from '../../store.js';
 import CardOnField from './CardOnField.jsx';
 import { hasActivatedAbility } from '../ui/abilityInfo.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 const CARD_TYPE_COLOR = {
   Creature: 'border-red-700',
@@ -11,6 +12,8 @@ const CARD_TYPE_COLOR = {
 
 export default function PlayerField({ player, playerId, isOpponent, isCurrentTurn, compact }) {
   const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard } = useStore();
+  const isMobile = useIsMobile();
+  const isCompact = compact || isMobile;
 
   const handleCreatureClick = (creature) => {
     if (!isOpponent) return;
@@ -54,7 +57,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
   };
 
   return (
-    <div className={`rounded-lg p-2 transition ${
+    <div className={`rounded-lg ${isMobile ? 'p-1' : 'p-2'} transition ${
       isCurrentTurn ? 'bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40' : 'bg-gray-900/40'
     }`}>
       {/* Player info bar */}
@@ -64,20 +67,20 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         }`}
         onClick={handleDirectAttack}
       >
-        <div className="flex items-center gap-2">
-          <span className={`font-bold text-[13px] ${isOpponent ? 'text-red-400' : 'text-green-400'}`}>
+        <div className="flex items-center gap-1 md:gap-2 min-w-0">
+          <span className={`font-bold truncate ${isMobile ? 'text-[11px] max-w-[60px]' : 'text-[13px]'} ${isOpponent ? 'text-red-400' : 'text-green-400'}`}>
             {player.name}
           </span>
-          {isCurrentTurn && <span className="text-[11px] text-[var(--color-gold)]">TURN</span>}
-          {canDirectAttack && <span className="text-[10px] text-red-400 font-bold">ATTACK DIRECTLY</span>}
+          {isCurrentTurn && <span className={`text-[var(--color-gold)] ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>TURN</span>}
+          {canDirectAttack && !isMobile && <span className="text-[10px] text-red-400 font-bold">ATTACK DIRECTLY</span>}
         </div>
-        <div className="flex items-center gap-3 text-[13px]">
+        <div className={`flex items-center gap-1.5 md:gap-3 ${isMobile ? 'text-[10px]' : 'text-[13px]'}`}>
           {player.playerShield > 0 && (
-            <span className="text-cyan-400 font-bold text-[13px]">{player.playerShield} Shield</span>
+            <span className="text-cyan-400 font-bold">{player.playerShield} Sh</span>
           )}
-          <span className="text-yellow-400 font-bold text-[15px]" data-player-sp={playerId}>{player.sp} SP</span>
+          <span className={`text-yellow-400 font-bold ${isMobile ? 'text-[11px]' : 'text-[15px]'}`} data-player-sp={playerId}>{player.sp} SP</span>
           <span className="text-blue-300">{player.ap} AP</span>
-          <span className="text-gray-400">{player.handCount ?? player.hand?.length ?? 0} cards</span>
+          {!isMobile && <span className="text-gray-400">{player.handCount ?? player.hand?.length ?? 0} cards</span>}
         </div>
       </div>
 
@@ -91,27 +94,27 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex gap-1 md:gap-2">
         {/* Gear zone */}
-        <div className={`flex flex-col gap-1 ${compact ? 'w-20' : 'w-28'} shrink-0 min-w-0`}>
-          <div className="text-[11px] text-gray-500 text-center">Gear</div>
+        <div className={`flex flex-col gap-0.5 md:gap-1 shrink-0 min-w-0 ${isMobile ? 'w-14' : isCompact ? 'w-20' : 'w-28'}`}>
+          <div className={`text-gray-500 text-center ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>Gear</div>
           {gearSlots.map((slot) => {
             const armour = player.gear[slot];
             return (
               <div
                 key={slot}
-                className={`${compact ? 'h-10' : 'h-14'} rounded border cursor-pointer ${
+                className={`${isMobile ? 'h-7' : isCompact ? 'h-10' : 'h-14'} rounded border cursor-pointer ${
                   armour ? 'border-purple-600 bg-purple-950/40 hover:border-purple-400' : 'border-gray-800 bg-gray-900/40'
-                } flex items-center justify-center text-[11px]`}
+                } flex items-center justify-center`}
                 onClick={() => handleArmourClick(armour)}
               >
                 {armour ? (
-                  <div className="text-center px-1">
-                    <div className="text-purple-300 font-medium truncate text-[10px]">{armour.name}</div>
-                    {!compact && <div className="text-gray-400 text-[9px]">{armour._turnsRemaining ?? armour.durability}T left</div>}
+                  <div className="text-center px-0.5">
+                    <div className={`text-purple-300 font-medium truncate ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{armour.name}</div>
+                    {!isCompact && <div className="text-gray-400 text-[9px]">{armour._turnsRemaining ?? armour.durability}T left</div>}
                   </div>
                 ) : (
-                  <span className="text-gray-700 text-[10px]">{slot}</span>
+                  <span className={`text-gray-700 ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{slot}</span>
                 )}
               </div>
             );
@@ -119,9 +122,11 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         </div>
 
         {/* Swamp zone */}
-        <div className="flex-1">
-          <div className="text-[11px] text-gray-500 text-center mb-1">The Swamp</div>
-          <div className="flex gap-0.5 justify-center min-h-[100px] bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-1 max-w-[600px] mx-auto">
+        <div className="flex-1 min-w-0">
+          <div className={`text-gray-500 text-center mb-0.5 ${isMobile ? 'text-[9px]' : 'text-[11px] mb-1'}`}>The Swamp</div>
+          <div className={`flex gap-0.5 justify-center bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-0.5 md:p-1 ${
+            isMobile ? 'min-h-[70px]' : 'min-h-[100px] max-w-[600px] mx-auto'
+          }`}>
             {Array.from({ length: 5 }).map((_, slotIdx) => {
               const creature = player.swamp.find(c => c._slot === slotIdx) || null;
               const canPlace = !isOpponent && isMyTurn && !creature
@@ -137,7 +142,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                       : canPlace
                         ? 'border-dashed border-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15'
                         : 'border-dashed border-gray-700/50 bg-gray-900/20'
-                  } min-h-[90px] flex items-center justify-center transition`}
+                  } ${isMobile ? 'min-h-[60px]' : 'min-h-[90px]'} flex items-center justify-center transition`}
                   onClick={() => {
                     if (canPlace) {
                       playCard(selectedCard.uid, { slotIndex: slotIdx });
@@ -158,7 +163,9 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                       {!isOpponent && isMyTurn && hasActivatedAbility(creature.abilityId) && !creature._silenced && (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleAbilityClick(creature); }}
-                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-yellow-600 hover:bg-yellow-500 text-[9px] text-black font-bold px-1.5 py-0.5 rounded shadow z-10"
+                          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded shadow z-10 ${
+                            isMobile ? 'text-[7px] px-1 py-0' : 'text-[9px] px-1.5 py-0.5'
+                          }`}
                           title="Use ability"
                         >
                           {'\u26A1'} Use
@@ -166,7 +173,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                       )}
                     </div>
                   ) : (
-                    <span className="text-gray-700 text-[10px]">{canPlace ? 'Place here' : ''}</span>
+                    <span className={`text-gray-700 ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>{canPlace ? 'Place' : ''}</span>
                   )}
                 </div>
               );
@@ -183,13 +190,15 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
             {player.hand.filter(c => !c.hidden).map((card) => (
               <div
                 key={card.uid}
-                className="bg-gray-800 border border-purple-600/40 rounded px-2 py-1 text-[11px] cursor-pointer hover:border-purple-400 transition"
+                className={`bg-gray-800 border border-purple-600/40 rounded px-1.5 py-0.5 cursor-pointer hover:border-purple-400 transition ${
+                  isMobile ? 'text-[9px]' : 'text-[11px]'
+                }`}
                 onClick={() => setZoomedCard(card)}
-                onMouseEnter={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
-                onMouseLeave={() => clearHoveredCard()}
+                onMouseEnter={isMobile ? undefined : (e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
+                onMouseLeave={isMobile ? undefined : () => clearHoveredCard()}
               >
                 <span className="text-white font-bold">{card.name}</span>
-                <span className="text-gray-400 ml-1">{card.type}</span>
+                {!isMobile && <span className="text-gray-400 ml-1">{card.type}</span>}
               </div>
             ))}
           </div>

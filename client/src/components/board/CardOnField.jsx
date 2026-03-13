@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useStore } from '../../store.js';
 import { motion } from 'framer-motion';
 import { ICONS, TYPE_ICON } from '../ui/icons.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 const TYPE_BORDER = {
   Creature: 'border-red-600',
@@ -22,6 +23,8 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
   const [hovered, setHovered] = useState(false);
   const isSelected = selectedCard?.uid === card.uid;
   const invisible = card._invisible;
+  const isMobile = useIsMobile();
+  const longPressTimer = useRef(null);
 
   const handleClick = () => {
     if (isOpponent) {
@@ -36,15 +39,33 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
     setZoomedCard(card);
   };
 
+  // Long-press to zoom on mobile
+  const handleTouchStart = useCallback(() => {
+    longPressTimer.current = setTimeout(() => {
+      setZoomedCard(card);
+      longPressTimer.current = null;
+    }, 400);
+  }, [card, setZoomedCard]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
   // Calculate health percentage for DEF bar
   const maxDef = card.defence || 1;
   const currentDef = Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0));
   const defPct = Math.min(100, (currentDef / maxDef) * 100);
   const defColor = defPct > 60 ? 'bg-green-500' : defPct > 30 ? 'bg-yellow-500' : 'bg-red-500';
 
+  const w = isMobile ? 'w-[70px]' : 'w-[110px]';
+  const h = isMobile ? 'h-[96px]' : 'h-[150px]';
+
   return (
     <motion.div
-      className={`relative w-[110px] h-[150px] rounded-lg border-2 cursor-pointer overflow-hidden ${
+      className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer overflow-hidden ${
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${isSelected ? 'ring-2 ring-[var(--color-gold)]' : ''} ${
         isValidTarget ? 'ring-2 ring-red-400 animate-pulse' : ''
@@ -54,10 +75,13 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       data-card-uid={card.uid}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      onMouseEnter={(e) => { setHovered(true); setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' }); }}
-      onMouseMove={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
-      onMouseLeave={() => { setHovered(false); clearHoveredCard(); }}
-      whileHover={animationsOff ? undefined : { scale: 1.05 }}
+      onTouchStart={isMobile ? handleTouchStart : undefined}
+      onTouchEnd={isMobile ? handleTouchEnd : undefined}
+      onTouchCancel={isMobile ? handleTouchEnd : undefined}
+      onMouseEnter={isMobile ? undefined : (e) => { setHovered(true); setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' }); }}
+      onMouseMove={isMobile ? undefined : (e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
+      onMouseLeave={isMobile ? undefined : () => { setHovered(false); clearHoveredCard(); }}
+      whileHover={animationsOff || isMobile ? undefined : { scale: 1.05 }}
       animate={animationsOff ? {} : (isAttacking ? { x: [0, 30, 0], transition: { duration: 0.35 } } : isSelected ? { scale: 1.05 } : {})}
       layout
     >
@@ -74,29 +98,31 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       {/* Invisible overlay */}
       {invisible && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
-          <span className="text-gray-500 text-[12px]">???</span>
+          <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>???</span>
         </div>
       )}
 
       {/* Opaque bottom section for text */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gray-950/95 p-1">
-        <div className="text-white text-[13px] font-bold truncate text-center leading-tight">
+      <div className="absolute bottom-0 left-0 right-0 bg-gray-950/95 p-0.5">
+        <div className={`text-white font-bold truncate text-center leading-tight ${
+          isMobile ? 'text-[9px]' : 'text-[13px]'
+        }`}>
           {invisible ? '???' : card.name}
         </div>
         {!invisible && card.type === 'Creature' && (
-          <div className="flex justify-between text-[11px] px-0 mt-0.5 overflow-hidden">
+          <div className={`flex justify-between px-0 mt-0.5 overflow-hidden ${isMobile ? 'text-[8px]' : 'text-[11px]'}`}>
             <span className="text-red-400 font-bold flex items-center gap-0.5">
-              <span className="text-[8px]">{ICONS.swords}</span>{card._attackBuff ? <span className="text-green-400">{(card.attack || 0) + card._attackBuff}</span> : card.attack ?? 0}
+              <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.swords}</span>{card._attackBuff ? <span className="text-green-400">{(card.attack || 0) + card._attackBuff}</span> : card.attack ?? 0}
             </span>
             <span className={`font-bold flex items-center gap-0.5 ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>
-              <span className="text-[8px]">{ICONS.shield}</span>
+              <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.shield}</span>
               {card._defenceBuff && !card._defenceDamage
                 ? <span className="text-green-400">{currentDef}</span>
                 : currentDef}
-              {card._defenceDamage ? <span className="text-gray-500 text-[7px]">/{card.defence}</span> : null}
+              {card._defenceDamage ? <span className={`text-gray-500 ${isMobile ? 'text-[5px]' : 'text-[7px]'}`}>/{card.defence}</span> : null}
             </span>
             <span className="text-yellow-400 font-bold flex items-center gap-0.5">
-              <span className="text-[8px]">{ICONS.coin}</span>{card.sp ?? 0}
+              <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.coin}</span>{card.sp ?? 0}
             </span>
           </div>
         )}
@@ -104,19 +130,21 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
 
       {/* Ability indicator */}
       {!invisible && card.abilityId && (
-        <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-yellow-600/80 rounded-full flex items-center justify-center">
-          <span className="text-[8px]">{ICONS.lightning}</span>
+        <div className={`absolute top-0.5 right-0.5 bg-yellow-600/80 rounded-full flex items-center justify-center ${
+          isMobile ? 'w-3 h-3' : 'w-4 h-4'
+        }`}>
+          <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.lightning}</span>
         </div>
       )}
 
       {/* Status indicators (top left) */}
       {card._silenced && (
-        <div className="absolute top-0.5 left-0.5 bg-red-800 text-white text-[8px] px-1 rounded">
+        <div className={`absolute top-0.5 left-0.5 bg-red-800 text-white px-1 rounded ${isMobile ? 'text-[6px]' : 'text-[8px]'}`}>
           {ICONS.muted}
         </div>
       )}
       {card._stonerShield && !card._silenced && (
-        <div className="absolute top-0.5 left-0.5 bg-green-800 text-white text-[8px] px-1 rounded">
+        <div className={`absolute top-0.5 left-0.5 bg-green-800 text-white px-1 rounded ${isMobile ? 'text-[6px]' : 'text-[8px]'}`}>
           {ICONS.shield}
         </div>
       )}

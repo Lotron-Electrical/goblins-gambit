@@ -13,11 +13,22 @@
   --color-gold-bright: #fbbf24;
 }
 
+html, body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--font-body);
   background: linear-gradient(180deg, #080a04 0%, #19200c 35%, #1a2210 55%, #0e1206 100%);
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
+}
+
+#root {
+  min-height: 100dvh;
 }
 
 /* Mud blob texture overlay */
@@ -48,10 +59,9 @@ body::after {
   background-repeat: repeat;
 }
 
-/* Vignette overlay */
+/* Vignette overlay — applied via pseudo to avoid overriding min-height */
 #root {
   box-shadow: inset 0 0 150px 60px rgba(0, 0, 0, 0.4);
-  min-height: 100vh;
 }
 
 .font-display {

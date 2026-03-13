@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useStore } from '../../store.js';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 const TYPE_BORDER = {
   Creature: 'border-red-600',
@@ -17,10 +18,12 @@ function getDeckRotations(count) {
   return rotations;
 }
 
-function CardFace({ card, className = '', style = {} }) {
+function CardFace({ card, className = '', style = {}, small }) {
+  const w = small ? 'w-[60px]' : 'w-[90px]';
+  const h = small ? 'h-[84px]' : 'h-[126px]';
   return (
     <div
-      className={`w-[90px] h-[126px] rounded-lg border-2 overflow-hidden flex flex-col ${
+      className={`${w} ${h} rounded-lg border-2 overflow-hidden flex flex-col ${
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${className}`}
       style={style}
@@ -39,9 +42,9 @@ function CardFace({ card, className = '', style = {} }) {
         <div className="absolute inset-0 bg-black/30" />
       </div>
       <div className="bg-gray-950 px-1 py-0.5 flex flex-col justify-center flex-1">
-        <div className="text-white text-[9px] font-bold truncate text-center">{card.name}</div>
+        <div className={`text-white font-bold truncate text-center ${small ? 'text-[7px]' : 'text-[9px]'}`}>{card.name}</div>
         {card.type === 'Creature' && (
-          <div className="text-[8px] text-center">
+          <div className={`text-center ${small ? 'text-[6px]' : 'text-[8px]'}`}>
             <span className="text-red-400">{card.attack}</span>
             <span className="text-gray-600 mx-0.5">/</span>
             <span className="text-blue-400">{card.defence}</span>
@@ -52,10 +55,12 @@ function CardFace({ card, className = '', style = {} }) {
   );
 }
 
-function CardBack({ className = '', style = {} }) {
+function CardBack({ className = '', style = {}, small }) {
+  const w = small ? 'w-[60px]' : 'w-[90px]';
+  const h = small ? 'h-[84px]' : 'h-[126px]';
   return (
     <div
-      className={`w-[90px] h-[126px] rounded-lg border-2 border-[var(--color-gold)] overflow-hidden shadow-lg ${className}`}
+      className={`${w} ${h} rounded-lg border-2 border-[var(--color-gold)] overflow-hidden shadow-lg ${className}`}
       style={style}
     >
       <img
@@ -70,6 +75,7 @@ function CardBack({ className = '', style = {} }) {
 
 export default function CenterZone({ deckCount, graveyardCount, graveyard, stagedCards = [] }) {
   const { setGraveyardOpen } = useStore();
+  const isMobile = useIsMobile();
 
   const graveyardRotations = useMemo(() => {
     return (graveyard || []).map((_, i) => Math.sin(i * 5.7 + 1.3) * 8);
@@ -77,11 +83,15 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
 
   const deckRotations = useMemo(() => getDeckRotations(deckCount), [deckCount]);
 
+  const cardW = isMobile ? 60 : 90;
+  const cardH = isMobile ? 84 : 126;
+  const zoneH = isMobile ? 'h-[100px]' : 'h-[140px]';
+
   return (
-    <div className="flex-shrink-0 h-[140px] flex items-center justify-between px-[calc(12.5%+500px)] relative">
+    <div className={`flex-shrink-0 ${zoneH} flex items-center justify-between px-4 md:px-12 lg:px-24 relative`}>
       {/* Deck stack — left side */}
       <div className="flex flex-col items-center gap-1">
-        <div className="relative w-[90px] h-[126px]">
+        <div className="relative" style={{ width: cardW, height: cardH }}>
           {deckCount > 0 ? (
             <>
               {deckRotations.map((rot, i) => {
@@ -96,7 +106,7 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                       transform: `rotate(${rot}deg)`,
                     }}
                   >
-                    <CardBack className="border-[var(--color-gold)]/40 shadow-none" />
+                    <CardBack small={isMobile} className="border-[var(--color-gold)]/40 shadow-none" />
                   </div>
                 );
               })}
@@ -108,21 +118,21 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                   transform: `rotate(${deckRotations[deckRotations.length - 1] || 0}deg)`,
                 }}
               >
-                <CardBack />
+                <CardBack small={isMobile} />
               </div>
             </>
           ) : (
-            <div className="w-[90px] h-[126px] rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center">
+            <div className="rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center" style={{ width: cardW, height: cardH }}>
               <span className="text-gray-600 text-[11px]">Empty</span>
             </div>
           )}
         </div>
-        <span className="text-gray-400 text-[11px]">{deckCount} cards</span>
+        <span className={`text-gray-400 ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>{deckCount} cards</span>
       </div>
 
       {/* Staged card stack — center, Uno-style */}
       {stagedCards.length > 0 && (
-        <div className="relative w-[110px] h-[154px] z-10">
+        <div className="relative z-10" style={{ width: isMobile ? 72 : 110, height: isMobile ? 100 : 154 }}>
           <AnimatePresence>
             {stagedCards.map((card) => (
               <motion.div
@@ -132,7 +142,7 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                 exit={{ opacity: 0, scale: 0.8, y: -10 }}
                 transition={{ duration: 0.3 }}
                 style={{ rotate: `${card._rotation}deg` }}
-                className={`absolute inset-0 w-[110px] h-[154px] rounded-lg border-2 overflow-hidden shadow-2xl flex flex-col ${
+                className={`absolute inset-0 rounded-lg border-2 overflow-hidden shadow-2xl flex flex-col ${
                   TYPE_BORDER[card.type] || 'border-gray-600'
                 }`}
               >
@@ -147,20 +157,22 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                   ) : (
                     <div className="w-full h-full bg-gray-800" />
                   )}
-                  <div className="absolute top-1 right-1 bg-blue-700 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  <div className={`absolute top-1 right-1 bg-blue-700 text-white font-bold w-4 h-4 rounded-full flex items-center justify-center ${
+                    isMobile ? 'text-[7px]' : 'text-[9px]'
+                  }`}>
                     {card.cost}
                   </div>
                 </div>
-                <div className="bg-gray-950/90 px-1.5 py-1 flex flex-col justify-center flex-1">
-                  <div className="text-white text-[11px] font-bold truncate text-center">{card.name}</div>
+                <div className="bg-gray-950/90 px-1 py-0.5 flex flex-col justify-center flex-1">
+                  <div className={`text-white font-bold truncate text-center ${isMobile ? 'text-[8px]' : 'text-[11px]'}`}>{card.name}</div>
                   {card.type === 'Creature' && (
-                    <div className="text-[9px] text-center mt-0.5">
+                    <div className={`text-center mt-0.5 ${isMobile ? 'text-[7px]' : 'text-[9px]'}`}>
                       <span className="text-red-400">ATK {card.attack}</span>
                       <span className="text-gray-600 mx-1">/</span>
                       <span className="text-blue-400">DEF {card.defence}</span>
                     </div>
                   )}
-                  {card.type !== 'Creature' && card.effect && (
+                  {!isMobile && card.type !== 'Creature' && card.effect && (
                     <div className="text-[8px] text-gray-400 text-center truncate mt-0.5">{card.effect}</div>
                   )}
                 </div>
@@ -173,12 +185,13 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
       {/* Graveyard — right side, messy stack of card faces */}
       <div className="flex flex-col items-center gap-1">
         <div
-          className="relative w-[90px] h-[126px] cursor-pointer"
+          className="relative cursor-pointer"
+          style={{ width: cardW, height: cardH }}
           onClick={() => graveyardCount > 0 && setGraveyardOpen(true)}
         >
           {graveyard && graveyard.length > 0 ? (
             <>
-              {graveyard.slice(-5).map((card, i, arr) => {
+              {graveyard.slice(isMobile ? -3 : -5).map((card, i, arr) => {
                 const isTop = i === arr.length - 1;
                 const rot = graveyardRotations[graveyard.length - arr.length + i] || 0;
                 return (
@@ -192,7 +205,7 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                       zIndex: i,
                     }}
                   >
-                    <CardFace card={card} className={isTop ? 'shadow-md' : ''} />
+                    <CardFace card={card} small={isMobile} className={isTop ? 'shadow-md' : ''} />
                   </div>
                 );
               })}
@@ -202,12 +215,12 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
               </div>
             </>
           ) : (
-            <div className="w-[90px] h-[126px] rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center">
+            <div className="rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center" style={{ width: cardW, height: cardH }}>
               <span className="text-gray-600 text-[11px]">Empty</span>
             </div>
           )}
         </div>
-        <span className="text-gray-400 text-[11px]">Graveyard</span>
+        <span className={`text-gray-400 ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>Graveyard</span>
       </div>
     </div>
   );

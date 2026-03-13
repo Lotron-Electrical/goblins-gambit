@@ -1,9 +1,11 @@
 import { useStore } from '../../store.js';
 import CardInHand from './CardInHand.jsx';
 import ActivityLog from '../ui/ActivityLog.jsx';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 export default function HandBar() {
   const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
+  const isMobile = useIsMobile();
 
   if (!gameState) return null;
 
@@ -21,6 +23,51 @@ export default function HandBar() {
   }
   buyAPCost = Math.max(0, buyAPCost);
   const canBuyAP = myPlayer.sp >= buyAPCost;
+
+  if (isMobile) {
+    return (
+      <div className="relative bg-gray-950/90 border-t border-gray-800 px-1 py-1 shrink-0 overflow-visible z-30">
+        {/* Cards row */}
+        <div className="flex gap-0.5 justify-start items-end overflow-x-auto overflow-y-visible pb-1 px-1">
+          {hand.map((card) => (
+            <CardInHand
+              key={card.uid}
+              card={card}
+              isSelected={selectedCard?.uid === card.uid}
+            />
+          ))}
+          {hand.length === 0 && (
+            <div className="text-gray-600 py-2 text-[11px]">No cards in hand</div>
+          )}
+        </div>
+        {/* Action buttons — horizontal row below cards */}
+        {isMyTurn && (
+          <div className="flex gap-1.5 px-1 pt-1">
+            <button
+              onClick={drawCard}
+              disabled={myPlayer.ap < 1}
+              className="flex-1 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-1.5 rounded-lg shadow transition text-[11px]"
+            >
+              Draw
+            </button>
+            <button
+              onClick={buyAP}
+              disabled={!canBuyAP}
+              className="flex-1 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-1.5 rounded-lg shadow transition text-[11px]"
+            >
+              Buy AP
+            </button>
+            <button
+              onClick={endTurn}
+              className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-1.5 rounded-lg shadow transition text-[12px]"
+            >
+              End Turn
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0 overflow-visible z-30">
