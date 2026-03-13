@@ -65,7 +65,9 @@ export default function TargetPicker() {
                 <span className="text-gray-400 text-[12px]">
                   {isPlayerTarget
                     ? `${gameState.players[target.ownerId]?.sp || 0} SP`
-                    : `${gameState.players[target.ownerId]?.name}'s creature`
+                    : target.slot
+                      ? `${gameState.players[target.ownerId]?.name}'s ${target.slot} armour`
+                      : `${gameState.players[target.ownerId]?.name}'s creature`
                   }
                 </span>
               </button>

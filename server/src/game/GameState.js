@@ -140,7 +140,13 @@ export function getClientState(state, playerId) {
     winner: state.winner,
     pendingTarget: state.pendingTarget?.playerId === playerId ? state.pendingTarget : null,
     pendingChoice: state.pendingChoice?.playerId === playerId ? state.pendingChoice : null,
-    animations: state.animations,
+    animations: state.animations.map(evt => {
+      // Strip hand data from hand_revealed for non-casters
+      if (evt.type === 'hand_revealed' && evt.viewerId !== playerId) {
+        return { ...evt, hand: undefined };
+      }
+      return evt;
+    }),
     myId: playerId,
   };
 }

@@ -37,12 +37,18 @@ export default function GameScreen() {
     };
   }, [theme]);
 
-  // Initialize sound + start music on first click
+  // Initialize sound + start music
   useEffect(() => {
-    if (!initRef.current) {
+    const muted = useStore.getState().muted;
+    const musMuted = useStore.getState().musicMuted;
+
+    // If audio already initialized (from lobby), start music immediately
+    if (soundManager.initialized) {
+      soundManager.setMuted(muted);
+      if (!musMuted) soundManager.startMusic();
+    } else if (!initRef.current) {
+      // First time ever — need a click to unlock AudioContext
       initRef.current = true;
-      const muted = useStore.getState().muted;
-      const musMuted = useStore.getState().musicMuted;
       const handler = () => {
         soundManager.init();
         soundManager.setMuted(muted);
