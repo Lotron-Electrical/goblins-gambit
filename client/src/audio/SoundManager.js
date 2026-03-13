@@ -82,7 +82,44 @@ class SoundManager {
   }
 
   setTheme(theme) {
-    this.theme = theme || 'swamp';
+    const newTheme = theme || 'swamp';
+    if (newTheme === this.theme) return;
+    this.theme = newTheme;
+    // Crossfade: stop current loops and restart with new theme
+    if (this.musicPlaying) {
+      this._crossfadeMusic();
+    }
+    // Restart ambient with new theme
+    if (this.ambientPlaying) {
+      if (this.ambientTimer) {
+        clearTimeout(this.ambientTimer);
+        this.ambientTimer = null;
+      }
+      setTimeout(() => {
+        if (this.ambientPlaying) this._scheduleAmbient();
+      }, 500);
+    }
+  }
+
+  _crossfadeMusic() {
+    // Fade out current nodes over 500ms, then start new loop
+    const oldNodes = this.musicNodes;
+    if (this._musicTimer) {
+      clearTimeout(this._musicTimer);
+      this._musicTimer = null;
+    }
+    // Create a gain node to fade out all current audio
+    // Since we can't easily reroute existing nodes, just stop them after a short delay
+    this.musicNodes = null;
+    setTimeout(() => {
+      if (oldNodes) {
+        oldNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+      }
+    }, 500);
+    // Start new loop after fade-out
+    setTimeout(() => {
+      if (this.musicPlaying) this._scheduleLoop();
+    }, 500);
   }
 
   startMenuMusic() {

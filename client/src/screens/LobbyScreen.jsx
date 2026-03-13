@@ -3,8 +3,41 @@ import { useStore } from '../store.js';
 import { soundManager } from '../audio/SoundManager.js';
 import SparkleParticles from '../components/ui/SparkleParticles.jsx';
 
+const THEME_OPTIONS = [
+  {
+    id: 'swamp',
+    name: 'Swamp',
+    icon: '\u{1F438}',
+    desc: 'Goblin swamp — murky, squelchy, banjo',
+    accent: '#15803d',
+    bg: 'bg-green-900/40',
+    border: 'border-green-600',
+    ring: 'ring-green-500',
+  },
+  {
+    id: 'blood',
+    name: 'Blood Moon',
+    icon: '\u{1F319}',
+    desc: 'Dark ritual — aggressive, pulsing dread',
+    accent: '#c44040',
+    bg: 'bg-red-900/40',
+    border: 'border-red-600',
+    ring: 'ring-red-500',
+  },
+  {
+    id: 'frost',
+    name: 'Frost',
+    icon: '\u{2744}\u{FE0F}',
+    desc: 'Frozen wastes — ethereal, crystalline',
+    accent: '#40a0c4',
+    bg: 'bg-blue-900/40',
+    border: 'border-blue-600',
+    ring: 'ring-blue-500',
+  },
+];
+
 export default function LobbyScreen() {
-  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted } = useStore();
+  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted, theme, setTheme } = useStore();
   const [name, setName] = useState(playerName || '');
   const [quickGame, setQuickGame] = useState(false);
 
@@ -13,6 +46,16 @@ export default function LobbyScreen() {
     const interval = setInterval(refreshRooms, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Apply theme on lobby mount
+  useEffect(() => {
+    if (theme && theme !== 'swamp') {
+      document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    soundManager.setTheme(theme);
+  }, [theme]);
 
   // Start menu music on first click, stop on unmount
   useEffect(() => {
@@ -43,7 +86,7 @@ export default function LobbyScreen() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
       <SparkleParticles />
-      <div className="text-center mb-12 relative z-10">
+      <div className="text-center mb-8 relative z-10">
         <h1 className="text-3xl md:text-6xl font-display text-[var(--color-gold-bright)] drop-shadow-[0_0_30px_rgba(212,160,23,0.5)] mb-2">
           Goblin's Gambit
         </h1>
@@ -51,7 +94,29 @@ export default function LobbyScreen() {
         <p className="text-gray-600 text-[11px] mt-1">v{__APP_VERSION__}</p>
       </div>
 
-      <div className="w-full max-w-md space-y-6 relative z-10">
+      <div className="w-full max-w-md space-y-5 relative z-10">
+        {/* Theme selector */}
+        <div>
+          <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wide">Battlefield Theme</label>
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={`relative rounded-lg border-2 px-2 py-3 text-center transition-all duration-300 ${
+                  theme === t.id
+                    ? `${t.border} ${t.bg} ring-2 ${t.ring} scale-[1.03]`
+                    : 'border-gray-700 bg-gray-900/60 hover:border-gray-500'
+                }`}
+              >
+                <div className="text-2xl mb-1">{t.icon}</div>
+                <div className={`text-sm font-bold ${theme === t.id ? 'text-white' : 'text-gray-400'}`}>{t.name}</div>
+                <div className="text-[10px] text-gray-500 leading-tight mt-0.5 hidden md:block">{t.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
           <label className="block text-gray-300 text-sm mb-1">Your Name</label>
           <input
@@ -84,7 +149,7 @@ export default function LobbyScreen() {
         </div>
 
         {rooms.length > 0 && (
-          <div className="mt-8">
+          <div className="mt-6">
             <h2 className="text-xl font-display text-[var(--color-gold)] mb-3">Open Games</h2>
             <div className="space-y-2">
               {rooms.map((room) => (
@@ -113,7 +178,7 @@ export default function LobbyScreen() {
         )}
 
         {rooms.length === 0 && (
-          <p className="text-gray-500 text-center mt-8">No open games. Create one to get started.</p>
+          <p className="text-gray-500 text-center mt-6">No open games. Create one to get started.</p>
         )}
       </div>
     </div>

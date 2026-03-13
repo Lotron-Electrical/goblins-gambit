@@ -8,7 +8,7 @@
 
 const THEMES = {
   swamp: {
-    bpm: 140,
+    bpm: 110, // slower, swampy groove
     chords: {
       low:    [[220,261.63,329.63],[261.63,329.63,392],[196,246.94,293.66],[220,261.63,329.63]],
       mid:    [[220,261.63,329.63],[293.66,349.23,440],[329.63,415.30,493.88],[220,261.63,329.63]],
@@ -20,17 +20,19 @@ const THEMES = {
       high: [110,87.31,146.83,164.81], finale: [110,123.47,164.81,110],
     },
     melodyPools: {
-      low: [440,523.25,587.33,659.25,783.99],
-      mid: [440,523.25,587.33,659.25,783.99,880],
-      high: [349.23,440,523.25,587.33,659.25,783.99,880],
-      finale: [329.63,415.30,440,523.25,587.33,659.25,783.99],
+      low: [220,261.63,329.63,392,440],        // lower register, fewer notes
+      mid: [220,261.63,329.63,392,440,523.25],
+      high: [196,220,261.63,329.63,392,440,523.25],
+      finale: [196,220,261.63,293.66,329.63,392,440],
     },
     bassType: 'triangle',
-    melodyType: 'square',
+    melodyType: 'triangle', // softer than square
     padType: 'sawtooth',
-    padFilter: 600,
-    melodyFilter: 1200,
+    padFilter: 400,  // murkier
+    melodyFilter: 800, // muffled, swampy
     tritones: [[110,155.56],[123.47,174.61]],
+    // Swamp-specific: fewer melody notes, squelch layer instead
+    melodyDensity: { low: 2, mid: 3, high: 4 },
   },
 
   blood: {
@@ -141,6 +143,11 @@ export function playDynamicLoop(ctx, intensity, volume, theme = 'swamp') {
     playBanjoLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes);
   }
 
+  // Swamp bonus: Squelch rhythm layer (goblin swamp feel)
+  if (theme === 'swamp') {
+    playSwampSquelch(ctx, t, beat, bar, bars, intensity, volume, nodes);
+  }
+
   // Frost bonus: Shimmer arpeggios (always on, ethereal sparkle)
   if (theme === 'frost') {
     playFrostShimmer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes);
@@ -207,7 +214,11 @@ function playBassLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, no
 function playMelodyLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes) {
   const pool = cfg.melodyPools[band];
   const melodyVol = volume * (0.3 + intensity * 0.15);
-  const notesPerBar = intensity < 0.3 ? 3 : intensity < 0.6 ? 5 : 7;
+  const defaultDensity = intensity < 0.3 ? 3 : intensity < 0.6 ? 5 : 7;
+  const densityMap = cfg.melodyDensity;
+  const notesPerBar = densityMap
+    ? (intensity < 0.3 ? densityMap.low : intensity < 0.6 ? densityMap.mid : densityMap.high)
+    : defaultDensity;
 
   let noteTime = 0;
   const seed = Math.floor(intensity * 4);
@@ -425,6 +436,62 @@ function playDissonance(ctx, t, beat, bar, bars, intensity, volume, cfg, nodes) 
 }
 
 // ── Theme-specific bonus layers ──
+
+/**
+ * Swamp squelch — rhythmic gloopy bubble sounds that give that goblin swamp feel.
+ * Low-freq sine bursts with pitch bends, timed to the beat.
+ */
+function playSwampSquelch(ctx, t, beat, bar, bars, intensity, volume, nodes) {
+  const squelchVol = volume * 0.2;
+
+  for (let b = 0; b < bars; b++) {
+    // 2-4 squelches per bar, on off-beats for groove
+    const count = 2 + Math.floor(intensity * 2);
+    for (let n = 0; n < count; n++) {
+      // Place squelches on off-beat positions
+      const offset = (n + 0.5) / count * bar;
+      const start = t + b * bar + offset;
+      const freq = 60 + (b * 17 + n * 31) % 80; // 60-140Hz range, deterministic
+      const dur = 0.06 + ((b + n) % 3) * 0.03;
+
+      // Main squelch: sine with upward pitch bend
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.linearRampToValueAtTime(freq * 2.5, start + dur);
+      gain.gain.setValueAtTime(squelchVol, start);
+      gain.gain.linearRampToValueAtTime(0, start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + dur);
+      nodes.push(osc);
+
+      // Secondary: filtered noise pop (the "glop" part)
+      if (n % 2 === 0) {
+        const bufLen = Math.floor(ctx.sampleRate * dur * 0.8);
+        const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const lpf = ctx.createBiquadFilter();
+        lpf.type = 'lowpass';
+        lpf.frequency.setValueAtTime(300, start);
+        lpf.frequency.linearRampToValueAtTime(100, start + dur * 0.8);
+        const g2 = ctx.createGain();
+        g2.gain.setValueAtTime(squelchVol * 0.5, start);
+        g2.gain.linearRampToValueAtTime(0, start + dur * 0.8);
+        src.connect(lpf);
+        lpf.connect(g2);
+        g2.connect(ctx.destination);
+        src.start(start);
+        nodes.push(src);
+      }
+    }
+  }
+}
 
 /**
  * Banjo layer for swamp theme — plucky arpeggiated notes with fast decay.
