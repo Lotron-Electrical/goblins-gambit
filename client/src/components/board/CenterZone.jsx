@@ -32,7 +32,7 @@ function CardFace({ card, className = '', style = {}, small }) {
         <img
           src={`/cards/${card.image}`}
           alt={card.name}
-          className="w-full h-full object-cover"
+          className="w-full h-[155%] object-cover object-top"
           draggable={false}
         />
       ) : (
@@ -137,7 +137,7 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                   <img
                     src={`/cards/${card.image}`}
                     alt={card.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-[155%] object-cover object-top"
                     draggable={false}
                   />
                 ) : (

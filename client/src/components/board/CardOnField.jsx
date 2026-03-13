@@ -85,12 +85,12 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       animate={animationsOff ? {} : (isAttacking ? { x: [0, 30, 0], transition: { duration: 0.35 } } : isSelected ? { scale: 1.05 } : {})}
       layout
     >
-      {/* Card art */}
+      {/* Card art — cropped to artwork only, hiding text portion */}
       {card.image && !invisible && (
         <img
           src={`/cards/${card.image}`}
           alt={card.name}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-[155%] object-cover object-top"
           draggable={false}
         />
       )}

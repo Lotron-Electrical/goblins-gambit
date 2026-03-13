@@ -73,13 +73,13 @@ export default function CardHoverPreview() {
       style={{ left, top, width: previewW, height: previewH }}
     >
       <div className="w-full h-full rounded-xl border-2 border-[var(--color-gold)] bg-gray-950 overflow-hidden shadow-2xl flex flex-col">
-        {/* Card art (top 50%) */}
+        {/* Card art (top 50%) — cropped to artwork only */}
         <div className="relative h-[50%] overflow-hidden bg-gray-800">
           {card.image && (
             <img
               src={`/cards/${card.image}`}
               alt={card.name}
-              className="w-full h-full object-cover"
+              className="w-full h-[155%] object-cover object-top"
               draggable={false}
             />
           )}

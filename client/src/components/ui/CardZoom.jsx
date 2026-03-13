@@ -32,13 +32,10 @@ export default function CardZoom() {
           className="w-full max-w-[300px] bg-gray-950 rounded-xl border-2 border-gray-700 overflow-hidden shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Card art */}
-          <div className={`relative h-[160px] border-b-2 ${TYPE_COLOR[card.type] || 'border-gray-600'} overflow-hidden`}>
-            {card.image && (
-              <img src={`/cards/${card.image}`} alt={card.name} className="w-full h-full object-cover" draggable={false} />
-            )}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent h-16" />
-          </div>
+          {/* Card art — full image, no cropping */}
+          {card.image && (
+            <img src={`/cards/${card.image}`} alt={card.name} className="w-full object-contain" draggable={false} />
+          )}
 
           {/* Card info */}
           <div className="p-3 space-y-2">
@@ -126,18 +123,15 @@ export default function CardZoom() {
         X
       </button>
 
-      {/* Card art */}
-      <div className={`relative h-[180px] border-b-2 ${TYPE_COLOR[card.type] || 'border-gray-600'} overflow-hidden`}>
-        {card.image && (
-          <img
-            src={`/cards/${card.image}`}
-            alt={card.name}
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
-        )}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent h-16" />
-      </div>
+      {/* Card art — full image, no cropping */}
+      {card.image && (
+        <img
+          src={`/cards/${card.image}`}
+          alt={card.name}
+          className="w-full object-contain shrink-0"
+          draggable={false}
+        />
+      )}
 
       {/* Card info */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
