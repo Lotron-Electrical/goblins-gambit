@@ -32,10 +32,12 @@ export default function CardZoom() {
           className="w-full max-w-[300px] bg-gray-950 rounded-xl border-2 border-gray-700 overflow-hidden shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Card art — full image, no cropping */}
-          {card.image && (
-            <img src={`/cards/${card.image}`} alt={card.name} className="w-full object-contain" draggable={false} />
-          )}
+          {/* Card art — cropped to artwork only */}
+          <div className="relative h-[200px] overflow-hidden">
+            {card.image && (
+              <img src={`/cards/${card.image}`} alt={card.name} className="w-full h-[155%] object-cover object-top" draggable={false} />
+            )}
+          </div>
 
           {/* Card info */}
           <div className="p-3 space-y-2">
@@ -123,15 +125,17 @@ export default function CardZoom() {
         X
       </button>
 
-      {/* Card art — full image, no cropping */}
-      {card.image && (
-        <img
-          src={`/cards/${card.image}`}
-          alt={card.name}
-          className="w-full object-contain shrink-0"
-          draggable={false}
-        />
-      )}
+      {/* Card art — cropped to artwork only */}
+      <div className="relative h-[200px] overflow-hidden shrink-0">
+        {card.image && (
+          <img
+            src={`/cards/${card.image}`}
+            alt={card.name}
+            className="w-full h-[155%] object-cover object-top"
+            draggable={false}
+          />
+        )}
+      </div>
 
       {/* Card info */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
