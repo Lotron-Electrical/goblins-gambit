@@ -16,7 +16,6 @@ import GameOverModal from '../components/ui/GameOverModal.jsx';
 import GraveyardModal from '../components/ui/GraveyardModal.jsx';
 import HelpPanel from '../components/ui/HelpPanel.jsx';
 import CardChoiceModal from '../components/ui/CardChoiceModal.jsx';
-import ActivityLog from '../components/ui/ActivityLog.jsx';
 import DamageNumber from '../components/ui/DamageNumber.jsx';
 import DiceRoll from '../components/ui/DiceRoll.jsx';
 import SPParticles from '../components/ui/SPParticles.jsx';
@@ -249,9 +248,6 @@ export default function GameScreen() {
 
       {/* Help panel */}
       <HelpPanel />
-
-      {/* Activity log */}
-      <ActivityLog />
 
       {/* Card play announcement */}
       <CardAnnouncement announcement={announcement} />

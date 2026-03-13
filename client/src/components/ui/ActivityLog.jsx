@@ -104,7 +104,7 @@ export default function ActivityLog() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 z-10 pointer-events-auto" style={{ width: '260px' }}>
+    <div className="pointer-events-auto" style={{ width: '260px' }}>
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="text-[11px] text-gray-500 hover:text-gray-300 mb-1 transition"

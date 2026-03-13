@@ -1,5 +1,6 @@
 import { useStore } from '../../store.js';
 import CardInHand from './CardInHand.jsx';
+import ActivityLog from '../ui/ActivityLog.jsx';
 
 export default function HandBar() {
   const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
@@ -23,6 +24,10 @@ export default function HandBar() {
 
   return (
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0">
+      {/* Activity log — anchored above the hand bar, left side */}
+      <div className="absolute bottom-full left-0 mb-1 z-10">
+        <ActivityLog />
+      </div>
       <div className="flex gap-1 justify-center items-end overflow-x-auto pb-1 pr-40">
         {hand.map((card) => (
           <CardInHand
