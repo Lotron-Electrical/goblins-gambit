@@ -18,7 +18,7 @@ const TYPE_GLOW = {
 };
 
 export default function CardOnField({ card, isOpponent, onClick, isValidTarget, isAttacking }) {
-  const { selectedCard, selectCard, setZoomedCard, setHoveredCard, clearHoveredCard } = useStore();
+  const { selectedCard, selectCard, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
   const [hovered, setHovered] = useState(false);
   const isSelected = selectedCard?.uid === card.uid;
   const invisible = card._invisible;
@@ -56,8 +56,8 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       onMouseEnter={(e) => { setHovered(true); setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' }); }}
       onMouseMove={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'field' })}
       onMouseLeave={() => { setHovered(false); clearHoveredCard(); }}
-      whileHover={{ scale: 1.05 }}
-      animate={isAttacking ? { x: [0, 30, 0], transition: { duration: 0.35 } } : isSelected ? { scale: 1.05 } : {}}
+      whileHover={animationsOff ? undefined : { scale: 1.05 }}
+      animate={animationsOff ? {} : (isAttacking ? { x: [0, 30, 0], transition: { duration: 0.35 } } : isSelected ? { scale: 1.05 } : {})}
       layout
     >
       {/* Card art */}

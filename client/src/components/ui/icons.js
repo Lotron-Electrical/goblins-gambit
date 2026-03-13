@@ -17,6 +17,7 @@ export const ICONS = {
   music: '\uD83C\uDFB5',  // 🎵
   musicOff: '\uD83D\uDD15', // 🔕
   bug: '\uD83D\uDC1B',      // 🐛
+  gear: '\u2699',            // ⚙
 };
 
 export const TYPE_ICON = {

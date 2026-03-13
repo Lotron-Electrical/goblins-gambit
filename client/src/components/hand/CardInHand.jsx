@@ -18,7 +18,7 @@ const TYPE_BORDER_STYLE = {
 };
 
 export default function CardInHand({ card, isSelected }) {
-  const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard } = useStore();
+  const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
 
   const handleClick = () => {
@@ -53,8 +53,8 @@ export default function CardInHand({ card, isSelected }) {
       onMouseEnter={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
       onMouseMove={(e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
       onMouseLeave={clearHoveredCard}
-      whileHover={{ y: -12, scale: 1.05 }}
-      animate={isSelected ? { y: -12, scale: 1.05 } : {}}
+      whileHover={animationsOff ? undefined : { y: -12, scale: 1.05 }}
+      animate={animationsOff ? {} : (isSelected ? { y: -12, scale: 1.05 } : {})}
       layout
     >
       {/* Card art (top 70%) */}

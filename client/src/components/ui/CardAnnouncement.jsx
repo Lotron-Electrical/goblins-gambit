@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { useStore } from '../../store.js';
 
 const TYPE_COLOR = {
   Creature: 'text-red-400',
@@ -8,6 +9,8 @@ const TYPE_COLOR = {
 };
 
 export default function CardAnnouncement({ announcement }) {
+  const animationsOff = useStore(s => s.animationsOff);
+  const dur = animationsOff ? 0 : 0.3;
   return (
     <AnimatePresence>
       {announcement && (
@@ -16,7 +19,7 @@ export default function CardAnnouncement({ announcement }) {
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.2 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: dur }}
         >
           <div className="text-center">
             <div className={`font-display text-3xl ${TYPE_COLOR[announcement.type] || 'text-white'} drop-shadow-lg`}>

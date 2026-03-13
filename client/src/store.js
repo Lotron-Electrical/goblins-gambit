@@ -21,7 +21,11 @@ export const useStore = create((set, get) => ({
   // UI
   zoomedCard: null,
   helpOpen: false,
-  muted: false,
+  menuOpen: false,
+  muted: JSON.parse(localStorage.getItem('gg_sfxMuted') || 'false'),
+  musicMuted: JSON.parse(localStorage.getItem('gg_musicMuted') || 'false'),
+  animationsOff: JSON.parse(localStorage.getItem('gg_animationsOff') || 'false'),
+  theme: localStorage.getItem('gg_theme') || 'swamp',
   hoveredCard: null,
   hoverPosition: null,
   graveyardOpen: false,
@@ -157,7 +161,24 @@ export const useStore = create((set, get) => ({
   setTargetMode: (mode) => set({ targetMode: mode }),
   setZoomedCard: (card) => set({ zoomedCard: card }),
   setHelpOpen: (open) => set({ helpOpen: open }),
-  setMuted: (muted) => set({ muted }),
+  setMenuOpen: (open) => set({ menuOpen: open }),
+  setMuted: (muted) => {
+    localStorage.setItem('gg_sfxMuted', JSON.stringify(muted));
+    set({ muted });
+  },
+  setMusicMuted: (musicMuted) => {
+    localStorage.setItem('gg_musicMuted', JSON.stringify(musicMuted));
+    set({ musicMuted });
+  },
+  setAnimationsOff: (animationsOff) => {
+    localStorage.setItem('gg_animationsOff', JSON.stringify(animationsOff));
+    set({ animationsOff });
+  },
+  setTheme: (theme) => {
+    localStorage.setItem('gg_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    set({ theme });
+  },
   setHoveredCard: (card, position) => set({ hoveredCard: card, hoverPosition: position }),
   clearHoveredCard: () => set({ hoveredCard: null, hoverPosition: null }),
   setGraveyardOpen: (open) => set({ graveyardOpen: open }),

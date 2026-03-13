@@ -67,6 +67,28 @@ body::after {
   animation: slide-in-right 0.2s ease-out;
 }
 
+/* Theme: Blood Moon */
+[data-theme="blood"] {
+  --color-swamp: #2a0a0a;
+  --color-swamp-dark: #150505;
+  --color-gold: #c44040;
+  --color-gold-bright: #f05050;
+}
+[data-theme="blood"] body {
+  background: linear-gradient(180deg, #0a0204 0%, #1a0808 35%, #220a0a 55%, #0e0404 100%);
+}
+
+/* Theme: Frost */
+[data-theme="frost"] {
+  --color-swamp: #0a1a2a;
+  --color-swamp-dark: #050d15;
+  --color-gold: #40a0c4;
+  --color-gold-bright: #50d0f0;
+}
+[data-theme="frost"] body {
+  background: linear-gradient(180deg, #040810 0%, #081420 35%, #0a1a28 55%, #040a12 100%);
+}
+
 /* Reduced motion: disable animations */
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse, .animate-slide-in-right {
