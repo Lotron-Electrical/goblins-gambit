@@ -18,6 +18,7 @@ const ANIMATION_DURATIONS = {
   set_complete: 600,
   dice_roll: 2200,
   turn_start: 500,
+  turn_skipped: 800,
   game_over: 1500,
   card_moved: 400,
   card_discarded: 300,
@@ -74,6 +75,16 @@ export function useAnimationQueue(animations) {
     if (soundEntry) {
       const soundName = typeof soundEntry === 'function' ? soundEntry(evt) : soundEntry;
       if (soundName) soundManager.play(soundName);
+    }
+
+    // Show announcement for turn skips (Lagg)
+    if (evt.type === 'turn_skipped') {
+      setAnnouncement({
+        name: 'Lagg',
+        type: 'Magic',
+        flavor: 'TURN SKIPPED!',
+      });
+      setTimeout(() => setAnnouncement(null), 1500);
     }
 
     // Show announcement for card plays

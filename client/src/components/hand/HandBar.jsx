@@ -22,7 +22,7 @@ export default function HandBar() {
   const canBuyAP = myPlayer.sp >= buyAPCost;
 
   return (
-    <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2">
+    <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0">
       <div className="flex gap-1 justify-center items-end overflow-x-auto pb-1 pr-40">
         {hand.map((card) => (
           <CardInHand

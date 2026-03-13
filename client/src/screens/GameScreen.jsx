@@ -164,9 +164,9 @@ export default function GameScreen() {
       } : {}}
     >
       {/* Opponent fields */}
-      <div className="flex-1 overflow-auto p-2">
+      <div className="flex-1 overflow-auto p-2 min-h-0">
         <div
-          className="grid gap-2 h-full"
+          className="grid gap-2"
           style={{
             gridTemplateColumns:
               opponents.length <= 3
@@ -196,7 +196,7 @@ export default function GameScreen() {
       />
 
       {/* My field */}
-      <div className="p-2">
+      <div className="p-2 shrink-0">
         <PlayerField
           player={myPlayer}
           playerId={myId}
