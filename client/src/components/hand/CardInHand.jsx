@@ -126,6 +126,15 @@ export default function CardInHand({ card, isSelected }) {
           REACT
         </div>
       )}
+
+      {/* Stats bar at bottom */}
+      {card.type === 'Creature' && (
+        <div className={`absolute bottom-0 left-0 right-0 bg-black/80 flex justify-between px-1.5 z-10 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
+          <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
+          <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
+          <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>
+        </div>
+      )}
     </motion.div>
   );
 }
