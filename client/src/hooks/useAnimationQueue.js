@@ -88,6 +88,16 @@ export function useAnimationQueue(animations) {
       setTimeout(() => setAnnouncement(null), 1500);
     }
 
+    // Show announcement for buff events with notable text (e.g. Catfish mimic)
+    if (evt.type === 'buff' && evt.text) {
+      setAnnouncement({
+        name: 'Ability',
+        type: 'Creature',
+        flavor: evt.text,
+      });
+      setTimeout(() => setAnnouncement(null), 1800);
+    }
+
     // Show announcement for card plays
     if (evt.type === 'card_played' && evt.card) {
       setAnnouncement({

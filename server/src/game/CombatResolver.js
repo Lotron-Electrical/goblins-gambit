@@ -95,6 +95,15 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
     remaining: Math.max(0, currentDef - damage),
   });
 
+  // Gabber splash: capture adjacent indices NOW, before any kill removes defender from swamp
+  let gabberAdjacentCards = null;
+  if (attackerCard.abilityId === 'gabber_splash' && !attackerCard._silenced) {
+    const idx = defender.swamp.findIndex(c => c.uid === defenderCard.uid);
+    gabberAdjacentCards = [];
+    if (idx > 0) gabberAdjacentCards.push(defender.swamp[idx - 1]);
+    if (idx < defender.swamp.length - 1) gabberAdjacentCards.push(defender.swamp[idx + 1]);
+  }
+
   if (damage >= currentDef) {
     defenderKilled = true;
     const dSP = dStats.sp;
@@ -122,15 +131,6 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
           prompt: 'Dead Meme died! Choose a card from the graveyard to return to your hand',
         };
       }
-    }
-
-    // Gabber splash: capture adjacent indices BEFORE defender is removed from swamp
-    let gabberAdjacentCards = null;
-    if (attackerCard.abilityId === 'gabber_splash' && !attackerCard._silenced) {
-      const idx = defender.swamp.findIndex(c => c.uid === defenderCard.uid);
-      gabberAdjacentCards = [];
-      if (idx > 0) gabberAdjacentCards.push(defender.swamp[idx - 1]);
-      if (idx < defender.swamp.length - 1) gabberAdjacentCards.push(defender.swamp[idx + 1]);
     }
 
     killCreature(state, defenderOwnerId, defenderCard.uid);
