@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store.js';
 import { soundManager } from '../audio/SoundManager.js';
+import SparkleParticles from '../components/ui/SparkleParticles.jsx';
 
 export default function LobbyScreen() {
   const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted } = useStore();
@@ -40,8 +41,9 @@ export default function LobbyScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-12">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
+      <SparkleParticles />
+      <div className="text-center mb-12 relative z-10">
         <h1 className="text-6xl font-display text-[var(--color-gold-bright)] drop-shadow-[0_0_30px_rgba(212,160,23,0.5)] mb-2">
           Goblin's Gambit
         </h1>
@@ -49,7 +51,7 @@ export default function LobbyScreen() {
         <p className="text-gray-600 text-[11px] mt-1">v{__APP_VERSION__}</p>
       </div>
 
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 relative z-10">
         <div>
           <label className="block text-gray-300 text-sm mb-1">Your Name</label>
           <input
