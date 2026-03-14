@@ -5,8 +5,13 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
-const commitCount = execSync('git rev-list --count HEAD').toString().trim();
-const APP_VERSION = `0.2.${commitCount}`;
+let commitCount;
+try {
+  commitCount = execSync('git rev-list --count HEAD').toString().trim();
+  // Shallow clones return 1 — fall back to hash
+  if (commitCount === '1') commitCount = null;
+} catch { commitCount = null; }
+const APP_VERSION = commitCount ? `0.2.${commitCount}` : `0.2-${commitHash}`;
 
 export default defineConfig({
   root: path.resolve(__dirname),
