@@ -19,7 +19,7 @@ const CODENAMES = [
 ];
 const hashNum = parseInt(commitHash, 16);
 const codename = CODENAMES[hashNum % CODENAMES.length];
-const APP_VERSION = `0.2.${codename.replace(' ', '-')}`;
+const APP_VERSION = `0.2.${codename.replace(' ', '-')}-${commitHash}`;
 
 export default defineConfig({
   root: path.resolve(__dirname),
