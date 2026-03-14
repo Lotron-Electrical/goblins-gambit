@@ -47,7 +47,16 @@ function computeAwards(stats) {
   return awards;
 }
 
-function AwardBadge({ icon, title, detail }) {
+function AwardBadge({ icon, title, detail, compact }) {
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5 bg-gray-800/80 rounded px-2 py-1">
+        <span className="text-sm">{icon}</span>
+        <span className="text-[var(--color-gold)] font-display text-[10px]">{title}</span>
+        <span className="text-gray-400 text-[10px]">{detail}</span>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col items-center bg-gray-800/80 rounded-lg px-4 py-3 min-w-[140px]">
       <span className="text-2xl mb-1">{icon}</span>
@@ -58,7 +67,7 @@ function AwardBadge({ icon, title, detail }) {
 }
 
 export default function GameOverModal() {
-  const { gameState, gameStats } = useStore();
+  const { gameState, gameStats, leaveRoom } = useStore();
   const isMobile = useIsMobile();
 
   if (!gameState?.winner) return null;
@@ -79,7 +88,7 @@ export default function GameOverModal() {
             {winnerPlayer.name} wins with {winnerPlayer.sp} SP!
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => leaveRoom()}
             className="mt-6 bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-lg transition text-lg"
           >
             Play Again
@@ -99,32 +108,104 @@ export default function GameOverModal() {
 
   const rankLabels = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
 
+  if (isMobile) {
+    // Compact mobile layout — combined table, inline awards, fits on one screen
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 overflow-y-auto">
+        <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-full p-3 flex flex-col items-center gap-2">
+          {/* Header — compact */}
+          <div className="text-center">
+            <div className={`font-display text-2xl ${isMe ? 'text-[var(--color-gold-bright)]' : 'text-red-500'}`}>
+              {isMe ? 'VICTORY!' : 'DEFEAT'}
+            </div>
+            <div className="text-gray-300 text-sm">
+              {winnerPlayer.name} wins with {winnerPlayer.sp} SP
+            </div>
+          </div>
+
+          {/* Combined Rankings + Stats table */}
+          <div className="w-full">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="text-gray-500 border-b border-gray-700">
+                  <th className="text-left py-1 pr-1 w-5">#</th>
+                  <th className="text-left py-1 pr-1">Player</th>
+                  <th className="text-center py-1 px-1">Crd</th>
+                  <th className="text-center py-1 px-1">K</th>
+                  <th className="text-center py-1 px-1">Dmg</th>
+                  <th className="text-right py-1 pl-1">SP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {players.map((p, i) => {
+                  const ps = gameStats[p.id] || {};
+                  const isWinner = p.id === winnerId;
+                  return (
+                    <tr
+                      key={p.id}
+                      className={`border-b border-gray-800/50 ${isWinner ? 'text-[var(--color-gold)]' : 'text-gray-300'}`}
+                    >
+                      <td className={`py-1 pr-1 font-display ${isWinner ? 'text-[var(--color-gold)]' : 'text-gray-500'}`}>
+                        {rankLabels[i] || `${i + 1}th`}
+                      </td>
+                      <td className={`py-1 pr-1 truncate max-w-[90px] ${isWinner ? 'font-bold' : 'font-medium'}`}>
+                        {p.name}
+                      </td>
+                      <td className="text-center py-1 px-1">{ps.cardsPlayed ?? 0}</td>
+                      <td className="text-center py-1 px-1">{ps.creaturesKilled ?? 0}</td>
+                      <td className="text-center py-1 px-1">{ps.damageDealt ?? 0}</td>
+                      <td className="text-right py-1 pl-1 font-display font-bold">{ps.spEarned ?? p.sp}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Awards — horizontal inline */}
+          {(awards.mvpCreature || awards.mostDestructive || awards.cardShark) && (
+            <div className="w-full flex flex-wrap gap-1.5 justify-center">
+              {awards.mvpCreature && (
+                <AwardBadge compact icon="⚔️" title="MVP" detail={`${awards.mvpCreature.name}`} />
+              )}
+              {awards.mostDestructive && (
+                <AwardBadge compact icon="💥" title="Destructive" detail={`${playerNameById[awards.mostDestructive.playerId]}`} />
+              )}
+              {awards.cardShark && (
+                <AwardBadge compact icon="🃏" title="Card Shark" detail={`${playerNameById[awards.cardShark.playerId]}`} />
+              )}
+            </div>
+          )}
+
+          {/* Play Again — compact */}
+          <button
+            onClick={() => leaveRoom()}
+            className="bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold rounded-lg transition py-2 px-6 text-sm"
+          >
+            Play Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 overflow-y-auto">
-      <div
-        className={`bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full flex flex-col items-center ${
-          isMobile ? 'max-w-full p-4 gap-4' : 'max-w-2xl p-8 gap-6'
-        }`}
-      >
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-2xl p-8 flex flex-col items-center gap-6">
         {/* Header */}
         <div className="text-center">
-          <div
-            className={`font-display mb-1 ${
-              isMe ? 'text-[var(--color-gold-bright)]' : 'text-red-500'
-            } ${isMobile ? 'text-4xl' : 'text-6xl'}`}
-          >
+          <div className={`font-display text-6xl mb-1 ${isMe ? 'text-[var(--color-gold-bright)]' : 'text-red-500'}`}>
             {isMe ? 'VICTORY!' : 'DEFEAT'}
           </div>
-          <div className={`text-gray-300 ${isMobile ? 'text-base' : 'text-xl'}`}>
+          <div className="text-gray-300 text-xl">
             {winnerPlayer.name} wins with {winnerPlayer.sp} SP
           </div>
         </div>
 
         {/* Player Rankings */}
         <div className="w-full">
-          <h3 className={`font-display text-gray-400 uppercase tracking-wider mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-            Rankings
-          </h3>
+          <h3 className="font-display text-gray-400 uppercase tracking-wider mb-2 text-sm">Rankings</h3>
           <div className="flex flex-col gap-1">
             {players.map((p, i) => {
               const isWinner = p.id === winnerId;
@@ -138,26 +219,14 @@ export default function GameOverModal() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span
-                      className={`font-display ${isMobile ? 'text-sm' : 'text-base'} ${
-                        isWinner ? 'text-[var(--color-gold)]' : 'text-gray-500'
-                      }`}
-                    >
+                    <span className={`font-display text-base ${isWinner ? 'text-[var(--color-gold)]' : 'text-gray-500'}`}>
                       {rankLabels[i] || `${i + 1}th`}
                     </span>
-                    <span
-                      className={`${isMobile ? 'text-sm' : 'text-base'} ${
-                        isWinner ? 'text-[var(--color-gold)] font-bold' : 'text-white'
-                      }`}
-                    >
+                    <span className={`text-base ${isWinner ? 'text-[var(--color-gold)] font-bold' : 'text-white'}`}>
                       {p.name}
                     </span>
                   </div>
-                  <span
-                    className={`font-display ${isMobile ? 'text-sm' : 'text-lg'} ${
-                      isWinner ? 'text-[var(--color-gold)]' : 'text-gray-300'
-                    }`}
-                  >
+                  <span className={`font-display text-lg ${isWinner ? 'text-[var(--color-gold)]' : 'text-gray-300'}`}>
                     {p.sp} SP
                   </span>
                 </div>
@@ -168,10 +237,8 @@ export default function GameOverModal() {
 
         {/* Stats Table */}
         <div className="w-full overflow-x-auto">
-          <h3 className={`font-display text-gray-400 uppercase tracking-wider mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-            Stats
-          </h3>
-          <table className={`w-full ${isMobile ? 'text-xs' : 'text-sm'}`}>
+          <h3 className="font-display text-gray-400 uppercase tracking-wider mb-2 text-sm">Stats</h3>
+          <table className="w-full text-sm">
             <thead>
               <tr className="text-gray-500 border-b border-gray-700">
                 <th className="text-left py-2 pr-2">Player</th>
@@ -205,30 +272,16 @@ export default function GameOverModal() {
         {/* Awards */}
         {(awards.mvpCreature || awards.mostDestructive || awards.cardShark) && (
           <div className="w-full">
-            <h3 className={`font-display text-gray-400 uppercase tracking-wider mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-              Awards
-            </h3>
-            <div className={`flex gap-3 ${isMobile ? 'flex-col items-stretch' : 'flex-row justify-center flex-wrap'}`}>
+            <h3 className="font-display text-gray-400 uppercase tracking-wider mb-2 text-sm">Awards</h3>
+            <div className="flex gap-3 flex-row justify-center flex-wrap">
               {awards.mvpCreature && (
-                <AwardBadge
-                  icon="⚔️"
-                  title="MVP Creature"
-                  detail={`${awards.mvpCreature.name} (${awards.mvpCreature.kills} kills)`}
-                />
+                <AwardBadge icon="⚔️" title="MVP Creature" detail={`${awards.mvpCreature.name} (${awards.mvpCreature.kills} kills)`} />
               )}
               {awards.mostDestructive && (
-                <AwardBadge
-                  icon="💥"
-                  title="Most Destructive"
-                  detail={`${playerNameById[awards.mostDestructive.playerId]} (${awards.mostDestructive.damage} dmg)`}
-                />
+                <AwardBadge icon="💥" title="Most Destructive" detail={`${playerNameById[awards.mostDestructive.playerId]} (${awards.mostDestructive.damage} dmg)`} />
               )}
               {awards.cardShark && (
-                <AwardBadge
-                  icon="🃏"
-                  title="Card Shark"
-                  detail={`${playerNameById[awards.cardShark.playerId]} (${awards.cardShark.cards} cards)`}
-                />
+                <AwardBadge icon="🃏" title="Card Shark" detail={`${playerNameById[awards.cardShark.playerId]} (${awards.cardShark.cards} cards)`} />
               )}
             </div>
           </div>
@@ -236,10 +289,8 @@ export default function GameOverModal() {
 
         {/* Play Again */}
         <button
-          onClick={() => window.location.reload()}
-          className={`bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold rounded-lg transition ${
-            isMobile ? 'py-2.5 px-6 text-base' : 'py-3 px-8 text-lg'
-          }`}
+          onClick={() => leaveRoom()}
+          className="bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold rounded-lg transition py-3 px-8 text-lg"
         >
           Play Again
         </button>

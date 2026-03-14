@@ -9,6 +9,7 @@ export default function GameMenu() {
     muted, setMuted,
     musicMuted, setMusicMuted,
     animationsOff, setAnimationsOff,
+    leaveRoom,
   } = useStore();
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function GameMenu() {
       setConfirmLeave(true);
       return;
     }
-    window.location.reload();
+    leaveRoom();
   };
 
   if (feedbackOpen) {
