@@ -6,7 +6,7 @@ export default function LoginScreen() {
   const { loginUser, registerUser, authLoading, authError, clearAuthError } = useStore();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [mode, setMode] = useState('register'); // 'login' | 'register' — default to register for new players
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -55,7 +55,25 @@ export default function LoginScreen() {
         </div>
 
         {authError && (
-          <p className="text-red-400 text-sm text-center">{authError}</p>
+          <div className="text-center">
+            <p className="text-red-400 text-sm">{authError}</p>
+            {mode === 'login' && authError.includes('Invalid') && (
+              <p className="text-gray-400 text-xs mt-1">
+                New here?{' '}
+                <button type="button" onClick={() => { setMode('register'); clearAuthError(); }} className="text-[var(--color-gold)] hover:underline">
+                  Create an account
+                </button>
+              </p>
+            )}
+            {mode === 'register' && authError.includes('taken') && (
+              <p className="text-gray-400 text-xs mt-1">
+                Already registered?{' '}
+                <button type="button" onClick={() => { setMode('login'); clearAuthError(); }} className="text-[var(--color-gold)] hover:underline">
+                  Login instead
+                </button>
+              </p>
+            )}
+          </div>
         )}
 
         <button
