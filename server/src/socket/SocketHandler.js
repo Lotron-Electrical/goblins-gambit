@@ -59,7 +59,7 @@ export function setupSocketHandlers(io, lobby) {
     lobby.games.delete(roomId);
   }
 
-  function botTick(roomId, engine, botId) {
+  async function botTick(roomId, engine, botId) {
     pendingBotTicks.delete(botId);
 
     try {
@@ -123,7 +123,7 @@ export function setupSocketHandlers(io, lobby) {
       }
 
       if (result.gameOver) {
-        updateStatsAfterGame(engine.state, result.winner);
+        await updateStatsAfterGame(engine.state, result.winner);
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
           winnerName: engine.state.players[result.winner]?.name || 'Unknown',
@@ -467,7 +467,7 @@ export function setupSocketHandlers(io, lobby) {
       runBotTurn(roomId, result.engine);
     });
 
-    socket.on(EVENTS.GAME_ACTION, (action, callback) => {
+    socket.on(EVENTS.GAME_ACTION, async (action, callback) => {
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) return;
       const engine = lobby.getGame(roomId);
@@ -488,7 +488,7 @@ export function setupSocketHandlers(io, lobby) {
       broadcastState(roomId, engine);
 
       if (result.gameOver) {
-        updateStatsAfterGame(engine.state, result.winner);
+        await updateStatsAfterGame(engine.state, result.winner);
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
           winnerName: engine.state.players[result.winner].name,

@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "express": "^4.21.0",
-    "socket.io": "^4.8.0",
-    "shared": "*"
+    "pg": "^8.20.0",
+    "shared": "*",
+    "socket.io": "^4.8.0"
   }
 }

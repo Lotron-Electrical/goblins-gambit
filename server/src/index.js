@@ -6,7 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { LobbyManager } from './lobby/LobbyManager.js';
 import { setupSocketHandlers } from './socket/SocketHandler.js';
-import { register, login, getProfile, getLeaderboard, validateToken } from './accounts.js';
+import { initDatabase, register, login, getProfile, getLeaderboard, validateToken } from './accounts.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
@@ -32,40 +32,40 @@ app.get('/api/health', (req, res) => {
 
 // --- Player Accounts ---
 
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
-  const result = register(username, password);
+  const result = await register(username, password);
   if (result.error) return res.status(400).json({ error: result.error });
-  const profile = getProfile(username);
+  const profile = await getProfile(username);
   res.json({ token: result.token, user: profile });
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  const result = login(username, password);
+  const result = await login(username, password);
   if (result.error) return res.status(401).json({ error: result.error });
-  const profile = getProfile(result.username);
+  const profile = await getProfile(result.username);
   res.json({ token: result.token, user: profile });
 });
 
-app.get('/api/profile', (req, res) => {
+app.get('/api/profile', async (req, res) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
   const username = validateToken(token);
   if (!username) return res.status(401).json({ error: 'Not authenticated' });
-  const profile = getProfile(username);
+  const profile = await getProfile(username);
   if (!profile) return res.status(404).json({ error: 'User not found' });
   res.json({ user: profile });
 });
 
-app.get('/api/profile/:username', (req, res) => {
-  const profile = getProfile(req.params.username);
+app.get('/api/profile/:username', async (req, res) => {
+  const profile = await getProfile(req.params.username);
   if (!profile) return res.status(404).json({ error: 'User not found' });
   res.json(profile);
 });
 
-app.get('/api/leaderboard', (req, res) => {
-  res.json(getLeaderboard());
+app.get('/api/leaderboard', async (req, res) => {
+  res.json(await getLeaderboard());
 });
 
 // In-game feedback -> create GitHub issue
@@ -116,6 +116,9 @@ app.get('*', (req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
+
+await initDatabase();
+
 httpServer.listen(PORT, () => {
   console.log(`Goblin's Gambit server running on port ${PORT}`);
 });
