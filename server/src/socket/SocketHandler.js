@@ -1,4 +1,4 @@
-import { EVENTS, ACTION } from '../../../shared/src/constants.js';
+import { EVENTS, ACTION, CHAT_EMOTES } from '../../../shared/src/constants.js';
 import { createBotId, getBotName, releaseBotName, decideBotAction } from '../bot/BotPlayer.js';
 import { validateToken, updateStatsAfterGame } from '../accounts.js';
 
@@ -6,6 +6,7 @@ export function setupSocketHandlers(io, lobby) {
   // Track which rooms have bots and bot IDs + difficulty
   const botIds = new Set();
   const botDifficulty = new Map(); // botId -> 'easy' | 'medium' | 'hard'
+  const lastChatTime = new Map(); // socketId -> timestamp
 
   function broadcastState(roomId, engine) {
     const room = lobby.getRoom(roomId);
@@ -503,11 +504,50 @@ export function setupSocketHandlers(io, lobby) {
       setTimeout(() => runBotTurn(roomId, engine), 500);
     });
 
+    // --- Chat ---
+    socket.on(EVENTS.CHAT_MESSAGE, (data) => {
+      const roomId = lobby.getPlayerRoom(socket.id);
+      if (!roomId) return;
+      const game = lobby.getGame(roomId);
+      if (!game) return; // only during active games
+
+      // Rate limit: 1 msg/sec
+      const now = Date.now();
+      const last = lastChatTime.get(socket.id) || 0;
+      if (now - last < 1000) return; // silent drop
+      lastChatTime.set(socket.id, now);
+
+      const player = game.state.players[socket.id];
+      if (!player) return;
+
+      const msg = {
+        id: `${socket.id}-${now}`,
+        playerId: socket.id,
+        playerName: player.name,
+        timestamp: now,
+      };
+
+      if (data.emoteKey) {
+        const validEmote = CHAT_EMOTES.find(e => e.key === data.emoteKey);
+        if (!validEmote) return;
+        msg.emoteKey = data.emoteKey;
+      } else if (typeof data.text === 'string') {
+        const text = data.text.trim().slice(0, 100);
+        if (!text) return;
+        msg.text = text;
+      } else {
+        return;
+      }
+
+      io.to(roomId).emit(EVENTS.CHAT_MESSAGE, msg);
+    });
+
     socket.on(EVENTS.ROOM_LIST, (_, callback) => {
       callback?.(lobby.getRoomList());
     });
 
     socket.on('disconnect', () => {
+      lastChatTime.delete(socket.id);
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) {
         socketAccounts.delete(socket.id);

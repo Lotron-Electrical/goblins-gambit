@@ -22,6 +22,7 @@ import DiceRoll from '../components/ui/DiceRoll.jsx';
 import FieldParticles from '../components/ui/FieldParticles.jsx';
 import SPParticles from '../components/ui/SPParticles.jsx';
 import MobileActivityLog from '../components/ui/MobileActivityLog.jsx';
+import ChatPanel from '../components/ui/ChatPanel.jsx';
 import { motion } from 'framer-motion';
 
 // Compact opponent bar for mobile — shows key info, tap to expand
@@ -115,6 +116,24 @@ export default function GameScreen() {
 
   // Mobile: activity log toggle (driven from HUD button)
   const [mobileLogOpen, setMobileLogOpen] = useState(false);
+
+  // Chat panel
+  const { setChatOpen: storeChatOpen, chatOpen } = useStore();
+  const handleSetChatOpen = useCallback((open) => {
+    storeChatOpen(open);
+    if (open) setMobileLogOpen(false); // close log when opening chat
+  }, [storeChatOpen]);
+  const handleSetMobileLogOpen = useCallback((open) => {
+    setMobileLogOpen(open);
+    if (open) storeChatOpen(false); // close chat when opening log
+  }, [storeChatOpen]);
+
+  // Close chat when game ends
+  useEffect(() => {
+    if (gameState?.winner && chatOpen) {
+      storeChatOpen(false);
+    }
+  }, [gameState?.winner]);
 
   // Mobile: track which opponent is expanded (defaults to current turn player)
   const [expandedOpponent, setExpandedOpponent] = useState(null);
@@ -354,7 +373,7 @@ export default function GameScreen() {
       <HandBar />
 
       {/* HUD overlay */}
-      <GameHUD mobileLogOpen={mobileLogOpen} setMobileLogOpen={setMobileLogOpen} />
+      <GameHUD mobileLogOpen={mobileLogOpen} setMobileLogOpen={handleSetMobileLogOpen} chatOpen={chatOpen} setChatOpen={handleSetChatOpen} />
       <GameMenu />
 
       {/* Target picker overlay */}
@@ -379,7 +398,10 @@ export default function GameScreen() {
       <HelpPanel />
 
       {/* Mobile activity log */}
-      {isMobile && <MobileActivityLog expanded={mobileLogOpen} onClose={() => setMobileLogOpen(false)} />}
+      {isMobile && <MobileActivityLog expanded={mobileLogOpen} onClose={() => handleSetMobileLogOpen(false)} />}
+
+      {/* Chat panel */}
+      <ChatPanel expanded={chatOpen} onClose={() => handleSetChatOpen(false)} />
 
       {/* Card play announcement */}
       <CardAnnouncement announcement={announcement} />
