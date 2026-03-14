@@ -270,7 +270,7 @@ export default function GameScreen() {
 
       {/* Opponent fields */}
       {isMobile ? (
-        <div ref={opponentScrollRef} className="flex-1 overflow-y-auto p-1 pt-12 min-h-[140px]">
+        <div ref={opponentScrollRef} className="flex-1 overflow-y-auto p-1 pt-10 min-h-0">
           <div className="flex flex-col gap-1">
             {opponents.map(({ id, player }) => {
               const isExpanded = expandedOpponent === id;

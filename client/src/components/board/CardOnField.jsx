@@ -65,7 +65,7 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
   const defColor = isBuffed ? 'bg-cyan-400' : defPct > 60 ? 'bg-green-500' : defPct > 30 ? 'bg-yellow-500' : 'bg-red-500';
 
   const w = 'w-full';
-  const h = isMobile ? 'h-[96px]' : 'h-[150px]';
+  const h = isMobile ? 'h-[72px]' : 'h-[150px]';
 
   return (
     <motion.div

@@ -81,7 +81,7 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
   // Scaled dimensions for layout reservations on mobile
   const layoutW = isMobile ? Math.round(cardW * mobileScale) : cardW;
   const layoutH = isMobile ? Math.round(cardH * mobileScale) : cardH;
-  const zoneH = isMobile ? 'h-[52px]' : 'h-[140px]';
+  const zoneH = isMobile ? 'h-[44px]' : 'h-[140px]';
 
   return (
     <div className={`flex-shrink-0 ${zoneH} flex items-center justify-between px-4 md:px-12 lg:px-24 relative`}>

@@ -70,8 +70,8 @@ export default function CardInHand({ card, isSelected }) {
   const costText = effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`;
   const canAfford = (isMyTurn || isReaction) && (effectiveCost === 0 || (gameState?.players[gameState.myId]?.ap >= effectiveCost));
 
-  const w = isMobile ? 'w-[80px]' : 'w-[130px]';
-  const h = isMobile ? 'h-[112px]' : 'h-[182px]';
+  const w = isMobile ? 'w-[72px]' : 'w-[130px]';
+  const h = isMobile ? 'h-[100px]' : 'h-[182px]';
 
   return (
     <motion.div
