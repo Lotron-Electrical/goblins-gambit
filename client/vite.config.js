@@ -3,10 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
-
 const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
-const buildNum = readFileSync(path.resolve(__dirname, '../BUILD'), 'utf-8').trim();
 
 // Goblin-themed codenames — two-word combos generated from hash
 const FIRST = [
@@ -30,7 +27,7 @@ const SECOND = [
 const hashNum = parseInt(commitHash, 16);
 const first = FIRST[hashNum % FIRST.length];
 const second = SECOND[Math.floor(hashNum / FIRST.length) % SECOND.length];
-const APP_VERSION = `0.${buildNum}.${first}-${second}`;
+const APP_VERSION = `0.2.${first}-${second}`;
 
 export default defineConfig({
   root: path.resolve(__dirname),
