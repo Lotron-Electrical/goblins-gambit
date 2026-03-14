@@ -500,6 +500,41 @@ const SOUNDS = {
     playNoise(ctx, 0.12, 0.5);
     playTone(ctx, 100, 0.15, 'sawtooth', 0.3, 50);
   },
+  direct_attack: (ctx) => {
+    // Ethereal choir — layered sine harmonics with slow attack, reverb-like decay
+    const t = ctx.currentTime;
+    const freqs = [261.6, 329.6, 392, 523.3]; // C4, E4, G4, C5 major chord
+    for (const freq of freqs) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.linearRampToValueAtTime(freq * 1.01, t + 0.6); // subtle shimmer
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.12, t + 0.15); // slow swell
+      gain.gain.setValueAtTime(0.1, t + 0.4);
+      gain.gain.linearRampToValueAtTime(0, t + 0.8);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.8);
+    }
+    // Upper octave shimmer
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(1046.5, t + 0.1); // C6
+    osc2.frequency.linearRampToValueAtTime(1318.5, t + 0.5); // E6
+    g2.gain.setValueAtTime(0, t + 0.1);
+    g2.gain.linearRampToValueAtTime(0.06, t + 0.25);
+    g2.gain.linearRampToValueAtTime(0, t + 0.7);
+    osc2.connect(g2);
+    g2.connect(ctx.destination);
+    osc2.start(t + 0.1);
+    osc2.stop(t + 0.7);
+    // Bass impact underneath
+    playTone(ctx, 80, 0.3, 'sine', 0.25, 40);
+  },
   killshot: (ctx) => {
     // Heavy impact — layered noise burst + deep bass hit + metallic ring
     playNoise(ctx, 0.25, 0.6);

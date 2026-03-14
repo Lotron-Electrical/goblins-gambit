@@ -233,16 +233,22 @@ export default function GameScreen() {
 
       // Capture DOM positions for attack line SVG
       const attackerEl = document.querySelector(`[data-card-uid="${currentAnimation.attacker}"]`);
-      const defenderEl = document.querySelector(`[data-card-uid="${currentAnimation.defender}"]`);
+      // Direct attacks target a player (SP counter), not a card
+      const isDirect = !!currentAnimation.directAttack;
+      const defenderEl = isDirect
+        ? document.querySelector(`[data-player-sp="${currentAnimation.defender}"]`)
+        : document.querySelector(`[data-card-uid="${currentAnimation.defender}"]`);
       if (attackerEl && defenderEl) {
         const aRect = attackerEl.getBoundingClientRect();
         const dRect = defenderEl.getBoundingClientRect();
+        const lineType = isDirect ? 'direct' : currentAnimation.killshot ? 'killshot' : 'normal';
         setAttackLine({
           from: { x: aRect.left + aRect.width / 2, y: aRect.top + aRect.height / 2 },
           to: { x: dRect.left + dRect.width / 2, y: dRect.top + dRect.height / 2 },
           killshot: !!currentAnimation.killshot,
+          direct: isDirect,
         });
-        setTimeout(() => setAttackLine(null), currentAnimation.killshot ? 600 : 400);
+        setTimeout(() => setAttackLine(null), isDirect ? 700 : currentAnimation.killshot ? 600 : 400);
       }
 
       setTimeout(() => clearAttackAnimation(), 350);
@@ -500,44 +506,70 @@ export default function GameScreen() {
       {/* Attack line SVG overlay */}
       {attackLine && !animationsOff && (() => {
         const k = attackLine.killshot;
+        const d = attackLine.direct;
         const dx = attackLine.to.x - attackLine.from.x;
         const dy = attackLine.to.y - attackLine.from.y;
         const len = Math.sqrt(dx * dx + dy * dy);
-        const dur = k ? '0.6s' : '0.4s';
-        const drawDur = k ? '0.15s' : '0.2s';
+        const dur = d ? '0.7s' : k ? '0.6s' : '0.4s';
+        const drawDur = d ? '0.25s' : k ? '0.15s' : '0.2s';
+        // Colors: direct=holy white-cyan, killshot=white-gold, normal=red-orange
+        const c1 = d ? '#ffffff' : k ? '#ffffff' : '#ef4444';
+        const c2 = d ? '#67e8f9' : k ? '#fbbf24' : '#f97316';
+        const blur = d ? 10 : k ? 8 : 4;
+        const glowW = d ? 16 : k ? 12 : 6;
+        const lineW = d ? 4 : k ? 5 : 3;
         return (
           <svg style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 40 }}>
             <defs>
               <linearGradient id="attack-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={k ? '#ffffff' : '#ef4444'} />
-                <stop offset="100%" stopColor={k ? '#fbbf24' : '#f97316'} />
+                <stop offset="0%" stopColor={c1} />
+                <stop offset="100%" stopColor={c2} />
               </linearGradient>
               <filter id="attack-glow">
-                <feGaussianBlur stdDeviation={k ? 8 : 4} result="blur" />
+                <feGaussianBlur stdDeviation={blur} result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
             </defs>
+            {/* Direct attack: vertical light pillar at target */}
+            {d && (
+              <>
+                <rect
+                  x={attackLine.to.x - 20} y={0}
+                  width="40" height="100%"
+                  fill="url(#attack-grad)" opacity="0"
+                >
+                  <animate attributeName="opacity" values="0;0.15;0.1;0" dur="0.7s" fill="freeze" />
+                </rect>
+                <rect
+                  x={attackLine.to.x - 6} y={0}
+                  width="12" height="100%"
+                  fill="#ffffff" opacity="0"
+                >
+                  <animate attributeName="opacity" values="0;0.3;0.15;0" dur="0.7s" fill="freeze" />
+                </rect>
+              </>
+            )}
             {/* Glow line */}
             <line
               x1={attackLine.from.x} y1={attackLine.from.y}
               x2={attackLine.to.x} y2={attackLine.to.y}
               stroke="url(#attack-grad)"
-              strokeWidth={k ? 12 : 6}
+              strokeWidth={glowW}
               strokeLinecap="round"
               filter="url(#attack-glow)"
               opacity="0.5"
             >
-              <animate attributeName="opacity" values={k ? '0;0.7;0' : '0;0.5;0'} dur={dur} fill="freeze" />
+              <animate attributeName="opacity" values={d ? '0;0.6;0' : k ? '0;0.7;0' : '0;0.5;0'} dur={dur} fill="freeze" />
             </line>
             {/* Main slash line */}
             <line
               x1={attackLine.from.x} y1={attackLine.from.y}
               x2={attackLine.to.x} y2={attackLine.to.y}
               stroke="url(#attack-grad)"
-              strokeWidth={k ? 5 : 3}
+              strokeWidth={lineW}
               strokeLinecap="round"
               strokeDasharray={`${len}`}
               strokeDashoffset={len}
@@ -546,18 +578,25 @@ export default function GameScreen() {
               <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.5;1" dur={dur} fill="freeze" />
             </line>
             {/* Impact burst at endpoint */}
-            <circle cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill={k ? '#fbbf24' : '#f97316'} opacity="0">
-              <animate attributeName="r" values={k ? '0;24;0' : '0;12;0'} dur={k ? '0.4s' : '0.3s'} begin="0.15s" fill="freeze" />
-              <animate attributeName="opacity" values={k ? '0;1;0' : '0;0.8;0'} dur={k ? '0.4s' : '0.3s'} begin="0.15s" fill="freeze" />
+            <circle cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill={d ? '#67e8f9' : k ? '#fbbf24' : '#f97316'} opacity="0">
+              <animate attributeName="r" values={d ? '0;30;0' : k ? '0;24;0' : '0;12;0'} dur={d ? '0.5s' : k ? '0.4s' : '0.3s'} begin="0.15s" fill="freeze" />
+              <animate attributeName="opacity" values={d ? '0;0.9;0' : k ? '0;1;0' : '0;0.8;0'} dur={d ? '0.5s' : k ? '0.4s' : '0.3s'} begin="0.15s" fill="freeze" />
             </circle>
-            {/* Killshot: extra shockwave ring */}
-            {k && (
+            {/* Killshot: shockwave ring */}
+            {k && !d && (
               <circle cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill="none" stroke="#ffffff" strokeWidth="2" opacity="0">
                 <animate attributeName="r" values="0;40;60" dur="0.5s" begin="0.2s" fill="freeze" />
                 <animate attributeName="opacity" values="0;0.6;0" dur="0.5s" begin="0.2s" fill="freeze" />
                 <animate attributeName="stroke-width" values="3;1;0" dur="0.5s" begin="0.2s" fill="freeze" />
               </circle>
             )}
+            {/* Direct attack: expanding holy rings */}
+            {d && [0, 1, 2].map(i => (
+              <circle key={i} cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill="none" stroke="#ffffff" strokeWidth="1.5" opacity="0">
+                <animate attributeName="r" values="0;30;50" dur="0.5s" begin={`${0.15 + i * 0.12}s`} fill="freeze" />
+                <animate attributeName="opacity" values={`0;${0.5 - i * 0.15};0`} dur="0.5s" begin={`${0.15 + i * 0.12}s`} fill="freeze" />
+              </circle>
+            ))}
           </svg>
         );
       })()}

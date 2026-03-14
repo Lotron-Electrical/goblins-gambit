@@ -49,7 +49,7 @@ const SOUND_MAP = {
     return 'creature_play';
   },
   draw_card: 'draw',
-  attack: (evt) => evt.killshot ? 'killshot' : 'attack',
+  attack: (evt) => evt.directAttack ? 'direct_attack' : evt.killshot ? 'killshot' : 'attack',
   damage: 'damage',
   destroy: (evt) => evt.reason?.includes('expired') ? 'armour_break' : 'death',
   sp_change: (evt) => evt.amount > 0 ? 'sp_gain' : null,
