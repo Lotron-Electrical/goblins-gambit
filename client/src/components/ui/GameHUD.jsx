@@ -16,7 +16,6 @@ export default function GameHUD() {
 
   if (!gameState) return null;
 
-  const myPlayer = gameState.players[gameState.myId];
   const [tipDismissed, setTipDismissed] = useState(false);
   const [tipFading, setTipFading] = useState(false);
   const initialAnimRef = useRef(gameState.animations);
@@ -103,15 +102,6 @@ export default function GameHUD() {
         </div>
       )}
 
-      {/* SP Progress bar */}
-      <div className="fixed top-12 left-0 right-0 pointer-events-none">
-        <div className="h-1 bg-gray-800">
-          <div
-            className="h-full bg-gradient-to-r from-[var(--color-gold)] to-yellow-400 transition-all duration-500"
-            style={{ width: `${Math.min(100, (myPlayer.sp / gameState.winSP) * 100)}%` }}
-          />
-        </div>
-      </div>
     </div>
   );
 }

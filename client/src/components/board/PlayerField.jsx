@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useStore } from '../../store.js';
 import CardOnField from './CardOnField.jsx';
 import { hasActivatedAbility } from '../ui/abilityInfo.js';
@@ -62,6 +63,14 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
     }
   };
 
+  // SP glow when approaching win
+  const spPct = gameState?.winSP ? player.sp / gameState.winSP : 0;
+  const spStyle = useMemo(() => {
+    if (spPct >= 0.9) return 'text-yellow-300 animate-[pulse_0.8s_ease-in-out_infinite] drop-shadow-[0_0_8px_rgba(250,204,21,0.7)]';
+    if (spPct >= 0.8) return 'text-yellow-400 animate-[pulse_2s_ease-in-out_infinite] drop-shadow-[0_0_5px_rgba(250,204,21,0.4)]';
+    return 'text-yellow-400';
+  }, [spPct]);
+
   return (
     <div className={`rounded-lg ${isMobile ? 'p-1' : 'p-2'} transition ${
       isCurrentTurn ? 'bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40' : 'bg-gray-900/40'
@@ -94,7 +103,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           {player.playerShield > 0 && (
             <span className="text-cyan-400 font-bold">{player.playerShield} Sh</span>
           )}
-          <span className={`text-yellow-400 font-bold ${isMobile ? 'text-[11px]' : 'text-[15px]'}`} data-player-sp={playerId}>{player.sp} SP</span>
+          <span className={`font-bold ${isMobile ? 'text-[11px]' : 'text-[15px]'} ${spStyle}`} data-player-sp={playerId}>{player.sp}/{gameState.winSP} SP</span>
           <span className="text-blue-300">{player.ap} AP</span>
           <span className={`font-bold ${(player.handCount ?? player.hand?.length ?? 0) >= 10 ? 'text-orange-400' : 'text-gray-400'}`}>
             {player.handCount ?? player.hand?.length ?? 0} cards
