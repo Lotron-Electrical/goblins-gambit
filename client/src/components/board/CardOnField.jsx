@@ -73,7 +73,7 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${isSelected ? 'ring-2 ring-[var(--color-gold)] animate-sparkle-border' : ''} ${
         isValidTarget ? 'ring-2 ring-red-400 animate-pulse' : ''
-      } ${invisible ? 'opacity-40' : ''}`}
+      } ${invisible ? 'opacity-40' : card._hasAttacked && !isOpponent ? 'opacity-50' : ''}`}
       style={hovered && !invisible ? { boxShadow: TYPE_GLOW[card.type] } : undefined}
       data-card-hover
       data-card-uid={card.uid}

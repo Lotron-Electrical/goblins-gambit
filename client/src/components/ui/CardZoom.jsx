@@ -43,6 +43,7 @@ export default function CardZoom() {
   const canRecycle = isOnMyField && card.type === 'Creature' && isMyTurn;
   const recycleSPCost = canRecycle ? Math.ceil((card.sp || 0) / 2) : 0;
   const canAffordRecycle = canRecycle && (myPlayer?.sp ?? 0) >= recycleSPCost;
+  const canAttack = isOnMyField && card.type === 'Creature' && isMyTurn && !card._hasAttacked;
 
   // Compute effective cost with theme modifiers
   const themeEffects = THEME_EFFECTS[useStore.getState().theme] || THEME_EFFECTS.swamp;
@@ -134,7 +135,7 @@ export default function CardZoom() {
           </div>
 
           {/* Action buttons */}
-          {(canPlay || canDiscard || canRecycle) && (
+          {(canPlay || canDiscard || canRecycle || canAttack) && (
             <div className="px-3 pb-2">
               {confirmAction ? (
                 <div className="bg-red-950 border border-red-700 rounded-lg p-3 space-y-2">
@@ -160,6 +161,17 @@ export default function CardZoom() {
                 </div>
               ) : (
                 <div className="flex gap-2 flex-wrap">
+                  {canAttack && (
+                    <button
+                      onClick={() => {
+                        selectCard({ ...card, _zone: 'swamp' });
+                        setZoomedCard(null);
+                      }}
+                      className="flex-1 bg-red-800 hover:bg-red-700 border border-red-600 text-white font-bold py-2 rounded-lg text-[13px] transition"
+                    >
+                      Attack
+                    </button>
+                  )}
                   {canPlay && (
                     <button
                       onClick={() => {
@@ -304,7 +316,7 @@ export default function CardZoom() {
         )}
 
         {/* Action buttons */}
-        {(canPlay || canDiscard || canRecycle) && (
+        {(canPlay || canDiscard || canRecycle || canAttack) && (
           <div className="border-t border-gray-800 pt-3">
             {confirmAction ? (
               <div className="bg-red-950 border border-red-700 rounded-lg p-3 space-y-2">
@@ -330,6 +342,17 @@ export default function CardZoom() {
               </div>
             ) : (
               <div className="space-y-2">
+                {canAttack && (
+                  <button
+                    onClick={() => {
+                      selectCard({ ...card, _zone: 'swamp' });
+                      setZoomedCard(null);
+                    }}
+                    className="w-full bg-red-800 hover:bg-red-700 border border-red-600 text-white font-bold py-2 rounded-lg text-[12px] transition"
+                  >
+                    Attack
+                  </button>
+                )}
                 {canPlay && (
                   <button
                     onClick={() => {

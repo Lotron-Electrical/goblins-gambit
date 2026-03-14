@@ -202,7 +202,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
               return (
                 <div
                   key={slotIdx}
-                  className={`relative flex-1 min-w-0 rounded border ${
+                  className={`relative flex-1 min-w-0 rounded border overflow-hidden ${
                     creature
                       ? 'border-transparent'
                       : canPlace

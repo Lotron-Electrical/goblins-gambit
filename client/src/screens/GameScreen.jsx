@@ -113,6 +113,9 @@ export default function GameScreen() {
     };
   }, []);
 
+  // Mobile: activity log toggle (driven from HUD button)
+  const [mobileLogOpen, setMobileLogOpen] = useState(false);
+
   // Mobile: track which opponent is expanded (defaults to current turn player)
   const [expandedOpponent, setExpandedOpponent] = useState(null);
   const prevTurnRef = useRef(null);
@@ -351,7 +354,7 @@ export default function GameScreen() {
       <HandBar />
 
       {/* HUD overlay */}
-      <GameHUD />
+      <GameHUD mobileLogOpen={mobileLogOpen} setMobileLogOpen={setMobileLogOpen} />
       <GameMenu />
 
       {/* Target picker overlay */}
@@ -376,7 +379,7 @@ export default function GameScreen() {
       <HelpPanel />
 
       {/* Mobile activity log */}
-      {isMobile && <MobileActivityLog />}
+      {isMobile && <MobileActivityLog expanded={mobileLogOpen} onClose={() => setMobileLogOpen(false)} />}
 
       {/* Card play announcement */}
       <CardAnnouncement announcement={announcement} />

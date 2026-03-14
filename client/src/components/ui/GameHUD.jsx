@@ -12,7 +12,7 @@ const THEME_ICON = {
 
 const FIRST_GAME_KEY = 'gg_seen_rules_prompt';
 
-export default function GameHUD() {
+export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
   const { gameState, setHelpOpen, setMenuOpen } = useStore();
   const isMobile = useIsMobile();
   const [themeExpanded, setThemeExpanded] = useState(false);
@@ -74,6 +74,18 @@ export default function GameHUD() {
               <span className={`text-gray-500 text-[10px]`}>Deck: {gameState.deckCount}</span>
               <span className={`text-gray-500 text-[10px]`}>Grave: {gameState.graveyardCount}</span>
             </>
+          )}
+          {/* Log button (mobile only) */}
+          {isMobile && setMobileLogOpen && (
+            <button
+              onClick={() => setMobileLogOpen(!mobileLogOpen)}
+              className={`flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition ${
+                isMobile ? 'w-7 h-7 text-[12px]' : 'w-8 h-8 text-[14px]'
+              } ${mobileLogOpen ? 'text-white' : 'text-gray-400'}`}
+              title="Activity Log"
+            >
+              {'\u{1F4DC}'}
+            </button>
           )}
           {/* Help button */}
           <button
