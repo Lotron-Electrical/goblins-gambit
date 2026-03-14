@@ -146,7 +146,7 @@ export const TUTORIAL_STEPS = [
       const card = state.players['tutorial-player'].hand.find(c => c.uid === 'tut-happy-hippy');
       state.players['tutorial-player'].hand = state.players['tutorial-player'].hand.filter(c => c.uid !== 'tut-happy-hippy');
       state.players['tutorial-player'].handCount = 2;
-      state.players['tutorial-player'].swamp = [{ ...card, turnsOnField: 0 }];
+      state.players['tutorial-player'].swamp = [{ ...card, turnsOnField: 0, _slot: 0 }];
       state.players['tutorial-player'].ap = 0;
       return state;
     },
@@ -168,6 +168,7 @@ export const TUTORIAL_STEPS = [
       const opponentStoner = stoner();
       opponentStoner.currentAttack = 400;
       opponentStoner.currentDefence = 200;
+      opponentStoner._slot = 0;
       state.players['tutorial-opponent'].swamp = [opponentStoner];
       state.players['tutorial-opponent'].handCount = 4;
       // New turn for player
