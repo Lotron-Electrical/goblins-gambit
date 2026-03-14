@@ -29,6 +29,16 @@ const BOT_NAMES = [
   'Mucksweat',
   'Scabpicker',
   'Wormguts',
+  'Knuckledragger',
+  'Snot Goblin',
+  'Pus Bucket',
+  'Grub Lord',
+  'Bellyache',
+  'Anklebiter',
+  'Dregface',
+  'Spit Roach',
+  'Bog Snorkle',
+  'Crudbrain',
 ];
 
 export function createBotId() {
