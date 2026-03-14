@@ -114,6 +114,7 @@ export default function HandBar() {
             <button
               onClick={drawCard}
               disabled={!isMyTurn || myPlayer.ap < 1}
+              data-tutorial="draw-btn"
               className="bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-2 py-1.5 rounded text-[10px] transition"
             >
               Draw
@@ -121,6 +122,7 @@ export default function HandBar() {
             <button
               onClick={buyAP}
               disabled={!isMyTurn || !canBuyAP}
+              data-tutorial="buy-ap-btn"
               className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-2 py-1.5 rounded text-[10px] transition"
             >
               Buy
@@ -128,6 +130,7 @@ export default function HandBar() {
             <button
               onClick={endTurn}
               disabled={!isMyTurn}
+              data-tutorial="end-turn-btn"
               className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-2 py-1.5 rounded text-[10px] transition"
             >
               End
@@ -183,6 +186,7 @@ export default function HandBar() {
           <button
             onClick={drawCard}
             disabled={myPlayer.ap < 1}
+            data-tutorial="draw-btn"
             className="bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition text-[13px] whitespace-nowrap"
           >
             Draw (1 AP)
@@ -190,12 +194,14 @@ export default function HandBar() {
           <button
             onClick={buyAP}
             disabled={!canBuyAP}
+            data-tutorial="buy-ap-btn"
             className="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition text-[13px] whitespace-nowrap"
           >
             Buy AP ({buyAPCost} SP)
           </button>
           <button
             onClick={endTurn}
+            data-tutorial="end-turn-btn"
             className="bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg shadow-lg transition text-[14px] whitespace-nowrap"
           >
             End Turn

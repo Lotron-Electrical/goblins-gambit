@@ -24,11 +24,13 @@ const WELCOME_LINES = [
 ];
 
 export default function LobbyScreen() {
-  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, authUser, authToken, logout } = useStore();
+  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, authUser, authToken, logout, startTutorial } = useStore();
   const [name, setName] = useState(playerName || '');
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const isGuest = authToken === 'guest';
+  const showTutorialBanner = !localStorage.getItem('gg_tutorial_complete') && !bannerDismissed;
 
   // Auto-set name from account for logged-in users
   useEffect(() => {
@@ -103,6 +105,12 @@ export default function LobbyScreen() {
           </button>
         )}
         <button
+          onClick={() => startTutorial()}
+          className="text-gray-400 hover:text-[var(--color-gold)] text-[12px] transition"
+        >
+          Tutorial
+        </button>
+        <button
           onClick={() => setShowLeaderboard(true)}
           className="text-gray-400 hover:text-[var(--color-gold)] text-[12px] transition"
         >
@@ -125,6 +133,25 @@ export default function LobbyScreen() {
       </div>
 
       <div className="w-full max-w-md space-y-5 relative z-10">
+        {showTutorialBanner && (
+          <div className="bg-gray-900/90 border-2 border-[var(--color-gold)] rounded-xl p-5 text-center">
+            <p className="font-display text-[var(--color-gold)] text-lg mb-2">New to Goblin's Gambit?</p>
+            <p className="text-gray-400 text-[13px] mb-4">Learn the basics in a quick guided tutorial</p>
+            <button
+              onClick={() => startTutorial()}
+              className="w-full bg-[var(--color-card-green)] hover:bg-green-600 text-white font-bold py-3 rounded-lg transition text-lg mb-2"
+            >
+              Play the Tutorial
+            </button>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="text-gray-500 hover:text-gray-300 text-[12px] transition"
+            >
+              Skip — I'll learn as I go
+            </button>
+          </div>
+        )}
+
         {authUser && !isGuest ? (
           <div className="text-center py-2">
             <p className="text-[var(--color-gold)] font-display text-lg italic">{welcomeLine}</p>

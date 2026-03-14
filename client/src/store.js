@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { socket } from './socket.js';
-import { EVENTS, ACTION } from '../../shared/src/constants.js';
+import { EVENTS, ACTION, CHAT_EMOTES } from '../../shared/src/constants.js';
 import { login as apiLogin, register as apiRegister, getProfile as apiGetProfile } from './api.js';
+import { TutorialEngine } from './tutorial/TutorialEngine.js';
 
 export const useStore = create((set, get) => ({
   // Auth
@@ -41,6 +42,15 @@ export const useStore = create((set, get) => ({
   hoveredCard: null,
   hoverPosition: null,
   graveyardOpen: false,
+
+  // Tutorial
+  tutorialMode: false,
+  tutorialEngine: null,
+
+  // Chat
+  chatMessages: [],
+  chatUnread: 0,
+  chatOpen: false,
 
   // Actions
   setPlayerName: (name) => set({ playerName: name }),
@@ -120,7 +130,7 @@ export const useStore = create((set, get) => ({
   leaveRoom: () => {
     socket.emit(EVENTS.LEAVE_ROOM);
     sessionStorage.removeItem('gg_roomId');
-    set({ currentRoom: null, screen: 'lobby', gameState: null });
+    set({ currentRoom: null, screen: 'lobby', gameState: null, chatMessages: [], chatUnread: 0, chatOpen: false, tutorialMode: false, tutorialEngine: null });
   },
 
   toggleReady: () => {
@@ -135,12 +145,14 @@ export const useStore = create((set, get) => ({
 
   // Game actions
   drawCard: () => {
+    if (get().tutorialMode) return get().tutorialAction(ACTION.DRAW_CARD);
     socket.emit(EVENTS.GAME_ACTION, { type: ACTION.DRAW_CARD }, (res) => {
       if (res?.error) set({ error: res.error });
     });
   },
 
   playCard: (cardUid, targetInfo) => {
+    if (get().tutorialMode) return get().tutorialAction(ACTION.PLAY_CARD, { cardUid });
     socket.emit(EVENTS.GAME_ACTION, {
       type: ACTION.PLAY_CARD,
       cardUid,
@@ -152,6 +164,7 @@ export const useStore = create((set, get) => ({
   },
 
   attack: (attackerUid, defenderOwnerId, defenderUid) => {
+    if (get().tutorialMode) return get().tutorialAction(ACTION.ATTACK, { attackerUid, defenderOwnerId, defenderUid });
     socket.emit(EVENTS.GAME_ACTION, {
       type: ACTION.ATTACK,
       attackerUid,
@@ -164,6 +177,7 @@ export const useStore = create((set, get) => ({
   },
 
   selectTarget: (targetOwnerId, targetUid, targets) => {
+    if (get().tutorialMode) return get().tutorialAction(ACTION.SELECT_TARGET, { targetOwnerId, targetUid });
     socket.emit(EVENTS.GAME_ACTION, {
       type: ACTION.SELECT_TARGET,
       targetOwnerId,
@@ -215,6 +229,7 @@ export const useStore = create((set, get) => ({
   },
 
   endTurn: () => {
+    if (get().tutorialMode) return get().tutorialAction(ACTION.END_TURN);
     socket.emit(EVENTS.GAME_ACTION, { type: ACTION.END_TURN }, (res) => {
       if (res?.error) set({ error: res.error });
     });
@@ -255,6 +270,62 @@ export const useStore = create((set, get) => ({
     socket.emit(EVENTS.REMOVE_BOT, { botId }, (res) => {
       if (res?.error) set({ error: res.error });
     });
+  },
+
+  // Tutorial actions
+  startTutorial: () => {
+    const engine = new TutorialEngine();
+    set({
+      tutorialMode: true,
+      tutorialEngine: engine,
+      gameState: engine.getState(),
+      screen: 'tutorial',
+      selectedCard: null,
+      targetMode: false,
+    });
+  },
+
+  tutorialAction: (actionType, payload = {}) => {
+    const engine = get().tutorialEngine;
+    if (!engine) return;
+
+    const { advanced, finished } = engine.handleAction(actionType, payload);
+    if (advanced) {
+      const newState = engine.getState();
+      // Check if this step has opponent delay
+      const config = engine.getStepConfig();
+      if (config.opponentDelay) {
+        // Show intermediate state, then after delay show final
+        set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
+      } else {
+        set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
+      }
+    }
+    if (finished) {
+      // Stay in tutorial mode — completion overlay handles the exit
+    }
+  },
+
+  endTutorial: () => {
+    set({
+      tutorialMode: false,
+      tutorialEngine: null,
+      gameState: null,
+      screen: 'lobby',
+      selectedCard: null,
+      targetMode: false,
+    });
+  },
+
+  // Chat actions
+  sendChatMessage: (text) => {
+    socket.emit(EVENTS.CHAT_MESSAGE, { text });
+  },
+  sendChatEmote: (emoteKey) => {
+    socket.emit(EVENTS.CHAT_MESSAGE, { emoteKey });
+  },
+  setChatOpen: (open) => {
+    set({ chatOpen: open, ...(open ? { chatUnread: 0 } : {}) });
   },
 
   selectCard: (card) => set({ selectedCard: card }),
@@ -390,4 +461,13 @@ socket.on(EVENTS.PLAYER_DISCONNECTED, ({ playerName }) => {
 
 socket.on(EVENTS.PLAYER_RECONNECTED, ({ playerName }) => {
   useStore.setState({ error: `${playerName} reconnected` });
+});
+
+socket.on(EVENTS.CHAT_MESSAGE, (msg) => {
+  const { chatMessages, chatOpen } = useStore.getState();
+  const updated = [...chatMessages, msg].slice(-50);
+  useStore.setState({
+    chatMessages: updated,
+    ...(!chatOpen ? { chatUnread: useStore.getState().chatUnread + 1 } : {}),
+  });
 });

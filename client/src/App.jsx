@@ -4,6 +4,7 @@ import LoginScreen from './screens/LoginScreen.jsx';
 import LobbyScreen from './screens/LobbyScreen.jsx';
 import RoomScreen from './screens/RoomScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
+import TutorialScreen from './screens/TutorialScreen.jsx';
 
 export default function App() {
   const { screen, connected, error, clearError, connect, authToken, loadProfile } = useStore();
@@ -41,7 +42,7 @@ export default function App() {
         </div>
       )}
 
-      {!connected && (
+      {!connected && screen !== 'tutorial' && (
         <div className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center">
           <div className="text-white text-xl font-display">Connecting to server...</div>
         </div>
@@ -50,6 +51,7 @@ export default function App() {
       {screen === 'lobby' && <LobbyScreen />}
       {screen === 'room' && <RoomScreen />}
       {screen === 'game' && <GameScreen />}
+      {screen === 'tutorial' && <TutorialScreen />}
     </div>
   );
 }

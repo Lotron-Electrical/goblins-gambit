@@ -12,8 +12,8 @@ const THEME_ICON = {
 
 const FIRST_GAME_KEY = 'gg_seen_rules_prompt';
 
-export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
-  const { gameState, setHelpOpen, setMenuOpen } = useStore();
+export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, setChatOpen }) {
+  const { gameState, setHelpOpen, setMenuOpen, chatUnread, tutorialMode } = useStore();
   const isMobile = useIsMobile();
   const [themeExpanded, setThemeExpanded] = useState(false);
 
@@ -24,8 +24,10 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
   const playerCount = Object.keys(gameState.players).length;
   const alivePlayers = Object.values(gameState.players).filter(p => !p.eliminated).length;
 
-  // First-game rules prompt — only shows once ever
+  // First-game rules prompt — only shows once ever, skip if tutorial was completed
   const [showRulesPrompt, setShowRulesPrompt] = useState(() => {
+    if (tutorialMode) return false;
+    if (localStorage.getItem('gg_tutorial_complete')) return false;
     return !localStorage.getItem(FIRST_GAME_KEY);
   });
 
@@ -57,6 +59,20 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
           <span className="text-gray-500 text-[10px]">{alivePlayers}/{playerCount}</span>
           <span className="text-gray-500 text-[10px]">Dk {gameState.deckCount}</span>
           <span className="text-gray-500 text-[10px]">Gv {gameState.graveyardCount}</span>
+          {setChatOpen && (
+            <button
+              onClick={() => setChatOpen(!chatOpen)}
+              className={`relative flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px] ${chatOpen ? 'text-white' : 'text-gray-400'}`}
+              title="Chat"
+            >
+              {'\u{1F4AC}'}
+              {chatUnread > 0 && !chatOpen && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5">
+                  {chatUnread > 9 ? '9+' : chatUnread}
+                </span>
+              )}
+            </button>
+          )}
           {setMobileLogOpen && (
             <button
               onClick={() => setMobileLogOpen(!mobileLogOpen)}
@@ -66,20 +82,24 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
               {'\u{1F4DC}'}
             </button>
           )}
-          <button
-            onClick={() => setHelpOpen(true)}
-            className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
-            title="Help"
-          >
-            ?
-          </button>
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
-            title="Settings"
-          >
-            {ICONS.gear}
-          </button>
+          {!tutorialMode && (
+            <button
+              onClick={() => setHelpOpen(true)}
+              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
+              title="Help"
+            >
+              ?
+            </button>
+          )}
+          {!tutorialMode && (
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
+              title="Settings"
+            >
+              {ICONS.gear}
+            </button>
+          )}
         </div>
       ) : (
         <div className="relative flex items-center px-4 py-2 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
@@ -110,20 +130,38 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
 
           {/* RIGHT — buttons */}
           <div className="flex items-center gap-2 ml-auto shrink-0">
-            <button
-              onClick={() => setHelpOpen(true)}
-              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
-              title="Help"
-            >
-              ?
-            </button>
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
-              title="Settings"
-            >
-              {ICONS.gear}
-            </button>
+            {setChatOpen && (
+              <button
+                onClick={() => setChatOpen(!chatOpen)}
+                className={`relative flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px] ${chatOpen ? 'text-white' : 'text-gray-400'}`}
+                title="Chat"
+              >
+                {'\u{1F4AC}'}
+                {chatUnread > 0 && !chatOpen && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5">
+                    {chatUnread > 9 ? '9+' : chatUnread}
+                  </span>
+                )}
+              </button>
+            )}
+            {!tutorialMode && (
+              <button
+                onClick={() => setHelpOpen(true)}
+                className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
+                title="Help"
+              >
+                ?
+              </button>
+            )}
+            {!tutorialMode && (
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
+                title="Settings"
+              >
+                {ICONS.gear}
+              </button>
+            )}
           </div>
         </div>
       )}
