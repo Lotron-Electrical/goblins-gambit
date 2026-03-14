@@ -63,10 +63,13 @@ function CardBack({ className = '', style = {}, small }) {
 }
 
 export default function CenterZone({ deckCount, graveyardCount, graveyard, stagedCards = [], volcano, dragon, jargon }) {
-  const { setGraveyardOpen } = useStore();
+  const { setGraveyardOpen, selectedCard, attackEvent, gameState } = useStore();
   const isMobile = useIsMobile();
   const [volcanoOpen, setVolcanoOpen] = useState(false);
   const [jargonOpen, setJargonOpen] = useState(false);
+
+  const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
+  const canAttackDragon = dragon?.active && isMyTurn && selectedCard && selectedCard._zone === 'swamp' && !selectedCard._hasAttacked;
 
   const graveyardRotations = useMemo(() => {
     return (graveyard || []).map((_, i) => Math.sin(i * 5.7 + 1.3) * 8);
@@ -181,9 +184,17 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
             </button>
           )}
 
-          {/* Dragon */}
+          {/* Dragon — click to attack with selected creature */}
           {dragon?.active && (
-            <div className="relative flex flex-col items-center px-2 py-1 rounded-lg bg-red-900/50 border border-red-500/60 animate-pulse">
+            <div
+              className={`relative flex flex-col items-center px-2 py-1 rounded-lg bg-red-900/50 border border-red-500/60 animate-pulse ${
+                canAttackDragon ? 'cursor-pointer ring-2 ring-[var(--color-gold)] hover:bg-red-900/80' : ''
+              }`}
+              onClick={() => {
+                if (canAttackDragon) attackEvent(selectedCard.uid);
+              }}
+              title={canAttackDragon ? 'Click to attack the Dragon!' : 'Dragon'}
+            >
               <span className={`text-xl ${isMobile ? 'text-base' : ''}`}>&#x1F409;</span>
               <div className="w-16 h-1.5 bg-gray-800 rounded-full mt-0.5 overflow-hidden">
                 <div
@@ -192,6 +203,9 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
                 />
               </div>
               <span className="text-[8px] text-red-300">{dragon.currentHP}/{dragon.maxHP}</span>
+              {canAttackDragon && (
+                <span className="text-[8px] text-[var(--color-gold)] font-bold mt-0.5">TAP TO ATTACK</span>
+              )}
               {volcano?.totalBanked > 0 && (
                 <span className="text-[8px] text-orange-300">&#x1F30B; {volcano.totalBanked} SP</span>
               )}
