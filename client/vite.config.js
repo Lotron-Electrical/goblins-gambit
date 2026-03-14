@@ -11,13 +11,21 @@ const FIRST = [
   'Sneaky', 'Boggy', 'Grim', 'Foul', 'Rusty', 'Slimy', 'Rotten',
   'Crusty', 'Manky', 'Grimy', 'Musty', 'Murky', 'Scabby', 'Wonky',
   'Filthy', 'Lumpy', 'Grotty', 'Dank', 'Mouldy', 'Cursed',
+  'Wicked', 'Putrid', 'Gnarly', 'Festering', 'Dodgy', 'Grubby',
+  'Rabid', 'Toxic', 'Savage', 'Warty', 'Busted', 'Crooked',
+  'Charred', 'Soggy', 'Tangled', 'Bloated', 'Jagged', 'Twisted',
+  'Barmy', 'Craggy',
 ];
 const SECOND = [
   'Goblin', 'Toad', 'Fang', 'Lurker', 'Brew', 'Skull', 'Snot',
   'Beetle', 'Rat', 'Brain', 'Shank', 'Tongue', 'Witch', 'Crawler',
   'Croak', 'Muncher', 'Snorkle', 'Picker', 'Spitter', 'Guts',
+  'Fungus', 'Worm', 'Stench', 'Boggart', 'Maggot', 'Troll',
+  'Badger', 'Swamp', 'Hag', 'Roach', 'Grub', 'Boil',
+  'Barnacle', 'Serpent', 'Pustule', 'Mange', 'Ghoul', 'Giblet',
+  'Splinter', 'Sludge',
 ];
-// 20x20 = 400 unique combos — collisions extremely unlikely
+// 40x40 = 1600 unique combos
 const hashNum = parseInt(commitHash, 16);
 const first = FIRST[hashNum % FIRST.length];
 const second = SECOND[Math.floor(hashNum / FIRST.length) % SECOND.length];
