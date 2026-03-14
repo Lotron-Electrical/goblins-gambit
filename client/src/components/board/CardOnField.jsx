@@ -56,12 +56,17 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
     }
   }, []);
 
-  // Calculate health percentage for DEF bar
-  const baseDef = card.defence || 1;
-  const currentDef = Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0));
-  const effectiveMax = Math.max(baseDef, currentDef);
+  // Swapeewee: when _swapped, ATK and DEF base values are flipped
+  const isSwapped = card.abilityId === 'swapeewee_swap' && card._swapped;
+  const baseAtk = isSwapped ? (card.defence || 0) : (card.attack || 0);
+  const baseDef = isSwapped ? (card.attack || 0) : (card.defence || 0);
+
+  // Calculate effective stats
+  const effectiveAtk = baseAtk + (card._attackBuff || 0);
+  const currentDef = Math.max(0, baseDef - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0));
+  const effectiveMax = Math.max(baseDef || 1, currentDef);
   const defPct = Math.min(100, (currentDef / effectiveMax) * 100);
-  const isBuffed = currentDef > baseDef;
+  const isBuffed = currentDef > (baseDef || 1);
   const defColor = isBuffed ? 'bg-cyan-400' : defPct > 60 ? 'bg-green-500' : defPct > 30 ? 'bg-yellow-500' : 'bg-red-500';
 
   const w = 'w-full';
@@ -165,7 +170,7 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       {!invisible && card.type === 'Creature' && (
         <div className="absolute bottom-0 left-0 right-0">
           <div className={`bg-black/80 grid grid-cols-3 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
-            <span className="text-red-400 font-bold text-center">{ICONS.swords}<br/>{card._attackBuff ? (card.attack || 0) + card._attackBuff : card.attack ?? 0}</span>
+            <span className="text-red-400 font-bold text-center">{ICONS.swords}<br/>{effectiveAtk}</span>
             <span className={`font-bold text-center ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>{ICONS.shield}<br/>{currentDef}</span>
             <span className="text-yellow-400 font-bold text-center">{ICONS.coin}<br/>{card.sp ?? 0}</span>
           </div>

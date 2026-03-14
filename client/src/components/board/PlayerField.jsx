@@ -151,8 +151,8 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         </div>
       </div>
 
-      {/* SP progress bar (opponents) */}
-      {isOpponent && gameState?.winSP && (
+      {/* SP progress bar */}
+      {gameState?.winSP && (
         <div className="h-1 rounded-full bg-gray-800 mx-1 mb-1">
           <div
             className="h-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-500"
