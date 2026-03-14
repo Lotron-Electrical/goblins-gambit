@@ -322,6 +322,9 @@ export default function GameScreen() {
         graveyardCount={gameState.graveyardCount}
         graveyard={gameState.graveyard || []}
         stagedCards={stagedCards}
+        volcano={gameState.volcano}
+        dragon={gameState.dragon}
+        jargon={gameState.jargon}
       />
 
       {/* My field */}

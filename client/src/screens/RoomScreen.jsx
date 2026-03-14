@@ -223,6 +223,22 @@ export default function RoomScreen() {
                     {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-gray-300 text-sm">Events</label>
+                    <p className="text-gray-500 text-[10px]">Volcano bank, Dragon raids, Jargon vendor</p>
+                  </div>
+                  <button
+                    onClick={() => setRoomSettings({ eventsEnabled: !currentRoom.eventsEnabled })}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${
+                      currentRoom.eventsEnabled ? 'bg-orange-600' : 'bg-gray-700'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform ${
+                      currentRoom.eventsEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                    }`} />
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -287,8 +287,10 @@ export function finesse_steal(state, playerId, card, cardIdx, targetInfo) {
   const events = [];
 
   if (!targetInfo) {
-    const validTargets = getOpponentPlayers(state, playerId);
-    if (validTargets.length === 0) return { success: false, error: 'No opponents' };
+    // Only target opponents who have cards in hand
+    const validTargets = getOpponentPlayers(state, playerId)
+      .filter(t => state.players[t.ownerId]?.hand.length > 0);
+    if (validTargets.length === 0) return { success: false, error: 'No opponents have cards to steal' };
     if (validTargets.length === 1) {
       targetInfo = { targetOwnerId: validTargets[0].ownerId };
     } else {
@@ -303,22 +305,26 @@ export function finesse_steal(state, playerId, card, cardIdx, targetInfo) {
     }
   }
 
+  const { targetOwnerId } = targetInfo;
+  const targetPlayer = state.players[targetOwnerId];
+
+  // Block if target has no cards (edge case: cards discarded between target selection and resolution)
+  if (!targetPlayer || targetPlayer.hand.length === 0) {
+    return { success: false, error: 'Target has no cards to steal' };
+  }
+
   player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
-  const { targetOwnerId } = targetInfo;
-  const targetPlayer = state.players[targetOwnerId];
-  if (targetPlayer && targetPlayer.hand.length > 0) {
-    const randIdx = Math.floor(Math.random() * targetPlayer.hand.length);
-    const [stolen] = targetPlayer.hand.splice(randIdx, 1);
-    if (player.hand.length < MAX_HAND_SIZE) {
-      player.hand.push(stolen);
-      events.push({ type: 'card_stolen', cardUid: stolen.uid, card: stolen, from: targetOwnerId, to: playerId, reason: 'Finesse!' });
-    } else {
-      state.graveyard.push(stolen);
-      events.push({ type: 'card_discarded', cardUid: stolen.uid, reason: 'Hand full - discarded' });
-    }
+  const randIdx = Math.floor(Math.random() * targetPlayer.hand.length);
+  const [stolen] = targetPlayer.hand.splice(randIdx, 1);
+  if (player.hand.length < MAX_HAND_SIZE) {
+    player.hand.push(stolen);
+    events.push({ type: 'card_stolen', cardUid: stolen.uid, card: stolen, from: targetOwnerId, to: playerId, reason: 'Finesse!' });
+  } else {
+    state.graveyard.push(stolen);
+    events.push({ type: 'card_discarded', cardUid: stolen.uid, reason: 'Hand full - discarded' });
   }
   state.graveyard.push(card);
   return { success: true, events };

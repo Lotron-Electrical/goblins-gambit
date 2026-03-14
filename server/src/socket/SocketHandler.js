@@ -405,6 +405,7 @@ export function setupSocketHandlers(io, lobby) {
       if (settings.maxPlayers != null) room.maxPlayers = Math.max(2, Math.min(6, Number(settings.maxPlayers) || 6));
       if (settings.startingHandSize != null) room.startingHandSize = Math.max(3, Math.min(10, Number(settings.startingHandSize) || 5));
       if (settings.baseAP != null) room.baseAP = Math.max(1, Math.min(5, Number(settings.baseAP) || 2));
+      if (settings.eventsEnabled != null) room.eventsEnabled = !!settings.eventsEnabled;
       io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
       callback?.({ success: true });
     });

@@ -6,6 +6,13 @@ export const MAX_SWAMP_SIZE = 5;
 export const MAX_GEAR_SIZE = 3;
 export const MAX_HAND_SIZE = 10;
 export const BUY_AP_COST = 1000; // SP cost to buy +1 AP
+
+// Event system constants
+export const EVENT_DRAGON_BASE_DEF = 1000; // Dragon DEF per player
+export const EVENT_DRAGON_DAMAGE = 500;     // Dragon SP damage per cycle
+export const VOLCANO_TRIGGER_RATIO = 0.5;   // Fraction of winSP to activate events
+export const JARGON_CHANCE = 0.15;           // 15% chance per cycle
+export const JARGON_CARD_COST_MULTIPLIER = 100; // SP cost = card.cost * this
 export const TURN_TIMER_SECONDS = 60;
 export const RECONNECT_HOLD_SECONDS = 60;
 export const MIN_PLAYERS = 2;
@@ -101,6 +108,9 @@ export const ACTION = {
   CHOOSE_CARD: 'choose_card',
   DISCARD_CARD: 'discard_card',
   RECYCLE_CREATURE: 'recycle_creature',
+  DEPOSIT_VOLCANO: 'deposit_volcano',
+  ATTACK_EVENT: 'attack_event',
+  BUY_FROM_JARGON: 'buy_from_jargon',
 };
 
 // Socket events

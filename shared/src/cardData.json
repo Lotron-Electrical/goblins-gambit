@@ -1150,6 +1150,20 @@
     "abilityId": "horse_dice"
   },
   {
+    "id": "volcano",
+    "name": "Volcano",
+    "type": "Event",
+    "cost": 0,
+    "effect": "Deposit SP for interest. Roll D6 for lock duration and interest rate. Beware the Dragon!",
+    "attack": null,
+    "defence": null,
+    "sp": null,
+    "durability": null,
+    "copies": 1,
+    "image": null,
+    "abilityId": "volcano_event"
+  },
+  {
     "id": "dragon",
     "name": "Dragon",
     "type": "Event",
@@ -1168,7 +1182,7 @@
     "name": "Jargon the Vendor",
     "type": "Event",
     "cost": 0,
-    "effect": "Send a creature off with vendor, get their SP worth when they return. Roll D6 for rounds",
+    "effect": "Buy a random card from the graveyard. Cost = card's AP cost x 100 SP.",
     "attack": null,
     "defence": null,
     "sp": null,

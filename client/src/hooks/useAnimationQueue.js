@@ -30,6 +30,15 @@ const ANIMATION_DURATIONS = {
   card_recovered: 400,
   deck_recycle: 400,
   first_player_bonus: 2000,
+  // Event system
+  volcano_active: 1500,
+  dragon_spawn: 2000,
+  dragon_attack: 1000,
+  dragon_killed: 2000,
+  jargon_arrival: 1500,
+  jargon_departure: 800,
+  volcano_deposit: 800,
+  volcano_withdraw: 800,
 };
 
 const SOUND_MAP = {
@@ -50,6 +59,13 @@ const SOUND_MAP = {
   turn_start: 'turn_start',
   game_over: 'victory',
   ability_used: 'ability_used',
+  volcano_active: 'volcano_rumble',
+  dragon_spawn: 'dragon_roar',
+  dragon_attack: 'dragon_roar',
+  dragon_killed: 'victory',
+  jargon_arrival: 'jargon_chime',
+  volcano_deposit: 'sp_gain',
+  volcano_withdraw: 'sp_gain',
 };
 
 export function useAnimationQueue(animations) {
@@ -97,6 +113,17 @@ export function useAnimationQueue(animations) {
         flavor: evt.text,
       });
       setTimeout(() => setAnnouncement(null), 1800);
+    }
+
+    // Show announcement for event system
+    if (['volcano_active', 'dragon_spawn', 'dragon_killed', 'jargon_arrival', 'jargon_departure', 'dragon_attack'].includes(evt.type)) {
+      setAnnouncement({
+        name: evt.type === 'dragon_spawn' || evt.type === 'dragon_attack' || evt.type === 'dragon_killed' ? 'Dragon' :
+              evt.type === 'jargon_arrival' || evt.type === 'jargon_departure' ? 'Jargon' : 'Volcano',
+        type: 'Event',
+        flavor: evt.text,
+      });
+      setTimeout(() => setAnnouncement(null), 2500);
     }
 
     // Show announcement for first-player bonus

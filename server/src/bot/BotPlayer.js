@@ -124,7 +124,11 @@ export function decideBotAction(state, difficulty = 'medium') {
     if (recycleAction) return recycleAction;
   }
 
-  // 7. Draw if we still have AP
+  // 7. Event actions (Volcano deposit, Dragon attack, Jargon buy)
+  const eventAction = pickEventAction(state, me, difficulty);
+  if (eventAction) return eventAction;
+
+  // 8. Draw if we still have AP
   if (me.hand.length < MAX_HAND_SIZE && me.ap >= 1) {
     return { type: ACTION.DRAW_CARD };
   }
@@ -662,6 +666,50 @@ function handleCardChoice(state) {
   })).sort((a, b) => b.score - a.score);
 
   return { type: ACTION.CHOOSE_CARD, cardUid: scored[0].card.uid };
+}
+
+// --- Event Actions ---
+
+function pickEventAction(state, me, difficulty) {
+  if (!state.eventsEnabled) return null;
+
+  // Dragon attack: prioritize if bot dealt most damage (wants the kill credit)
+  if (state.dragon?.active && me.ap >= 1) {
+    const myDamage = state.dragon.damageByPlayer?.[state.myId] || 0;
+    const maxOtherDamage = Math.max(0, ...Object.entries(state.dragon.damageByPlayer || {})
+      .filter(([id]) => id !== state.myId)
+      .map(([, d]) => d));
+
+    // Attack if: we're the top damage dealer, or dragon HP is low, or we have strong creatures
+    const shouldAttack = myDamage >= maxOtherDamage || state.dragon.currentHP <= 1000;
+
+    if (shouldAttack) {
+      const attacker = me.swamp
+        .filter(c => !c._hasAttacked && !c._harambeOwner)
+        .sort((a, b) => ((b.attack || 0) + (b._attackBuff || 0)) - ((a.attack || 0) + (a._attackBuff || 0)))[0];
+      if (attacker) {
+        return { type: ACTION.ATTACK_EVENT, attackerUid: attacker.uid };
+      }
+    }
+  }
+
+  // Volcano deposit: deposit when we have > 3000 SP and it's safe
+  if (state.volcano?.active && !state.dragon?.active && me.sp > 3000 && me.ap >= 1) {
+    // Deposit 20-40% of SP
+    const pct = 0.2 + Math.random() * 0.2;
+    const amount = Math.floor(me.sp * pct);
+    if (amount >= 500) {
+      return { type: ACTION.DEPOSIT_VOLCANO, amount };
+    }
+  }
+
+  // Jargon buy: buy if affordable and hand isn't full
+  if (state.jargon?.active && me.sp > 1500 && me.hand.length < 7 && state.graveyardCount > 0) {
+    // Estimate cost (graveyard avg cost ~1.5 * 100 = 150 SP)
+    return { type: ACTION.BUY_FROM_JARGON };
+  }
+
+  return null;
 }
 
 // --- Helpers ---

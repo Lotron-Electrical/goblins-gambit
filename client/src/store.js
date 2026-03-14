@@ -226,6 +226,25 @@ export const useStore = create((set, get) => ({
     });
   },
 
+  depositVolcano: (amount) => {
+    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.DEPOSIT_VOLCANO, amount }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+  },
+
+  attackEvent: (attackerUid) => {
+    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.ATTACK_EVENT, attackerUid }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+    set({ selectedCard: null, targetMode: false });
+  },
+
+  buyFromJargon: () => {
+    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.BUY_FROM_JARGON }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+  },
+
   addBot: (difficulty = 'medium') => {
     socket.emit(EVENTS.ADD_BOT, { difficulty }, (res) => {
       if (res?.error) set({ error: res.error });

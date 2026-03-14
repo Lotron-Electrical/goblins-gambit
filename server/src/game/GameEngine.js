@@ -19,6 +19,11 @@ import {
   TURN_PHASE,
   ACTION,
   THEME_EFFECTS,
+  EVENT_DRAGON_BASE_DEF,
+  EVENT_DRAGON_DAMAGE,
+  VOLCANO_TRIGGER_RATIO,
+  JARGON_CHANCE,
+  JARGON_CARD_COST_MULTIPLIER,
 } from '../../../shared/src/constants.js';
 
 // Encumbrance: hoarding cards (8-9) penalises AP to 1, but maxing hand (10)
@@ -113,6 +118,15 @@ export class GameEngine {
 
       case ACTION.RECYCLE_CREATURE:
         return this.handleRecycleCreature(player, playerId, action);
+
+      case ACTION.DEPOSIT_VOLCANO:
+        return this.handleDepositVolcano(player, playerId, action);
+
+      case ACTION.ATTACK_EVENT:
+        return this.handleAttackEvent(player, playerId, action);
+
+      case ACTION.BUY_FROM_JARGON:
+        return this.handleBuyFromJargon(player, playerId, action);
 
       default:
         return { success: false, error: 'Unknown action' };
@@ -434,6 +448,12 @@ export class GameEngine {
     }
 
     events.push({ type: 'turn_start', playerId: nextPlayerId, turnNumber: this.state.turnNumber });
+
+    // Detect turn cycle completion (wrapped back to first player)
+    if (this.state.currentTurnIndex === 0 && this.state.eventsEnabled) {
+      this.state.turnCycleCount++;
+      this.tickEventCycle(events);
+    }
 
     // Skip turns for Lagg-affected or disconnected players (loop handles cascades)
     let safetyLimit = this.state.turnOrder.length;
@@ -856,6 +876,347 @@ export class GameEngine {
         player.gear[slot] = null;
       }
     }
+  }
+
+  // ========== EVENT SYSTEM ==========
+
+  /** Called once per turn cycle (when currentTurnIndex wraps to 0) */
+  tickEventCycle(events) {
+    const state = this.state;
+    const playerCount = state.turnOrder.length;
+    const halfWinSP = state.winSP * VOLCANO_TRIGGER_RATIO;
+
+    // Check if any player has reached the threshold
+    const thresholdReached = Object.values(state.players).some(p => p.sp >= halfWinSP);
+
+    if (!thresholdReached) return;
+
+    // Activate Volcano if not already active (and Dragon isn't active)
+    if (!state.volcano.active && !state.dragon.active) {
+      state.volcano.active = true;
+      events.push({
+        type: 'volcano_active',
+        text: 'THE VOLCANO AWAKENS!',
+      });
+    }
+
+    // Tick deposit maturity (only if Dragon is NOT active)
+    if (state.volcano.active && !state.dragon.active) {
+      for (const [pid, deposits] of Object.entries(state.volcano.deposits)) {
+        const player = state.players[pid];
+        if (!player) continue;
+        const matured = [];
+        for (let i = deposits.length - 1; i >= 0; i--) {
+          deposits[i].maturesIn--;
+          if (deposits[i].maturesIn <= 0) {
+            const dep = deposits[i];
+            const payout = Math.floor(dep.amount * (1 + dep.interestRate / 100));
+            player.sp += payout;
+            state.volcano.totalBanked -= dep.amount;
+            events.push({
+              type: 'volcano_withdraw',
+              playerId: pid,
+              amount: payout,
+              interest: payout - dep.amount,
+            });
+            events.push({ type: 'sp_change', playerId: pid, amount: payout, reason: 'Volcano matured' });
+            matured.push(i);
+          }
+        }
+        for (const idx of matured) {
+          deposits.splice(idx, 1);
+        }
+      }
+    }
+
+    // Dragon damage tick
+    if (state.dragon.active) {
+      for (const pid of state.turnOrder) {
+        const p = state.players[pid];
+        let dmg = EVENT_DRAGON_DAMAGE;
+        // Shield absorbs first
+        if (p.playerShield > 0) {
+          const absorbed = Math.min(p.playerShield, dmg);
+          p.playerShield -= absorbed;
+          dmg -= absorbed;
+        }
+        if (dmg > 0) {
+          p.sp = Math.max(0, p.sp - dmg);
+          events.push({ type: 'sp_change', playerId: pid, amount: -dmg, reason: 'Dragon attack' });
+        }
+      }
+      events.push({ type: 'dragon_attack', text: 'The Dragon attacks all players!' });
+    }
+
+    // Dragon spawn check (only if Volcano has banked SP and Dragon is NOT already active)
+    if (state.volcano.active && !state.dragon.active && state.volcano.totalBanked > 0) {
+      const spawnChance = Math.min(0.5, state.volcano.totalBanked / 20000);
+      if (Math.random() < spawnChance) {
+        this.spawnDragon(events);
+      }
+    }
+
+    // Jargon spawn check (if not already active and Dragon isn't active)
+    if (!state.jargon.active && !state.dragon.active) {
+      if (Math.random() < JARGON_CHANCE) {
+        this.spawnJargon(events);
+      }
+    }
+
+    // Jargon departure countdown
+    if (state.jargon.active) {
+      state.jargon.cyclesRemaining--;
+      if (state.jargon.cyclesRemaining <= 0) {
+        state.jargon.active = false;
+        events.push({ type: 'jargon_departure', text: 'Jargon the Vendor departs...' });
+      }
+    }
+  }
+
+  spawnDragon(events) {
+    const state = this.state;
+    const playerCount = state.turnOrder.length;
+    state.dragon.active = true;
+    state.dragon.maxHP = EVENT_DRAGON_BASE_DEF * playerCount;
+    state.dragon.currentHP = state.dragon.maxHP;
+    state.dragon.damageByPlayer = {};
+    for (const pid of state.turnOrder) {
+      state.dragon.damageByPlayer[pid] = 0;
+    }
+    events.push({
+      type: 'dragon_spawn',
+      text: 'A DRAGON APPROACHES!',
+      maxHP: state.dragon.maxHP,
+    });
+  }
+
+  spawnJargon(events) {
+    const state = this.state;
+    state.jargon.active = true;
+    state.jargon.cyclesRemaining = 1;
+    events.push({
+      type: 'jargon_arrival',
+      text: 'JARGON THE VENDOR ARRIVES!',
+    });
+  }
+
+  handleDepositVolcano(player, playerId, action) {
+    const state = this.state;
+    const amount = Math.floor(Number(action.amount) || 0);
+
+    if (!state.eventsEnabled || !state.volcano.active) {
+      return { success: false, error: 'Volcano is not active' };
+    }
+    if (state.dragon.active) {
+      return { success: false, error: 'Cannot deposit while Dragon is active' };
+    }
+    if (amount <= 0) {
+      return { success: false, error: 'Must deposit a positive amount' };
+    }
+    if (player.sp < amount) {
+      return { success: false, error: `Not enough SP (have ${player.sp})` };
+    }
+    if (player.ap < 1) {
+      return { success: false, error: 'Need 1 AP to deposit' };
+    }
+
+    player.ap -= 1;
+    player.sp -= amount;
+
+    // Roll D6 for lock duration and interest rate
+    const d6 = Math.floor(Math.random() * 6) + 1;
+    const interestRate = d6 * 10; // 10-60%
+
+    if (!state.volcano.deposits[playerId]) {
+      state.volcano.deposits[playerId] = [];
+    }
+    state.volcano.deposits[playerId].push({
+      amount,
+      interestRate,
+      maturesIn: d6,
+      depositedAt: state.turnCycleCount,
+    });
+    state.volcano.totalBanked += amount;
+
+    const events = [
+      { type: 'sp_change', playerId, amount: -amount, reason: 'Volcano deposit' },
+      {
+        type: 'volcano_deposit',
+        playerId,
+        amount,
+        interestRate,
+        maturesIn: d6,
+        text: `Deposited ${amount} SP! Locked for ${d6} cycles at ${interestRate}% interest`,
+      },
+      { type: 'dice_roll', dice: [d6], result: `${interestRate}% interest, ${d6} cycle lock` },
+    ];
+
+    this.logAction(playerId, 'deposit_volcano', { amount, interestRate, maturesIn: d6 });
+    state.animations.push(...events);
+    return this.checkWin({ success: true, events });
+  }
+
+  handleAttackEvent(player, playerId, action) {
+    const state = this.state;
+
+    if (!state.eventsEnabled || !state.dragon.active) {
+      return { success: false, error: 'No Dragon to attack' };
+    }
+    if (player.ap < 1) {
+      return { success: false, error: 'Need 1 AP to attack Dragon' };
+    }
+
+    const { attackerUid } = action;
+    const attackerCard = player.swamp.find(c => c.uid === attackerUid);
+    if (!attackerCard) return { success: false, error: 'Creature not on field' };
+    if (attackerCard._hasAttacked) {
+      return { success: false, error: 'This creature already attacked this turn' };
+    }
+
+    player.ap -= 1;
+    attackerCard._hasAttacked = true;
+
+    // Ghost reveal
+    if (attackerCard._invisible) {
+      attackerCard._invisible = false;
+    }
+
+    const aStats = getEffectiveStats(state, playerId, attackerCard);
+    let damage = aStats.attack;
+
+    // Berserk multiplier
+    const themeEffects = THEME_EFFECTS[state.theme];
+    if (themeEffects?.berserkMultiplier > 1 && isLastPlace(state, playerId)) {
+      damage = Math.floor(damage * themeEffects.berserkMultiplier);
+    }
+
+    state.dragon.currentHP -= damage;
+    state.dragon.damageByPlayer[playerId] = (state.dragon.damageByPlayer[playerId] || 0) + damage;
+
+    const events = [
+      {
+        type: 'attack',
+        attacker: attackerUid,
+        defender: 'dragon',
+        attackerOwner: playerId,
+        defenderOwner: 'dragon',
+      },
+      {
+        type: 'damage',
+        targetUid: 'dragon',
+        amount: damage,
+        attackerOwner: playerId,
+        attackerUid,
+      },
+    ];
+
+    // Track stats
+    if (state.stats[playerId]) {
+      state.stats[playerId].damageDealt += damage;
+      if (state.stats[playerId].creatureStats[attackerUid]) {
+        state.stats[playerId].creatureStats[attackerUid].damageDealt += damage;
+      }
+    }
+
+    // Dragon killed?
+    if (state.dragon.currentHP <= 0) {
+      // Find player with most damage dealt
+      let maxDamage = 0;
+      let killerId = null;
+      for (const [pid, dmg] of Object.entries(state.dragon.damageByPlayer)) {
+        if (dmg > maxDamage) {
+          maxDamage = dmg;
+          killerId = pid;
+        }
+      }
+
+      // Award all volcano deposits + interest to killer
+      const totalPayout = state.volcano.totalBanked;
+      if (killerId && totalPayout > 0) {
+        const killer = state.players[killerId];
+        if (killer) {
+          // Calculate total with interest
+          let fullPayout = 0;
+          for (const [, deposits] of Object.entries(state.volcano.deposits)) {
+            for (const dep of deposits) {
+              fullPayout += Math.floor(dep.amount * (1 + dep.interestRate / 100));
+            }
+          }
+          killer.sp += fullPayout;
+          events.push({
+            type: 'sp_change',
+            playerId: killerId,
+            amount: fullPayout,
+            reason: 'Dragon slain! Volcano treasure claimed!',
+          });
+          if (state.stats[killerId]) {
+            state.stats[killerId].spEarned += fullPayout;
+          }
+        }
+      }
+
+      events.push({
+        type: 'dragon_killed',
+        killerId,
+        killerName: killerId ? state.players[killerId]?.name : 'Unknown',
+        totalPayout: state.volcano.totalBanked,
+        text: `${killerId ? state.players[killerId]?.name : 'Unknown'} SLAYS THE DRAGON!`,
+      });
+
+      // Reset volcano entirely
+      state.dragon.active = false;
+      state.dragon.currentHP = 0;
+      state.dragon.damageByPlayer = {};
+      state.volcano.active = false;
+      state.volcano.deposits = {};
+      state.volcano.totalBanked = 0;
+    }
+
+    this.logAction(playerId, 'attack_event', { attackerUid, damage });
+    state.animations.push(...events);
+    return this.checkWin({ success: true, events });
+  }
+
+  handleBuyFromJargon(player, playerId, action) {
+    const state = this.state;
+
+    if (!state.eventsEnabled || !state.jargon.active) {
+      return { success: false, error: 'Jargon is not available' };
+    }
+    if (state.graveyard.length === 0) {
+      return { success: false, error: 'Graveyard is empty' };
+    }
+    if (player.hand.length >= MAX_HAND_SIZE) {
+      return { success: false, error: 'Hand is full' };
+    }
+
+    // Pick random card from graveyard
+    const randomIdx = Math.floor(Math.random() * state.graveyard.length);
+    const card = state.graveyard[randomIdx];
+    const cost = Math.max(100, (card.cost || 1) * JARGON_CARD_COST_MULTIPLIER);
+
+    if (player.sp < cost) {
+      return { success: false, error: `Need ${cost} SP to buy from Jargon (have ${player.sp})` };
+    }
+
+    player.sp -= cost;
+    state.graveyard.splice(randomIdx, 1);
+    player.hand.push(card);
+
+    const events = [
+      { type: 'sp_change', playerId, amount: -cost, reason: 'Bought from Jargon' },
+      {
+        type: 'card_recovered',
+        cardUid: card.uid,
+        card,
+        playerId,
+        reason: `Jargon sold ${card.name}`,
+      },
+    ];
+
+    this.logAction(playerId, 'buy_jargon', { cardUid: card.uid, cost });
+    state.animations.push(...events);
+    return { success: true, events };
   }
 
   logAction(playerId, type, data) {

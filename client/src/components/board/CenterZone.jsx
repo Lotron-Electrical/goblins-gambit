@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../../store.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
+import VolcanoModal from '../ui/VolcanoModal.jsx';
+import JargonModal from '../ui/JargonModal.jsx';
 
 const TYPE_BORDER = {
   Creature: 'border-red-600',
@@ -60,9 +62,11 @@ function CardBack({ className = '', style = {}, small }) {
   );
 }
 
-export default function CenterZone({ deckCount, graveyardCount, graveyard, stagedCards = [] }) {
+export default function CenterZone({ deckCount, graveyardCount, graveyard, stagedCards = [], volcano, dragon, jargon }) {
   const { setGraveyardOpen } = useStore();
   const isMobile = useIsMobile();
+  const [volcanoOpen, setVolcanoOpen] = useState(false);
+  const [jargonOpen, setJargonOpen] = useState(false);
 
   const graveyardRotations = useMemo(() => {
     return (graveyard || []).map((_, i) => Math.sin(i * 5.7 + 1.3) * 8);
@@ -162,6 +166,52 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
         </div>
       )}
 
+      {/* Event zone — Volcano, Dragon, Jargon */}
+      {(volcano?.active || dragon?.active || jargon?.active) && (
+        <div className="flex items-center gap-2 z-10">
+          {/* Volcano */}
+          {volcano?.active && !dragon?.active && (
+            <button
+              onClick={() => setVolcanoOpen(true)}
+              className="relative flex flex-col items-center px-2 py-1 rounded-lg bg-orange-900/40 border border-orange-600/50 hover:bg-orange-900/60 transition cursor-pointer"
+              title="Volcano Bank"
+            >
+              <span className={`text-xl ${isMobile ? 'text-base' : ''}`}>&#x1F30B;</span>
+              <span className="text-[9px] text-orange-300 font-bold">{volcano.totalBanked} SP</span>
+            </button>
+          )}
+
+          {/* Dragon */}
+          {dragon?.active && (
+            <div className="relative flex flex-col items-center px-2 py-1 rounded-lg bg-red-900/50 border border-red-500/60 animate-pulse">
+              <span className={`text-xl ${isMobile ? 'text-base' : ''}`}>&#x1F409;</span>
+              <div className="w-16 h-1.5 bg-gray-800 rounded-full mt-0.5 overflow-hidden">
+                <div
+                  className="h-full bg-red-500 rounded-full transition-all"
+                  style={{ width: `${(dragon.currentHP / dragon.maxHP) * 100}%` }}
+                />
+              </div>
+              <span className="text-[8px] text-red-300">{dragon.currentHP}/{dragon.maxHP}</span>
+              {volcano?.totalBanked > 0 && (
+                <span className="text-[8px] text-orange-300">&#x1F30B; {volcano.totalBanked} SP</span>
+              )}
+            </div>
+          )}
+
+          {/* Jargon */}
+          {jargon?.active && (
+            <button
+              onClick={() => setJargonOpen(true)}
+              className="relative flex flex-col items-center px-2 py-1 rounded-lg bg-purple-900/40 border border-purple-500/50 hover:bg-purple-900/60 transition cursor-pointer"
+              title="Jargon the Vendor"
+            >
+              <span className={`text-xl ${isMobile ? 'text-base' : ''}`}>&#x1F9D9;</span>
+              <span className="text-[9px] text-purple-300 font-bold">Shop</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Graveyard — right side, messy stack of card faces */}
       <div className={`flex ${isMobile ? 'flex-row-reverse items-center gap-1' : 'flex-col items-center gap-1'}`}>
         <div
@@ -206,6 +256,14 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
         </div>
         <span className={`text-gray-400 ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>Grave</span>
       </div>
+
+      {/* Event modals */}
+      {volcanoOpen && volcano && (
+        <VolcanoModal volcano={volcano} onClose={() => setVolcanoOpen(false)} />
+      )}
+      {jargonOpen && jargon?.active && (
+        <JargonModal graveyardCount={graveyardCount} onClose={() => setJargonOpen(false)} />
+      )}
     </div>
   );
 }

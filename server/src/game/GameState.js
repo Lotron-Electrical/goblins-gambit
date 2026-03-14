@@ -6,6 +6,7 @@ import {
   TURN_PHASE,
   WIN_SP,
   THEME_EFFECTS,
+  EVENT_DRAGON_BASE_DEF,
 } from '../../../shared/src/constants.js';
 import { isLastPlace } from './abilities/helpers.js';
 
@@ -62,6 +63,25 @@ export function createGameState(playerIds, playerNames, settings = {}) {
     pendingChoice: null,    // { playerId, cards, ... }
     animations: [],         // queued animation events for client
     baseAP,                 // custom base AP for this game
+
+    // Event system
+    eventsEnabled: !!settings.eventsEnabled,
+    turnCycleCount: 0,      // increments each time turn wraps to player 0
+    volcano: {
+      active: false,
+      deposits: {},         // playerId -> [{ amount, interestRate, maturesIn, depositedAt }]
+      totalBanked: 0,
+    },
+    dragon: {
+      active: false,
+      currentHP: 0,
+      maxHP: 0,
+      damageByPlayer: {},   // playerId -> totalDamage
+    },
+    jargon: {
+      active: false,
+      cyclesRemaining: 0,
+    },
   };
 
   // Initialize per-player stats
@@ -183,6 +203,30 @@ export function getClientState(state, playerId) {
     theme: state.theme || 'swamp',
     berserkPlayerIds: getBerserkPlayerIds(state),
     ...(state.winner ? { stats: state.stats } : {}),
+
+    // Event system (only if enabled)
+    ...(state.eventsEnabled ? {
+      eventsEnabled: true,
+      volcano: {
+        active: state.volcano.active,
+        totalBanked: state.volcano.totalBanked,
+        // Show own deposits with timers, opponents only see total
+        myDeposits: state.volcano.deposits[playerId] || [],
+        depositCounts: Object.fromEntries(
+          Object.entries(state.volcano.deposits).map(([pid, deps]) => [pid, deps.length])
+        ),
+      },
+      dragon: state.dragon.active ? {
+        active: true,
+        currentHP: state.dragon.currentHP,
+        maxHP: state.dragon.maxHP,
+        damageByPlayer: state.dragon.damageByPlayer,
+      } : { active: false },
+      jargon: {
+        active: state.jargon.active,
+        cyclesRemaining: state.jargon.cyclesRemaining,
+      },
+    } : {}),
   };
 }
 

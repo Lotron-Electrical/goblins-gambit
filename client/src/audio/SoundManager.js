@@ -545,6 +545,23 @@ const SOUNDS = {
   ability_used: (ctx) => {
     playTone(ctx, 550, 0.15, 'sine', 0.2, 1100);
   },
+  // Event system sounds
+  volcano_rumble: (ctx) => {
+    playTone(ctx, 60, 0.8, 'sawtooth', 0.25, 40);
+    playNoise(ctx, 0.5, 0.2);
+    setTimeout(() => playTone(ctx, 80, 0.6, 'sine', 0.15, 50), 200);
+  },
+  dragon_roar: (ctx) => {
+    playTone(ctx, 120, 0.6, 'sawtooth', 0.35, 200);
+    setTimeout(() => playTone(ctx, 200, 0.5, 'sawtooth', 0.25, 80), 150);
+    setTimeout(() => playNoise(ctx, 0.3, 0.3), 300);
+  },
+  jargon_chime: (ctx) => {
+    playTone(ctx, 660, 0.15, 'triangle', 0.2);
+    setTimeout(() => playTone(ctx, 880, 0.15, 'triangle', 0.2), 120);
+    setTimeout(() => playTone(ctx, 1100, 0.2, 'triangle', 0.2), 240);
+    setTimeout(() => playTone(ctx, 1320, 0.3, 'triangle', 0.15), 360);
+  },
 };
 
 export const soundManager = new SoundManager();

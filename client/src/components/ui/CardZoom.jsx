@@ -60,16 +60,16 @@ export default function CardZoom() {
         onClick={() => setZoomedCard(null)}
       >
         <div
-          className="w-full max-w-[300px] bg-gray-950 rounded-xl border-2 border-gray-700 overflow-hidden shadow-2xl"
+          className="w-full max-w-[300px] max-h-[85dvh] bg-gray-950 rounded-xl border-2 border-gray-700 overflow-hidden shadow-2xl flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Card art — cropped to artwork only */}
+          {/* Card art — cropped to artwork only, constrained height */}
           {card.image && (
-            <img src={`/cards/${card.image}`} alt={card.name} className="w-full" style={{ clipPath: 'inset(0 0 32% 0)' }} draggable={false} />
+            <img src={`/cards/${card.image}`} alt={card.name} className="w-full shrink-0 max-h-[30dvh] object-cover object-top" draggable={false} />
           )}
 
-          {/* Card info */}
-          <div className="p-3 space-y-2">
+          {/* Card info — scrollable */}
+          <div className="p-3 space-y-2 overflow-y-auto flex-1 min-h-0">
             <div>
               <h3 className="font-display text-[16px] text-white leading-tight">{card.name}</h3>
               <div className="flex items-center gap-2 mt-1">
@@ -181,7 +181,7 @@ export default function CardZoom() {
           {/* Close button */}
           <button
             onClick={() => setZoomedCard(null)}
-            className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 text-[14px] transition"
+            className="w-full shrink-0 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 text-[14px] transition"
           >
             Close
           </button>

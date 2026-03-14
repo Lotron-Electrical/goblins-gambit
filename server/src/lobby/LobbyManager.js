@@ -94,6 +94,7 @@ export class LobbyManager {
       startingSP: room.startingSP || 0,
       startingHandSize: room.startingHandSize,
       baseAP: room.baseAP,
+      eventsEnabled: room.eventsEnabled || false,
     });
     this.games.set(roomId, engine);
 

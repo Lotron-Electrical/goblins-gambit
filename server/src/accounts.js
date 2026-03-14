@@ -226,21 +226,26 @@ async function getProfile(username) {
 async function getLeaderboard() {
   if (usePostgres) {
     const result = await pool.query(
-      `SELECT display_name, games_played, games_won, total_sp, creatures_killed
+      `SELECT display_name, games_played, games_won, total_sp, creatures_killed,
+              cards_played, favourite_card, created_at
        FROM gg_accounts
        ORDER BY games_won DESC,
          CASE WHEN games_played > 0
               THEN ROUND((games_won::numeric / games_played) * 100)
-              ELSE 0 END DESC
-       LIMIT 50`
+              ELSE 0 END DESC,
+         created_at ASC
+       LIMIT 100`
     );
-    return result.rows.map(r => ({
+    return result.rows.map((r, i) => ({
+      rank: i + 1,
       username: r.display_name,
       gamesPlayed: r.games_played,
       gamesWon: r.games_won,
       winRate: r.games_played > 0 ? Math.round((r.games_won / r.games_played) * 100) : 0,
       totalSP: r.total_sp,
       creaturesKilled: r.creatures_killed,
+      cardsPlayed: r.cards_played,
+      favouriteCard: r.favourite_card,
     }));
   }
 
@@ -253,9 +258,12 @@ async function getLeaderboard() {
       winRate: a.stats.gamesPlayed > 0 ? Math.round((a.stats.gamesWon / a.stats.gamesPlayed) * 100) : 0,
       totalSP: a.stats.totalSP,
       creaturesKilled: a.stats.creaturesKilled,
+      cardsPlayed: a.stats.cardsPlayed || 0,
+      favouriteCard: a.stats.favouriteCard || null,
     }))
     .sort((a, b) => b.gamesWon - a.gamesWon || b.winRate - a.winRate)
-    .slice(0, 50);
+    .map((a, i) => ({ ...a, rank: i + 1 }))
+    .slice(0, 100);
 }
 
 async function validateToken(token) {
