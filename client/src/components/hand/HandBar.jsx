@@ -1,9 +1,18 @@
+import { useState } from 'react';
 import { useStore } from '../../store.js';
 import CardInHand from './CardInHand.jsx';
 import ActivityLog from '../ui/ActivityLog.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
+import { TYPE_ICON } from '../ui/icons.js';
 
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
+
+const HAND_TABS = [
+  { type: 'Creature', color: 'red', bg: 'bg-red-900/60', active: 'bg-red-700', border: 'border-red-500' },
+  { type: 'Magic', color: 'blue', bg: 'bg-blue-900/60', active: 'bg-blue-700', border: 'border-blue-500' },
+  { type: 'Armour', color: 'gray', bg: 'bg-gray-800/60', active: 'bg-gray-600', border: 'border-gray-400' },
+  { type: 'Tricks', color: 'green', bg: 'bg-green-900/60', active: 'bg-green-700', border: 'border-green-500' },
+];
 
 export default function HandBar() {
   const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
@@ -28,31 +37,67 @@ export default function HandBar() {
   buyAPCost = Math.max(0, buyAPCost);
   const canBuyAP = myPlayer.sp >= buyAPCost;
 
+  // Mobile: tabbed hand by card type
+  const [activeTab, setActiveTab] = useState('Creature');
+
   if (isMobile) {
+    const filteredCards = hand.filter(c => c.type === activeTab);
+    const tabCounts = {};
+    for (const tab of HAND_TABS) {
+      tabCounts[tab.type] = hand.filter(c => c.type === tab.type).length;
+    }
+
     return (
-      <div className="relative bg-gray-950/90 border-t border-gray-800 px-1 py-1 shrink-0 overflow-visible z-30">
+      <div className="relative bg-gray-950/90 border-t border-gray-800 shrink-0 overflow-visible z-30">
         {/* Reaction banner */}
         {hasReaction && (
-          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-1 mb-1 mx-1 text-center animate-pulse">
+          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-1 mb-1 mx-1 mt-1 text-center animate-pulse">
             <span className="text-orange-300 text-[10px] font-bold">You can react to {currentPlayerName}'s turn! Tap a REACT card.</span>
           </div>
         )}
-        {/* Cards row */}
-        <div className="flex gap-0.5 justify-start items-end overflow-x-auto overflow-y-visible pb-1 px-1">
-          {hand.map((card) => (
+        {/* Type tabs */}
+        <div className="flex">
+          {HAND_TABS.map(tab => {
+            const isActive = activeTab === tab.type;
+            const count = tabCounts[tab.type];
+            return (
+              <button
+                key={tab.type}
+                onClick={() => setActiveTab(tab.type)}
+                className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[11px] font-bold transition-colors border-b-2 ${
+                  isActive
+                    ? `${tab.active} ${tab.border} text-white`
+                    : `bg-gray-900/60 border-transparent text-gray-500`
+                }`}
+              >
+                <span className="text-[13px]">{TYPE_ICON[tab.type]}</span>
+                {count > 0 && (
+                  <span className={`text-[10px] rounded-full min-w-[16px] h-[16px] flex items-center justify-center ${
+                    isActive ? 'bg-white/20' : 'bg-gray-700'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {/* Cards for active tab */}
+        <div className="flex gap-0.5 justify-start items-end overflow-x-auto overflow-y-visible pb-1 px-1 pt-1 min-h-[120px]">
+          {filteredCards.map((card) => (
             <CardInHand
               key={card.uid}
               card={card}
               isSelected={selectedCard?.uid === card.uid}
             />
           ))}
-          {hand.length === 0 && (
-            <div className="text-gray-600 py-2 text-[11px]">No cards in hand</div>
+          {filteredCards.length === 0 && (
+            <div className="text-gray-600 py-2 text-[11px] w-full text-center">No {activeTab.toLowerCase()} cards</div>
           )}
         </div>
         {/* Action buttons — horizontal row below cards */}
         {isMyTurn && (
-          <div className="flex gap-1.5 px-1 pt-1">
+          <div className="flex gap-1.5 px-1 py-1">
             <button
               onClick={drawCard}
               disabled={myPlayer.ap < 1}
