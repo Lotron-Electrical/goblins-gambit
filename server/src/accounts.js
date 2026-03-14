@@ -287,10 +287,23 @@ async function updateStatsAfterGame(gameState, winnerId) {
            total_sp = total_sp + $3,
            cards_played = cards_played + $4,
            creatures_killed = creatures_killed + $5,
-           card_counts = card_counts || $6::jsonb,
+           card_counts = (
+             SELECT COALESCE(jsonb_object_agg(key, val), '{}') FROM (
+               SELECT key, SUM(val)::int AS val FROM (
+                 SELECT key, value::int AS val FROM jsonb_each_text(card_counts)
+                 UNION ALL
+                 SELECT key, value::int AS val FROM jsonb_each_text($6::jsonb)
+               ) combined GROUP BY key
+             ) merged
+           ),
            favourite_card = (
-             SELECT key FROM jsonb_each_text(card_counts || $6::jsonb)
-             ORDER BY value::int DESC LIMIT 1
+             SELECT key FROM (
+               SELECT key, SUM(val)::int AS total FROM (
+                 SELECT key, value::int AS val FROM jsonb_each_text(card_counts)
+                 UNION ALL
+                 SELECT key, value::int AS val FROM jsonb_each_text($6::jsonb)
+               ) combined GROUP BY key
+             ) merged ORDER BY total DESC LIMIT 1
            )
          WHERE username = $1`,
         [key, isWinner ? 1 : 0, sp, cardsPlayed, creaturesKilled, gameCountsJson]

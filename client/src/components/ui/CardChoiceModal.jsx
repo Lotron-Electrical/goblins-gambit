@@ -20,12 +20,12 @@ export default function CardChoiceModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 pointer-events-auto">
-      <div className="bg-gray-900 border border-[var(--color-gold)] rounded-xl p-6 max-w-lg shadow-2xl">
-        <h3 className="text-xl font-display text-[var(--color-gold)] mb-3">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 pointer-events-auto p-3">
+      <div className="bg-gray-900 border border-[var(--color-gold)] rounded-xl p-4 sm:p-6 max-w-lg w-full shadow-2xl">
+        <h3 className="text-lg sm:text-xl font-display text-[var(--color-gold)] mb-2 sm:mb-3">
           {pending.type === 'dead_meme' ? 'Dead Meme Revive' : pending.type === 'ama_reveal' ? 'AMA - Hand Revealed' : isPeek ? 'Woke - Deck Peek' : 'Choose a Card'}
         </h3>
-        <p className="text-[14px] text-gray-300 mb-4">{pending.prompt}</p>
+        <p className="text-[13px] sm:text-[14px] text-gray-300 mb-3 sm:mb-4">{pending.prompt}</p>
         <div className="grid grid-cols-3 gap-2">
           {isPeek && pending.cards.length === 0 && (
             <div className="col-span-3 text-center text-gray-500 py-4">Deck is empty!</div>

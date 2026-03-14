@@ -109,6 +109,7 @@ export default function GameScreen() {
   // Mobile: track which opponent is expanded (defaults to current turn player)
   const [expandedOpponent, setExpandedOpponent] = useState(null);
   const prevTurnRef = useRef(null);
+  const opponentScrollRef = useRef(null);
 
   // Auto-expand: opponent whose turn it is, or first opponent when it's my turn
   useEffect(() => {
@@ -125,6 +126,17 @@ export default function GameScreen() {
       }
     }
   }, [gameState?.currentPlayerId, isMobile, gameState]);
+
+  // Auto-scroll to show expanded opponent field
+  useEffect(() => {
+    if (!isMobile || !expandedOpponent || !opponentScrollRef.current) return;
+    // Small delay to let the DOM render the expanded field
+    const timer = setTimeout(() => {
+      const el = opponentScrollRef.current?.querySelector(`[data-opponent="${expandedOpponent}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [expandedOpponent, isMobile]);
 
   const { currentAnimation, isAnimating, announcement } = useAnimationQueue(
     gameState?.animations
@@ -248,13 +260,13 @@ export default function GameScreen() {
 
       {/* Opponent fields */}
       {isMobile ? (
-        <div className="flex-1 overflow-auto p-1 pt-12 min-h-0">
+        <div ref={opponentScrollRef} className="flex-1 overflow-y-auto p-1 pt-12 min-h-[140px]">
           <div className="flex flex-col gap-1">
             {opponents.map(({ id, player }) => {
               const isExpanded = expandedOpponent === id;
               const isTurn = gameState.currentPlayerId === id;
               return (
-                <div key={id}>
+                <div key={id} data-opponent={id}>
                   <OpponentBar
                     player={player}
                     playerId={id}

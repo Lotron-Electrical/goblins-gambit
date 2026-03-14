@@ -138,7 +138,7 @@ export default function CardZoom() {
                   <p className="text-[13px] text-red-200 text-center">
                     {confirmAction === 'discard'
                       ? `Discard ${card.name} from your hand? This cannot be undone.`
-                      : `Sacrifice ${card.name} for +${card.sp ?? 0} shield? This cannot be undone.`}
+                      : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? This cannot be undone.`}
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -170,7 +170,7 @@ export default function CardZoom() {
                       onClick={() => setConfirmAction('recycle')}
                       className="flex-1 bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 font-bold py-2 rounded-lg text-[13px] transition"
                     >
-                      Recycle (+{card.sp ?? 0} shield)
+                      Recycle (+{Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield)
                     </button>
                   )}
                 </div>
@@ -288,7 +288,7 @@ export default function CardZoom() {
                 <p className="text-[12px] text-red-200 text-center">
                   {confirmAction === 'discard'
                     ? `Discard ${card.name}? This cannot be undone.`
-                    : `Sacrifice ${card.name} for +${card.sp ?? 0} shield? Cannot be undone.`}
+                    : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Cannot be undone.`}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -320,7 +320,7 @@ export default function CardZoom() {
                     onClick={() => setConfirmAction('recycle')}
                     className="w-full bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 font-bold py-2 rounded-lg text-[12px] transition"
                   >
-                    Recycle (+{card.sp ?? 0} shield)
+                    Recycle (+{Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield)
                   </button>
                 )}
               </div>

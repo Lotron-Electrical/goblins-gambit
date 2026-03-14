@@ -290,6 +290,12 @@ export const useStore = create((set, get) => ({
 socket.on('connect', () => {
   useStore.setState({ connected: true });
 
+  // Re-authenticate if we have a token
+  const { authToken } = useStore.getState();
+  if (authToken && authToken !== 'guest') {
+    socket.emit('authenticate', { token: authToken });
+  }
+
   // Attempt to rejoin if we were in a room/game before disconnect
   const savedRoomId = sessionStorage.getItem('gg_roomId');
   const { playerName, screen } = useStore.getState();
