@@ -74,9 +74,11 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         onClick={handleDirectAttack}
       >
         <div className="flex items-center gap-1 md:gap-2 min-w-0">
-          <span className={`font-bold truncate ${isMobile ? 'text-[11px] max-w-[100px]' : 'text-[13px] max-w-[140px]'} ${isOpponent ? 'text-red-400' : 'text-green-400'}`} title={player.name}>
-            {player.name}
-          </span>
+          {!(isMobile && isOpponent) && (
+            <span className={`font-bold truncate ${isMobile ? 'text-[11px] max-w-[100px]' : 'text-[13px] max-w-[140px]'} ${isOpponent ? 'text-red-400' : 'text-green-400'}`} title={player.name}>
+              {player.name}
+            </span>
+          )}
           {gameState?.berserkPlayerIds?.includes(playerId) && (
             <span className={`text-red-500 font-bold animate-pulse ${isMobile ? 'text-[8px]' : 'text-[10px]'}`} title="Berserk — 2x damage!">BERSERK</span>
           )}
