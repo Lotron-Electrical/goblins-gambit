@@ -265,18 +265,21 @@ export default function GameScreen() {
             {opponents.map(({ id, player }) => {
               const isExpanded = expandedOpponent === id;
               const isTurn = gameState.currentPlayerId === id;
+              const is1v1 = opponents.length === 1;
               return (
                 <div key={id} data-opponent={id}>
-                  <OpponentBar
-                    player={player}
-                    playerId={id}
-                    isCurrentTurn={isTurn}
-                    isExpanded={isExpanded}
-                    onTap={() => setExpandedOpponent(isExpanded ? null : id)}
-                    gameState={gameState}
-                  />
-                  {isExpanded && (
-                    <div className="mt-1">
+                  {!is1v1 && (
+                    <OpponentBar
+                      player={player}
+                      playerId={id}
+                      isCurrentTurn={isTurn}
+                      isExpanded={isExpanded}
+                      onTap={() => setExpandedOpponent(isExpanded ? null : id)}
+                      gameState={gameState}
+                    />
+                  )}
+                  {(is1v1 || isExpanded) && (
+                    <div className={is1v1 ? '' : 'mt-1'}>
                       <PlayerField
                         player={player}
                         playerId={id}

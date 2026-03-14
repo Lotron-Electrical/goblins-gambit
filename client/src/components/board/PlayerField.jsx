@@ -72,15 +72,17 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
   }, [spPct]);
 
   return (
-    <div className={`rounded-lg ${isMobile ? 'p-1' : 'p-2'} transition ${
-      isCurrentTurn ? 'bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40' : 'bg-gray-900/40'
-    } ${gameState?.berserkPlayerIds?.includes(playerId) ? 'ring-1 ring-red-600/60 shadow-[0_0_12px_rgba(220,38,38,0.3)]' : ''}`}>
+    <div
+      className={`rounded-lg ${isMobile ? 'p-1' : 'p-2'} transition ${
+        isCurrentTurn ? 'bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40' : 'bg-gray-900/40'
+      } ${gameState?.berserkPlayerIds?.includes(playerId) ? 'ring-1 ring-red-600/60 shadow-[0_0_12px_rgba(220,38,38,0.3)]' : ''} ${
+        canDirectAttack ? 'cursor-pointer ring-2 ring-red-500 animate-[pulse_1s_ease-in-out_infinite] bg-red-950/20' : ''
+      }`}
+      onClick={canDirectAttack ? handleDirectAttack : undefined}
+    >
       {/* Player info bar */}
       <div
-        className={`flex items-center justify-between mb-1 px-1 rounded ${
-          canDirectAttack ? 'cursor-pointer ring-2 ring-red-500 animate-pulse bg-red-950/30 hover:bg-red-900/40' : ''
-        }`}
-        onClick={handleDirectAttack}
+        className="flex items-center justify-between mb-1 px-1 rounded"
       >
         <div className="flex items-center gap-1 md:gap-2 min-w-0">
           {!(isMobile && isOpponent) && (
