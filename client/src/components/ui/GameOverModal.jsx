@@ -10,10 +10,10 @@ function computeAwards(stats) {
   let bestKills = 0;
   for (const [, ps] of Object.entries(stats)) {
     if (ps.creatureStats) {
-      for (const [name, cs] of Object.entries(ps.creatureStats)) {
+      for (const [, cs] of Object.entries(ps.creatureStats)) {
         if (cs.kills > bestKills) {
           bestKills = cs.kills;
-          bestCreature = name;
+          bestCreature = cs.name;
         }
       }
     }
