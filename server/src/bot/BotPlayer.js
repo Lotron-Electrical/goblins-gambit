@@ -25,8 +25,19 @@ export function createBotId() {
   return `bot_${nextBotId++}`;
 }
 
+const usedBotNames = new Set();
+
 export function getBotName() {
-  return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+  const available = BOT_NAMES.filter(n => !usedBotNames.has(n));
+  const name = available.length > 0
+    ? available[Math.floor(Math.random() * available.length)]
+    : `Goblin #${nextBotId}`; // fallback if all names used
+  usedBotNames.add(name);
+  return name;
+}
+
+export function releaseBotName(name) {
+  usedBotNames.delete(name);
 }
 
 /**

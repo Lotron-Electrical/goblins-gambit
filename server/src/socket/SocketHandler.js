@@ -1,5 +1,5 @@
 import { EVENTS, ACTION } from '../../../shared/src/constants.js';
-import { createBotId, getBotName, decideBotAction } from '../bot/BotPlayer.js';
+import { createBotId, getBotName, releaseBotName, decideBotAction } from '../bot/BotPlayer.js';
 
 export function setupSocketHandlers(io, lobby) {
   // Track which rooms have bots and bot IDs + difficulty
@@ -240,6 +240,8 @@ export function setupSocketHandlers(io, lobby) {
         return;
       }
 
+      const bot = room.players.find(p => p.id === botId);
+      if (bot) releaseBotName(bot.name);
       room.players = room.players.filter(p => p.id !== botId);
       lobby.playerRooms.delete(botId);
       botIds.delete(botId);
