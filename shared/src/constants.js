@@ -131,6 +131,9 @@ export const EVENTS = {
   ADD_BOT: 'add_bot',
   REMOVE_BOT: 'remove_bot',
 
+  // Reconnection
+  REJOIN_ROOM: 'rejoin_room',
+
   // System
   PLAYER_DISCONNECTED: 'player_disconnected',
   PLAYER_RECONNECTED: 'player_reconnected',

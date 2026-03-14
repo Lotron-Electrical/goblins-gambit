@@ -99,6 +99,7 @@ export const useStore = create((set, get) => ({
     const { playerName } = get();
     socket.emit(EVENTS.CREATE_ROOM, { name: playerName, options }, (res) => {
       if (res.room) {
+        sessionStorage.setItem('gg_roomId', res.room.id);
         set({ currentRoom: res.room, screen: 'room' });
       }
     });
@@ -110,6 +111,7 @@ export const useStore = create((set, get) => ({
       if (res.error) {
         set({ error: res.error });
       } else {
+        sessionStorage.setItem('gg_roomId', res.room.id);
         set({ currentRoom: res.room, screen: 'room' });
       }
     });
@@ -117,7 +119,8 @@ export const useStore = create((set, get) => ({
 
   leaveRoom: () => {
     socket.emit(EVENTS.LEAVE_ROOM);
-    set({ currentRoom: null, screen: 'lobby' });
+    sessionStorage.removeItem('gg_roomId');
+    set({ currentRoom: null, screen: 'lobby', gameState: null });
   },
 
   toggleReady: () => {
@@ -286,7 +289,22 @@ export const useStore = create((set, get) => ({
 // Socket event listeners
 socket.on('connect', () => {
   useStore.setState({ connected: true });
-  useStore.getState().refreshRooms();
+
+  // Attempt to rejoin if we were in a room/game before disconnect
+  const savedRoomId = sessionStorage.getItem('gg_roomId');
+  const { playerName, screen } = useStore.getState();
+  if (savedRoomId && playerName && (screen === 'game' || screen === 'room')) {
+    socket.emit(EVENTS.REJOIN_ROOM, { roomId: savedRoomId, name: playerName }, (res) => {
+      if (res?.error) {
+        // Room gone — reset to lobby
+        sessionStorage.removeItem('gg_roomId');
+        useStore.setState({ screen: 'lobby', currentRoom: null, gameState: null });
+      }
+      // Success case handled by GAME_STATE / ROOM_UPDATE event listeners
+    });
+  } else {
+    useStore.getState().refreshRooms();
+  }
 });
 
 socket.on('disconnect', () => {
@@ -337,8 +355,14 @@ socket.on(EVENTS.GAME_OVER, ({ winner, winnerName, stats }) => {
   if (stats) {
     useStore.setState({ gameStats: stats });
   }
+  // Game is over — clear saved room so we don't try to rejoin
+  sessionStorage.removeItem('gg_roomId');
 });
 
 socket.on(EVENTS.PLAYER_DISCONNECTED, ({ playerName }) => {
   useStore.setState({ error: `${playerName} disconnected` });
+});
+
+socket.on(EVENTS.PLAYER_RECONNECTED, ({ playerName }) => {
+  useStore.setState({ error: `${playerName} reconnected` });
 });

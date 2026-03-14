@@ -208,6 +208,106 @@ export function setupSocketHandlers(io, lobby) {
       io.emit(EVENTS.ROOM_LIST, lobby.getRoomList());
     });
 
+    // --- Reconnection: rejoin an active game with a new socket ---
+    socket.on(EVENTS.REJOIN_ROOM, ({ roomId, name }, callback) => {
+      playerName = name || 'Player';
+      const room = lobby.getRoom(roomId);
+      if (!room) {
+        callback?.({ error: 'Room no longer exists' });
+        return;
+      }
+
+      // Find the old player entry by name
+      const oldPlayer = room.players.find(p => p.name === playerName && !botIds.has(p.id));
+      if (!oldPlayer) {
+        callback?.({ error: 'Player not found in room' });
+        return;
+      }
+
+      const oldId = oldPlayer.id;
+      const newId = socket.id;
+
+      // Update player ID in room
+      oldPlayer.id = newId;
+      if (room.host === oldId) room.host = newId;
+
+      // Update lobby tracking
+      lobby.playerRooms.delete(oldId);
+      lobby.playerRooms.set(newId, roomId);
+      socket.join(roomId);
+
+      // Transfer account tracking
+      const username = socketAccounts.get(oldId);
+      if (username) {
+        socketAccounts.delete(oldId);
+        socketAccounts.set(newId, username);
+      }
+
+      const game = lobby.getGame(roomId);
+      if (game) {
+        // Remap player in game state
+        const playerState = game.state.players[oldId];
+        if (playerState) {
+          playerState.id = newId;
+          playerState.connected = true;
+          game.state.players[newId] = playerState;
+          delete game.state.players[oldId];
+        }
+
+        // Update turn order
+        const turnIdx = game.state.turnOrder.indexOf(oldId);
+        if (turnIdx !== -1) game.state.turnOrder[turnIdx] = newId;
+
+        // Update stats tracking
+        if (game.state.stats[oldId]) {
+          game.state.stats[newId] = game.state.stats[oldId];
+          delete game.state.stats[oldId];
+        }
+
+        // Update any pending target/choice referencing old ID
+        if (game.state.pendingTarget?.playerId === oldId) {
+          game.state.pendingTarget.playerId = newId;
+        }
+        if (game.state.pendingChoice?.playerId === oldId) {
+          game.state.pendingChoice.playerId = newId;
+        }
+
+        // Update creature references (_controller, _originalOwner, _harambeOwner)
+        for (const [pid, p] of Object.entries(game.state.players)) {
+          for (const c of p.swamp) {
+            if (c._controller === oldId) c._controller = newId;
+            if (c._originalOwner === oldId) c._originalOwner = newId;
+            if (c._harambeOwner === oldId) c._harambeOwner = newId;
+          }
+        }
+
+        // Notify other players
+        for (const p of room.players) {
+          if (p.id !== newId && !botIds.has(p.id)) {
+            io.to(p.id).emit(EVENTS.PLAYER_RECONNECTED, {
+              playerId: newId,
+              playerName,
+            });
+          }
+        }
+
+        // Send current game state to reconnected player
+        const state = game.getStateForPlayer(newId);
+        callback?.({ success: true, room, gameState: state });
+
+        // Also emit GAME_STATE so the client's listener picks it up
+        socket.emit(EVENTS.GAME_STATE, state);
+
+        // If it's this player's turn and they were being skipped, they can now play
+        // Broadcast updated state to all players
+        broadcastState(roomId, game);
+      } else {
+        // Game hasn't started yet — just rejoin the room
+        callback?.({ success: true, room });
+        io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
+      }
+    });
+
     socket.on(EVENTS.LEAVE_ROOM, () => {
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) return;
@@ -407,13 +507,16 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on('disconnect', () => {
-      socketAccounts.delete(socket.id);
       const roomId = lobby.getPlayerRoom(socket.id);
-      if (!roomId) return;
+      if (!roomId) {
+        socketAccounts.delete(socket.id);
+        return;
+      }
 
       const game = lobby.getGame(roomId);
       if (game) {
-        // Mark player disconnected but keep in game
+        // Mark player disconnected but keep in game — don't delete playerRooms or socketAccounts
+        // so the rejoin handler can find them
         const player = game.state.players[socket.id];
         if (player) {
           player.connected = false;
@@ -428,9 +531,19 @@ export function setupSocketHandlers(io, lobby) {
               }
             }
           }
+
+          // If it was this player's turn, skip to next (they'll get their turn back on rejoin)
+          if (game.getCurrentPlayerId() === socket.id) {
+            // Force end turn for disconnected player so game doesn't stall
+            game.handleAction(socket.id, { type: ACTION.END_TURN });
+            broadcastState(roomId, game);
+            // Check if next player is a bot
+            runBotTurn(roomId, game);
+          }
         }
       } else {
         // Not in game, just leave lobby
+        socketAccounts.delete(socket.id);
         const result = lobby.leaveRoom(socket.id);
         if (result && !result.deleted) {
           io.to(roomId).emit(EVENTS.ROOM_UPDATE, result.room);
