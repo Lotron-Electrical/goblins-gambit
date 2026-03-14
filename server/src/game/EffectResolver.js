@@ -91,6 +91,7 @@ function resolveTrick(state, playerId, card, cardIdx, targetInfo) {
   }
   // Fallback: consume card
   const player = state.players[playerId];
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   state.graveyard.push(card);
   return { success: true, events: [{ type: 'card_played', cardUid: card.uid, card, playerId }] };

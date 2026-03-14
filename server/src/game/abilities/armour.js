@@ -35,11 +35,12 @@ export function cursed_set_bonus(state, playerId, targetOwnerId, events) {
   const player = state.players[playerId];
   const target = state.players[targetOwnerId];
   if (player && target) {
-    const temp = player.sp;
-    player.sp = target.sp;
-    target.sp = temp;
-    events.push({ type: 'sp_change', playerId, amount: target.sp - temp, reason: 'Cursed set - SP swapped!' });
-    events.push({ type: 'sp_change', playerId: targetOwnerId, amount: temp - target.sp, reason: 'Cursed set - SP swapped!' });
+    const playerOldSP = player.sp;
+    const targetOldSP = target.sp;
+    player.sp = targetOldSP;
+    target.sp = playerOldSP;
+    events.push({ type: 'sp_change', playerId, amount: targetOldSP - playerOldSP, reason: 'Cursed set - SP swapped!' });
+    events.push({ type: 'sp_change', playerId: targetOwnerId, amount: playerOldSP - targetOldSP, reason: 'Cursed set - SP swapped!' });
   }
   return { success: true, events };
 }

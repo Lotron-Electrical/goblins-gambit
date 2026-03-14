@@ -17,6 +17,14 @@ export default function GraveyardModal() {
     if (graveyardOpen) clearHoveredCard();
   }, [graveyardOpen, clearHoveredCard]);
 
+  // Escape to close
+  useEffect(() => {
+    if (!graveyardOpen) return;
+    const handler = (e) => { if (e.key === 'Escape') setGraveyardOpen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [graveyardOpen, setGraveyardOpen]);
+
   if (!graveyardOpen || !gameState) return null;
 
   const graveyard = gameState.graveyard || [];

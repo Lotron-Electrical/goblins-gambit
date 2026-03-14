@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../../store.js';
 import { soundManager } from '../../audio/SoundManager.js';
 import { ICONS } from './icons.js';
@@ -12,6 +12,13 @@ export default function GameMenu() {
   } = useStore();
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [menuOpen, setMenuOpen]);
 
   if (!menuOpen) return null;
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useStore } from '../../store.js';
 
 const PARTICLE_COUNT = 40;
 const COLORS = [
@@ -10,11 +11,13 @@ const COLORS = [
 ];
 
 export default function SparkleParticles() {
+  const animationsOff = useStore(s => s.animationsOff);
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const rafRef = useRef(null);
 
   useEffect(() => {
+    if (animationsOff) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -85,7 +88,9 @@ export default function SparkleParticles() {
       window.removeEventListener('resize', resize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [animationsOff]);
+
+  if (animationsOff) return null;
 
   return (
     <canvas

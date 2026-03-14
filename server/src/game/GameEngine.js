@@ -21,6 +21,8 @@ import {
   THEME_EFFECTS,
 } from '../../../shared/src/constants.js';
 
+// Encumbrance: hoarding cards (8-9) penalises AP to 1, but maxing hand (10)
+// flips to 7 AP as a "hoarding becomes advantage" comeback mechanic.
 function getEncumbranceAP(handSize, baseAP = BASE_AP) {
   if (handSize === 0) return Math.max(baseAP, 4);
   if (handSize === 1) return Math.max(baseAP, 3);
@@ -256,12 +258,12 @@ export class GameEngine {
         }
       }
 
-      // Track direct attack stats
+      // Track direct attack stats (actual SP damage dealt, after shield absorption)
       if (this.state.stats[playerId]) {
-        const totalDmg = aStats.attack; // total damage before shield
-        this.state.stats[playerId].damageDealt += totalDmg;
+        const actualDmg = damage; // damage remaining after shield
+        this.state.stats[playerId].damageDealt += actualDmg;
         if (this.state.stats[playerId].creatureStats[attackerUid]) {
-          this.state.stats[playerId].creatureStats[attackerUid].damageDealt += totalDmg;
+          this.state.stats[playerId].creatureStats[attackerUid].damageDealt += actualDmg;
         }
       }
       // Track SP gains from events
@@ -506,6 +508,12 @@ export class GameEngine {
 
       if (skipLagg) cur._drawSkip--;
       cur.ap = 0;
+      // Clean up per-turn state for skipped player (same as handleEndTurn)
+      for (const c of cur.swamp) {
+        delete c._hasAttacked;
+        delete c._silenced;
+        delete c._stonerShield;
+      }
       const reason = skipLagg ? 'Lagg!' : 'Disconnected';
       events.push({ type: 'turn_skipped', playerId: curId, reason });
 
@@ -603,6 +611,29 @@ export class GameEngine {
       targets: action.targets, // for multi-target abilities
     };
 
+    // Validate selected targets against the valid targets list
+    if (pending.validTargets && pending.validTargets.length > 0) {
+      const valid = pending.validTargets;
+      if (targetInfo.targets) {
+        // Multi-target: each must be in validTargets
+        for (const t of targetInfo.targets) {
+          if (!valid.some(v => v.uid === t.targetUid && v.ownerId === t.targetOwnerId)) {
+            return { success: false, error: 'Invalid target selected' };
+          }
+        }
+      } else if (targetInfo.targetUid) {
+        // Single creature target
+        if (!valid.some(v => v.uid === targetInfo.targetUid && v.ownerId === targetInfo.targetOwnerId)) {
+          return { success: false, error: 'Invalid target selected' };
+        }
+      } else if (targetInfo.targetOwnerId && pending.targetType === 'player') {
+        // Player target
+        if (!valid.some(v => (v.ownerId || v.id) === targetInfo.targetOwnerId)) {
+          return { success: false, error: 'Invalid target player selected' };
+        }
+      }
+    }
+
     // Activated ability target resolution
     if (pending.abilityActivation) {
       const player = this.state.players[playerId];
@@ -691,6 +722,11 @@ export class GameEngine {
       if (p.sp >= this.state.winSP) {
         this.state.phase = GAME_PHASE.FINISHED;
         this.state.winner = pid;
+        // Clear Dead Meme timeout to prevent post-game state corruption
+        if (this._pendingChoiceTimeout) {
+          clearTimeout(this._pendingChoiceTimeout);
+          this._pendingChoiceTimeout = null;
+        }
         this.state.animations.push({
           type: 'game_over',
           winner: pid,

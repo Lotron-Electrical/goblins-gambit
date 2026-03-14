@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../store.js';
 
 export default function TargetPicker() {
   const { gameState, selectTarget } = useStore();
   const pending = gameState?.pendingTarget;
   const [multiSelected, setMultiSelected] = useState([]);
+  const prevPromptRef = useRef(null);
+
+  // Reset multi-selection when the target prompt changes
+  useEffect(() => {
+    const promptKey = pending?.prompt;
+    if (promptKey !== prevPromptRef.current) {
+      prevPromptRef.current = promptKey;
+      setMultiSelected([]);
+    }
+  }, [pending?.prompt]);
 
   if (!pending) return null;
 

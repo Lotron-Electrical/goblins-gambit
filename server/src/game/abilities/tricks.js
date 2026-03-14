@@ -5,6 +5,7 @@
 
 export function trick_sp(state, playerId, card, cardIdx, targetInfo) {
   const player = state.players[playerId];
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   player.sp += card.sp;
   const events = [
@@ -17,6 +18,7 @@ export function trick_sp(state, playerId, card, cardIdx, targetInfo) {
 
 export function horse_dice(state, playerId, card, cardIdx, targetInfo) {
   const player = state.players[playerId];
+  player.ap -= (card._effectiveCost ?? card.cost);
   player.hand.splice(cardIdx, 1);
   const d1 = Math.ceil(Math.random() * 6);
   const d2 = Math.ceil(Math.random() * 6);

@@ -35,7 +35,7 @@ function OpponentBar({ player, playerId, isCurrentTurn, isExpanded, onTap, gameS
       } ${isExpanded ? 'ring-1 ring-blue-500' : ''}`}
     >
       <div className="flex items-center gap-1.5 min-w-0">
-        <span className="text-red-400 font-bold text-[11px] truncate max-w-[80px]">{player.name}</span>
+        <span className="text-red-400 font-bold text-[11px] truncate max-w-[120px]">{player.name}</span>
         {isCurrentTurn && <span className="text-[var(--color-gold)] text-[9px]">TURN</span>}
         {player.playerShield > 0 && <span className="text-cyan-400 text-[9px]">{player.playerShield}Sh</span>}
       </div>
@@ -52,7 +52,6 @@ function OpponentBar({ player, playerId, isCurrentTurn, isExpanded, onTap, gameS
 export default function GameScreen() {
   const { gameState, musicMuted, theme } = useStore();
   const boardRef = useRef(null);
-  const initRef = useRef(false);
   const isMobile = useIsMobile();
 
   // Apply saved theme on mount + sync to sound manager
@@ -70,24 +69,26 @@ export default function GameScreen() {
   useEffect(() => {
     const muted = useStore.getState().muted;
     const musMuted = useStore.getState().musicMuted;
+    let clickHandler = null;
 
     // If audio already initialized (from lobby), start music immediately
     if (soundManager.initialized) {
       soundManager.setMuted(muted);
       if (!musMuted) soundManager.startMusic();
-    } else if (!initRef.current) {
-      // First time ever — need a click to unlock AudioContext
-      initRef.current = true;
-      const handler = () => {
+    } else {
+      // Need a click to unlock AudioContext
+      clickHandler = () => {
         soundManager.init();
         soundManager.setMuted(muted);
         if (!musMuted) soundManager.startMusic();
-        document.removeEventListener('click', handler);
+        document.removeEventListener('click', clickHandler);
+        clickHandler = null;
       };
-      document.addEventListener('click', handler);
+      document.addEventListener('click', clickHandler);
     }
     return () => {
       soundManager.stopMusic();
+      if (clickHandler) document.removeEventListener('click', clickHandler);
     };
   }, []);
 
@@ -109,15 +110,21 @@ export default function GameScreen() {
   const [expandedOpponent, setExpandedOpponent] = useState(null);
   const prevTurnRef = useRef(null);
 
-  // Auto-expand the opponent whose turn it is
+  // Auto-expand: opponent whose turn it is, or first opponent when it's my turn
   useEffect(() => {
     if (!isMobile || !gameState) return;
     const currentId = gameState.currentPlayerId;
-    if (currentId !== gameState.myId && currentId !== prevTurnRef.current) {
-      setExpandedOpponent(currentId);
+    if (currentId !== prevTurnRef.current) {
       prevTurnRef.current = currentId;
+      if (currentId !== gameState.myId) {
+        setExpandedOpponent(currentId);
+      } else {
+        // My turn — auto-expand first opponent so I can see their creatures
+        const firstOpponent = Object.keys(gameState.players).find(id => id !== gameState.myId);
+        if (firstOpponent) setExpandedOpponent(firstOpponent);
+      }
     }
-  }, [gameState?.currentPlayerId, isMobile]);
+  }, [gameState?.currentPlayerId, isMobile, gameState]);
 
   const { currentAnimation, isAnimating, announcement } = useAnimationQueue(
     gameState?.animations
@@ -203,7 +210,7 @@ export default function GameScreen() {
         result: currentAnimation.result || currentAnimation.outcome || '',
       });
     }
-  }, [currentAnimation]);
+  }, [currentAnimation, setAttackAnimation, clearAttackAnimation]);
 
   const handleDiceComplete = useCallback(() => {
     setDiceData(null);

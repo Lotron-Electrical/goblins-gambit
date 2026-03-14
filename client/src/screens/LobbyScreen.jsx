@@ -4,7 +4,7 @@ import { soundManager } from '../audio/SoundManager.js';
 import SparkleParticles from '../components/ui/SparkleParticles.jsx';
 
 export default function LobbyScreen() {
-  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, musicMuted } = useStore();
+  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms } = useStore();
   const [name, setName] = useState(playerName || '');
 
   useEffect(() => {
@@ -23,7 +23,8 @@ export default function LobbyScreen() {
   useEffect(() => {
     const handler = () => {
       soundManager.init();
-      if (!musicMuted) soundManager.startMenuMusic();
+      // Read current muted state at click time, not closure time
+      if (!useStore.getState().musicMuted) soundManager.startMenuMusic();
       document.removeEventListener('click', handler);
     };
     document.addEventListener('click', handler);
@@ -31,7 +32,7 @@ export default function LobbyScreen() {
       document.removeEventListener('click', handler);
       soundManager.stopMenuMusic();
     };
-  }, [musicMuted]);
+  }, []);
 
   const handleCreate = () => {
     if (!name.trim()) return;

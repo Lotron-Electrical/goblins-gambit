@@ -70,9 +70,9 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
 
   const deckRotations = useMemo(() => getDeckRotations(deckCount), [deckCount]);
 
-  const cardW = isMobile ? 60 : 90;
-  const cardH = isMobile ? 84 : 126;
-  const zoneH = isMobile ? 'h-[100px]' : 'h-[140px]';
+  const cardW = isMobile ? 44 : 90;
+  const cardH = isMobile ? 62 : 126;
+  const zoneH = isMobile ? 'h-[72px]' : 'h-[140px]';
 
   return (
     <div className={`flex-shrink-0 ${zoneH} flex items-center justify-between px-4 md:px-12 lg:px-24 relative`}>

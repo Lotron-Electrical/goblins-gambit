@@ -55,10 +55,12 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
   }, []);
 
   // Calculate health percentage for DEF bar
-  const maxDef = card.defence || 1;
+  const baseDef = card.defence || 1;
   const currentDef = Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0));
-  const defPct = Math.min(100, (currentDef / maxDef) * 100);
-  const defColor = defPct > 60 ? 'bg-green-500' : defPct > 30 ? 'bg-yellow-500' : 'bg-red-500';
+  const effectiveMax = Math.max(baseDef, currentDef);
+  const defPct = Math.min(100, (currentDef / effectiveMax) * 100);
+  const isBuffed = currentDef > baseDef;
+  const defColor = isBuffed ? 'bg-cyan-400' : defPct > 60 ? 'bg-green-500' : defPct > 30 ? 'bg-yellow-500' : 'bg-red-500';
 
   const w = 'w-full';
   const h = isMobile ? 'h-[96px]' : 'h-[150px]';

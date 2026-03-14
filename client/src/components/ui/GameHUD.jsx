@@ -55,6 +55,7 @@ export default function GameHUD() {
           )}
           <span className={`text-yellow-400 font-bold ${isMobile ? 'text-[12px]' : 'text-[16px]'}`}>{myPlayer.sp}/{gameState.winSP}</span>
           <span className={`text-blue-300 font-bold ${isMobile ? 'text-[11px]' : 'text-[14px]'}`}>{myPlayer.ap} AP</span>
+          <span className={`text-gray-400 ${isMobile ? 'text-[10px]' : 'text-[13px]'}`}>{myPlayer.hand?.length ?? myPlayer.handCount ?? 0} cards</span>
           {/* Help button */}
           <button
             onClick={() => setHelpOpen(true)}

@@ -378,7 +378,7 @@ export function snacc_control(state, playerId, card, cardIdx, targetInfo) {
     creature._originalOwner = targetOwnerId;
     creature._controller = playerId;
     creature._snaccReturn = true; // flag to return at end of controller's next turn
-    creature._hasAttacked = true; // cannot attack the turn it's stolen
+    delete creature._hasAttacked; // allow stolen creature to attack immediately
     creature._slot = getNextFreeSlot(player);
     player.swamp.push(creature);
     events.push({ type: 'card_moved', cardUid: creature.uid, from: targetOwnerId, to: playerId, reason: 'Snacc!' });

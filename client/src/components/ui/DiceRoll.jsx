@@ -7,18 +7,27 @@ export default function DiceRoll({ dice, result, onComplete }) {
 
   useEffect(() => {
     if (!dice) return;
+    let cancelled = false;
+    const timers = [];
     const interval = setInterval(() => {
       setDisplay([Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)]);
     }, 100);
 
-    setTimeout(() => {
+    timers.push(setTimeout(() => {
       clearInterval(interval);
+      if (cancelled) return;
       setDisplay(dice);
       setRolling(false);
-      setTimeout(() => onComplete?.(), 800);
-    }, 1200);
+      timers.push(setTimeout(() => {
+        if (!cancelled) onComplete?.();
+      }, 800));
+    }, 1200));
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      timers.forEach(t => clearTimeout(t));
+    };
   }, [dice]);
 
   if (!dice) return null;

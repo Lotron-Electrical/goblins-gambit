@@ -5,7 +5,7 @@ export default function DamageNumber({ damages }) {
     <AnimatePresence>
       {damages.map((d, i) => (
         <motion.div
-          key={`${d.cardUid}-${i}`}
+          key={d.id}
           className="fixed z-50 pointer-events-none font-bold text-xl"
           style={{ left: d.x || '50%', top: d.y || '40%' }}
           initial={{ opacity: 1, y: 0 }}

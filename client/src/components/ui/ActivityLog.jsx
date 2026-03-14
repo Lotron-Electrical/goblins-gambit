@@ -64,10 +64,12 @@ export default function ActivityLog() {
 
     const newEntries = [];
     for (const evt of gameState.animations) {
+      // Use server-provided sequence id if available, otherwise generate one
+      const entryId = evt._seqId ?? `${Date.now()}-${Math.random()}`;
       const text = formatEvent(evt, gameState.players);
       if (text) {
         newEntries.push({
-          id: Date.now() + Math.random(),
+          id: entryId,
           text,
           type: evt.type,
           timestamp: Date.now(),
@@ -76,7 +78,12 @@ export default function ActivityLog() {
     }
 
     if (newEntries.length > 0) {
-      setEntries(prev => [...prev, ...newEntries].slice(-MAX_LOG_ENTRIES));
+      setEntries(prev => {
+        const existingIds = new Set(prev.map(e => e.id));
+        const deduplicated = newEntries.filter(e => !existingIds.has(e.id));
+        if (deduplicated.length === 0) return prev;
+        return [...prev, ...deduplicated].slice(-MAX_LOG_ENTRIES);
+      });
     }
   }, [gameState?.animations, gameState?.players]);
 

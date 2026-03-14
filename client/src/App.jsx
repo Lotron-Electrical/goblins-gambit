@@ -9,14 +9,14 @@ export default function App() {
 
   useEffect(() => {
     connect();
-  }, []);
+  }, [connect]);
 
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => clearError(), 5000);
       return () => clearTimeout(timer);
     }
-  }, [error]);
+  }, [error, clearError]);
 
   return (
     <div className="min-h-screen">

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useStore } from '../../store.js';
 
 const GLOSSARY = [
@@ -18,6 +19,13 @@ const GLOSSARY = [
 
 export default function HelpPanel() {
   const { helpOpen, setHelpOpen } = useStore();
+
+  useEffect(() => {
+    if (!helpOpen) return;
+    const handler = (e) => { if (e.key === 'Escape') setHelpOpen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [helpOpen, setHelpOpen]);
 
   if (!helpOpen) return null;
 

@@ -3,6 +3,7 @@ import { useStore } from '../../store.js';
 import { motion } from 'framer-motion';
 import { ICONS, TYPE_ICON } from '../ui/icons.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 
 const TYPE_BORDER = {
   Creature: 'border-red-600 hover:border-red-400',
@@ -59,8 +60,14 @@ export default function CardInHand({ card, isSelected }) {
     }
   }, []);
 
-  const costText = card.cost === 0 ? 'FREE' : `${card.cost} AP`;
-  const canAfford = (isMyTurn || isReaction) && (card.cost === 0 || (gameState?.players[gameState.myId]?.ap >= card.cost));
+  // Compute effective cost with theme modifiers (Blood Moon 2x spells, Frost free spells)
+  const themeEffects = THEME_EFFECTS[gameState?.theme] || THEME_EFFECTS.swamp;
+  const effectiveCost = card.type === 'Magic' && themeEffects.spellCostMultiplier !== undefined
+    ? Math.floor(card.cost * themeEffects.spellCostMultiplier)
+    : card.cost;
+  const costModified = effectiveCost !== card.cost;
+  const costText = effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`;
+  const canAfford = (isMyTurn || isReaction) && (effectiveCost === 0 || (gameState?.players[gameState.myId]?.ap >= effectiveCost));
 
   const w = isMobile ? 'w-[80px]' : 'w-[130px]';
   const h = isMobile ? 'h-[112px]' : 'h-[182px]';
@@ -98,7 +105,7 @@ export default function CardInHand({ card, isSelected }) {
       {/* Cost badge */}
       <div className={`absolute top-0.5 right-0.5 font-bold px-1 py-0.5 rounded z-10 ${
         isMobile ? 'text-[8px]' : 'text-[12px] px-1.5'
-      } ${card.cost === 0 ? 'bg-green-700 text-white' : 'bg-blue-800 text-blue-200'}`}>
+      } ${effectiveCost === 0 ? 'bg-green-700 text-white' : costModified && effectiveCost > card.cost ? 'bg-red-800 text-red-200' : costModified && effectiveCost < card.cost ? 'bg-green-700 text-green-200' : 'bg-blue-800 text-blue-200'}`}>
         {costText}
       </div>
 

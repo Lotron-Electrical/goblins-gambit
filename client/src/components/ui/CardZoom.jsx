@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { useStore } from '../../store.js';
 import { hasActivatedAbility } from './abilityInfo.js';
 import { ICONS, TYPE_ICON } from './icons.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 
 const TYPE_COLOR = {
   Creature: 'border-red-600 bg-red-950/90',
@@ -14,8 +16,22 @@ export default function CardZoom() {
   const { zoomedCard, setZoomedCard, gameState } = useStore();
   const isMobile = useIsMobile();
 
+  useEffect(() => {
+    if (!zoomedCard) return;
+    const handler = (e) => { if (e.key === 'Escape') setZoomedCard(null); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [zoomedCard, setZoomedCard]);
+
   if (!zoomedCard) return null;
   const card = zoomedCard;
+
+  // Compute effective cost with theme modifiers
+  const themeEffects = THEME_EFFECTS[useStore.getState().theme] || THEME_EFFECTS.swamp;
+  const effectiveCost = card.type === 'Magic' && card.cost !== undefined && themeEffects.spellCostMultiplier !== undefined
+    ? Math.floor(card.cost * themeEffects.spellCostMultiplier)
+    : card.cost;
+  const costModified = effectiveCost !== card.cost;
 
   const maxAtk = 1000;
   const maxDef = 2000;
@@ -45,8 +61,8 @@ export default function CardZoom() {
                 <span className="text-[13px]">{TYPE_ICON[card.type]}</span>
                 <span className="text-[13px] text-gray-400">{card.type}</span>
                 {card.cost !== undefined && (
-                  <span className={`text-[13px] ml-auto font-bold ${card.cost === 0 ? 'text-green-400' : 'text-blue-300'}`}>
-                    {card.cost === 0 ? 'FREE' : `${card.cost} AP`}
+                  <span className={`text-[13px] ml-auto font-bold ${effectiveCost === 0 ? 'text-green-400' : costModified ? 'text-red-400' : 'text-blue-300'}`}>
+                    {effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`}
                   </span>
                 )}
               </div>
@@ -143,8 +159,8 @@ export default function CardZoom() {
             <span className="text-[14px]">{TYPE_ICON[card.type]}</span>
             <span className="text-[14px] text-gray-400">{card.type}</span>
             {card.cost !== undefined && (
-              <span className={`text-[14px] ml-auto font-bold ${card.cost === 0 ? 'text-green-400' : 'text-blue-300'}`}>
-                {card.cost === 0 ? 'FREE' : `${card.cost} AP`}
+              <span className={`text-[14px] ml-auto font-bold ${effectiveCost === 0 ? 'text-green-400' : costModified ? 'text-red-400' : 'text-blue-300'}`}>
+                {effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`}
               </span>
             )}
           </div>

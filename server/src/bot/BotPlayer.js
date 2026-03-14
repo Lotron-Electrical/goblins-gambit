@@ -3,7 +3,7 @@
  * Evaluates game state and returns actions. Runs server-side.
  */
 
-import { ACTION, CARD_TYPE, MAX_HAND_SIZE } from '../../../shared/src/constants.js';
+import { ACTION, CARD_TYPE, MAX_HAND_SIZE, THEME_EFFECTS } from '../../../shared/src/constants.js';
 import { hasActivatedAbility } from '../game/abilities/index.js';
 
 let nextBotId = 1;
@@ -150,8 +150,9 @@ function checkLethal(state, me) {
     }
 
     // Check if total damage is enough to kill the opponent
-    // (opponent loses when SP <= 0, and direct attacks deal ATK as SP damage)
-    if (totalDamage >= opp.sp && attackers.length > 0 && opp.sp > 0) {
+    // (opponent loses when SP <= 0, direct attacks must burn through shield first)
+    const effectiveSP = opp.sp + (opp.playerShield || 0);
+    if (totalDamage >= effectiveSP && attackers.length > 0 && opp.sp > 0) {
       // Go all-in: return the first attack, subsequent calls will pick the rest
       return {
         type: ACTION.ATTACK,
@@ -272,7 +273,7 @@ function getPlayTargetInfo(state, me, card) {
   if (['smesh_damage', 'savage_destroy', 'ooft_buff', 'thicc_buff', 'stfu_silence'].includes(card.abilityId)) {
     if (['ooft_buff', 'thicc_buff'].includes(card.abilityId)) {
       // Target own creature
-      const best = me.swamp.sort((a, b) => (b.attack || 0) - (a.attack || 0))[0];
+      const best = [...me.swamp].sort((a, b) => (b.attack || 0) - (a.attack || 0))[0];
       if (best) return { targetOwnerId: me.id, targetUid: best.uid };
     } else {
       // Target opponent creature
@@ -295,7 +296,7 @@ function getPlayTargetInfo(state, me, card) {
 
   // Judgment — target opponent with most creatures
   if (card.abilityId === 'judgment_steal') {
-    const opp = opponents.sort((a, b) => b.swamp.length - a.swamp.length)[0];
+    const opp = [...opponents].sort((a, b) => b.swamp.length - a.swamp.length)[0];
     if (opp) return { targetOwnerId: opp.id };
   }
 
@@ -370,7 +371,7 @@ function pickAttack(state, me) {
       const targets = taunt ? [taunt] : opp.swamp;
 
       for (const t of targets) {
-        const hp = effectiveHP(t);
+        const hp = effectiveHP(t, state.theme);
         const remainingHP = hp - (plannedDamage[t.uid] || 0);
 
         // Score targets: prefer those closest to death (accounting for planned damage)
@@ -473,7 +474,7 @@ function pickAbility(state, me) {
       const ownCreatures = me.swamp.filter(c => c.uid !== creature.uid || me.swamp.length === 1);
       if (ownCreatures.length >= 3) {
         // Multi-mode: buff 3 creatures with +100 each
-        const targets = ownCreatures
+        const targets = [...ownCreatures]
           .sort((a, b) => ((b.attack || 0) + (b._attackBuff || 0)) - ((a.attack || 0) + (a._attackBuff || 0)))
           .slice(0, 3)
           .map(c => ({ targetOwnerId: me.id, targetUid: c.uid }));
@@ -484,7 +485,7 @@ function pickAbility(state, me) {
         };
       } else if (ownCreatures.length > 0) {
         // Single-mode: +300 to strongest creature
-        const strongest = ownCreatures.sort((a, b) =>
+        const strongest = [...ownCreatures].sort((a, b) =>
           ((b.attack || 0) + (b._attackBuff || 0)) - ((a.attack || 0) + (a._attackBuff || 0))
         )[0];
         return {
@@ -500,7 +501,7 @@ function pickAbility(state, me) {
       const allTargets = [];
       for (const opp of opponents) {
         for (const t of opp.swamp) {
-          allTargets.push({ ...t, _ownerId: opp.id, _hp: effectiveHP(t) });
+          allTargets.push({ ...t, _ownerId: opp.id, _hp: effectiveHP(t, state.theme) });
         }
       }
       if (allTargets.length === 0) continue;
@@ -543,7 +544,7 @@ function pickAbility(state, me) {
       const allTargets = [];
       for (const opp of opponents) {
         for (const t of opp.swamp) {
-          allTargets.push({ ...t, _ownerId: opp.id, _hp: effectiveHP(t) });
+          allTargets.push({ ...t, _ownerId: opp.id, _hp: effectiveHP(t, state.theme) });
         }
       }
       if (allTargets.length === 0) continue;
@@ -580,7 +581,7 @@ function handleTargetSelection(state) {
   if (pending.targetType === 'player') {
     // Pick opponent with most SP (best to steal from / disrupt)
     const opponents = getOpponents(state);
-    const best = opponents.sort((a, b) => b.sp - a.sp)[0];
+    const best = [...opponents].sort((a, b) => b.sp - a.sp)[0];
     if (best) return { type: ACTION.SELECT_TARGET, targetOwnerId: best.id };
     // Fallback
     if (validTargets.length > 0) {
@@ -605,9 +606,9 @@ function handleTargetSelection(state) {
 
     let best;
     if (isOffensive) {
-      best = validTargets.sort((a, b) => (b.attack || b.sp || 0) - (a.attack || a.sp || 0))[0];
+      best = [...validTargets].sort((a, b) => (b.attack || b.sp || 0) - (a.attack || a.sp || 0))[0];
     } else {
-      best = validTargets.sort((a, b) => (b.attack || 0) - (a.attack || 0))[0];
+      best = [...validTargets].sort((a, b) => (b.attack || 0) - (a.attack || 0))[0];
     }
 
     return {
@@ -680,11 +681,16 @@ function getOpponentCreatureWithAbility(opponents) {
 }
 
 function pickBestOpponent(opponents) {
-  return opponents.sort((a, b) => b.sp - a.sp)[0] || null;
+  return [...opponents].sort((a, b) => b.sp - a.sp)[0] || null;
 }
 
-function effectiveHP(t) {
-  return (t.defence || 0) - (t._defenceDamage || 0) + (t._defenceBuff || 0) + (t._tempShield || 0);
+function effectiveHP(t, theme) {
+  let def = (t.defence || 0) - (t._defenceDamage || 0) + (t._defenceBuff || 0) + (t._tempShield || 0);
+  const themeEffects = theme ? THEME_EFFECTS[theme] : null;
+  if (themeEffects?.defMultiplier && themeEffects.defMultiplier !== 1) {
+    def = Math.floor(def * themeEffects.defMultiplier);
+  }
+  return def;
 }
 
 function countArmourSet(me, setName) {

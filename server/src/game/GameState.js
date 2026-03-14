@@ -157,6 +157,7 @@ export function getClientState(state, playerId) {
     turnPhase: state.turnPhase,
     deckCount: state.deck.length,
     graveyardCount: state.graveyard.length,
+    // Graveyard is intentionally public — all players can see discarded/killed cards
     graveyard: state.graveyard.map(c => ({
       uid: c.uid, id: c.id, name: c.name, type: c.type,
       image: c.image, attack: c.attack, defence: c.defence,

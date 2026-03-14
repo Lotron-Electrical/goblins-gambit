@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../../store.js';
 import { ICONS, TYPE_ICON } from './icons.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 
 export default function CardHoverPreview() {
   const { hoveredCard, hoverPosition, clearHoveredCard } = useStore();
@@ -10,11 +11,12 @@ export default function CardHoverPreview() {
   const [delayedPos, setDelayedPos] = useState(null);
   const isMobile = useIsMobile();
 
+  // Only trigger delay timer when the hovered card changes, not on every mouse move
   useEffect(() => {
     if (hoveredCard && !isMobile) {
       const timer = setTimeout(() => {
         setDelayedCard(hoveredCard);
-        setDelayedPos(hoverPosition);
+        setDelayedPos(useStore.getState().hoverPosition);
         setVisible(true);
       }, 150);
       return () => clearTimeout(timer);
@@ -23,7 +25,14 @@ export default function CardHoverPreview() {
       setDelayedCard(null);
       setDelayedPos(null);
     }
-  }, [hoveredCard, hoverPosition, isMobile]);
+  }, [hoveredCard, isMobile]);
+
+  // Update position without resetting the delay timer
+  useEffect(() => {
+    if (visible && hoverPosition) {
+      setDelayedPos(hoverPosition);
+    }
+  }, [visible, hoverPosition]);
 
   // Safety net: if mouse isn't over a card element, clear stale hover state
   useEffect(() => {
@@ -65,7 +74,12 @@ export default function CardHoverPreview() {
   if (top < 8) top = 8;
   if (top + previewH > window.innerHeight - 8) top = window.innerHeight - previewH - 8;
 
-  const costText = card.cost === 0 ? 'FREE' : `${card.cost} AP`;
+  const theme = useStore.getState().theme;
+  const themeEffects = THEME_EFFECTS[theme] || THEME_EFFECTS.swamp;
+  const effectiveCost = card.type === 'Magic' && themeEffects.spellCostMultiplier !== undefined
+    ? Math.floor(card.cost * themeEffects.spellCostMultiplier)
+    : card.cost;
+  const costText = effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`;
 
   return (
     <div
@@ -85,7 +99,7 @@ export default function CardHoverPreview() {
           )}
           {/* Cost badge */}
           <div className={`absolute top-2 right-2 text-[12px] font-bold px-2 py-0.5 rounded ${
-            card.cost === 0 ? 'bg-green-700 text-white' : 'bg-blue-800 text-blue-200'
+            effectiveCost === 0 ? 'bg-green-700 text-white' : effectiveCost > card.cost ? 'bg-red-800 text-red-200' : effectiveCost < card.cost ? 'bg-green-700 text-green-200' : 'bg-blue-800 text-blue-200'
           }`}>
             {costText}
           </div>

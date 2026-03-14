@@ -40,6 +40,24 @@ export function setupSocketHandlers(io, lobby) {
   // Track pending bot ticks to prevent duplicates
   const pendingBotTicks = new Set();
 
+  function cleanupFinishedGame(roomId) {
+    const room = lobby.getRoom(roomId);
+    if (room) {
+      // Release bot names and clean up bot tracking
+      for (const p of room.players) {
+        if (botIds.has(p.id)) {
+          releaseBotName(p.name);
+          botIds.delete(p.id);
+          botDifficulty.delete(p.id);
+          pendingBotTicks.delete(p.id);
+        }
+        lobby.playerRooms.delete(p.id);
+      }
+    }
+    lobby.rooms.delete(roomId);
+    lobby.games.delete(roomId);
+  }
+
   function botTick(roomId, engine, botId) {
     pendingBotTicks.delete(botId);
 
@@ -109,6 +127,7 @@ export function setupSocketHandlers(io, lobby) {
           winnerName: engine.state.players[result.winner]?.name || 'Unknown',
           stats: engine.state.stats,
         });
+        cleanupFinishedGame(roomId);
         return;
       }
 
@@ -350,6 +369,7 @@ export function setupSocketHandlers(io, lobby) {
           winnerName: engine.state.players[result.winner].name,
           stats: engine.state.stats,
         });
+        cleanupFinishedGame(roomId);
         return;
       }
 

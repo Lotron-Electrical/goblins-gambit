@@ -75,7 +75,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
       >
         <div className="flex items-center gap-1 md:gap-2 min-w-0">
           {!(isMobile && isOpponent) && (
-            <span className={`font-bold truncate ${isMobile ? 'text-[11px] max-w-[100px]' : 'text-[13px] max-w-[140px]'} ${isOpponent ? 'text-red-400' : 'text-green-400'}`} title={player.name}>
+            <span className={`font-bold truncate ${isMobile ? 'text-[11px] max-w-[140px]' : 'text-[13px] max-w-[200px]'} ${isOpponent ? 'text-red-400' : 'text-green-400'}`} title={player.name}>
               {player.name}
             </span>
           )}
