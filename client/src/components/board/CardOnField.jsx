@@ -60,7 +60,7 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
   const defPct = Math.min(100, (currentDef / maxDef) * 100);
   const defColor = defPct > 60 ? 'bg-green-500' : defPct > 30 ? 'bg-yellow-500' : 'bg-red-500';
 
-  const w = isMobile ? 'w-[70px] shrink' : 'w-[110px] shrink';
+  const w = 'w-full';
   const h = isMobile ? 'h-[96px]' : 'h-[150px]';
 
   return (

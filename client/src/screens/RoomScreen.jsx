@@ -23,9 +23,18 @@ export default function RoomScreen() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        <h2 className="text-3xl font-display text-[var(--color-gold-bright)] text-center mb-2">
-          Game Lobby
-        </h2>
+        <div className="flex items-center justify-between mb-2">
+          <button
+            onClick={leaveRoom}
+            className="text-gray-400 hover:text-white transition flex items-center gap-1 text-sm"
+          >
+            <span className="text-lg">&larr;</span> Back
+          </button>
+          <h2 className="text-3xl font-display text-[var(--color-gold-bright)]">
+            Game Lobby
+          </h2>
+          <div className="w-16" /> {/* spacer for centering */}
+        </div>
         <p className="text-gray-400 text-center mb-1">
           Room: {currentRoom.id}
         </p>

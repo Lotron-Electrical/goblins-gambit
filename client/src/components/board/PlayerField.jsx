@@ -159,7 +159,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                   }}
                 >
                   {creature ? (
-                    <div className="relative min-w-0">
+                    <div className="relative min-w-0 w-full">
                       <CardOnField
                         card={creature}
                         isOpponent={isOpponent}
