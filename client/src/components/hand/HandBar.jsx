@@ -8,10 +8,10 @@ import { TYPE_ICON } from '../ui/icons.js';
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 
 const HAND_TABS = [
-  { type: 'Creature', color: 'red', bg: 'bg-red-900/60', active: 'bg-red-700', border: 'border-red-500' },
-  { type: 'Magic', color: 'blue', bg: 'bg-blue-900/60', active: 'bg-blue-700', border: 'border-blue-500' },
-  { type: 'Armour', color: 'gray', bg: 'bg-gray-800/60', active: 'bg-gray-600', border: 'border-gray-400' },
-  { type: 'Tricks', color: 'green', bg: 'bg-green-900/60', active: 'bg-green-700', border: 'border-green-500' },
+  { type: 'Creature', inactive: 'bg-red-950/40 border-red-800/50 text-red-400', active: 'bg-red-700 border-red-500 text-white' },
+  { type: 'Magic', inactive: 'bg-blue-950/40 border-blue-800/50 text-blue-400', active: 'bg-blue-700 border-blue-500 text-white' },
+  { type: 'Armour', inactive: 'bg-gray-900/40 border-gray-600/50 text-gray-400', active: 'bg-gray-600 border-gray-400 text-white' },
+  { type: 'Tricks', inactive: 'bg-green-950/40 border-green-800/50 text-green-400', active: 'bg-green-700 border-green-500 text-white' },
 ];
 
 export default function HandBar() {
@@ -51,7 +51,7 @@ export default function HandBar() {
       <div className="relative bg-gray-950/90 border-t border-gray-800 shrink-0 overflow-visible z-30">
         {/* Reaction banner */}
         {hasReaction && (
-          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-1 mb-1 mx-1 mt-1 text-center animate-pulse">
+          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-1 mb-1 mx-1 mt-1 text-center animate-[pulse_0.6s_ease-in-out_2] shadow-[0_0_8px_rgba(234,88,12,0.3)]">
             <span className="text-orange-300 text-[10px] font-bold">You can react to {currentPlayerName}'s turn! Tap a REACT card.</span>
           </div>
         )}
@@ -65,9 +65,7 @@ export default function HandBar() {
                 key={tab.type}
                 onClick={() => setActiveTab(tab.type)}
                 className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[11px] font-bold transition-colors border-b-2 ${
-                  isActive
-                    ? `${tab.active} ${tab.border} text-white`
-                    : `bg-gray-900/60 border-transparent text-gray-500`
+                  isActive ? tab.active : tab.inactive
                 }`}
               >
                 <span className="text-[13px]">{TYPE_ICON[tab.type]}</span>
@@ -128,7 +126,7 @@ export default function HandBar() {
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0 overflow-visible z-30">
       {/* Reaction banner */}
       {hasReaction && (
-        <div className="bg-orange-600/20 border border-orange-500/40 rounded px-3 py-1.5 mb-2 text-center animate-pulse">
+        <div className="bg-orange-600/20 border border-orange-500/40 rounded px-3 py-1.5 mb-2 text-center animate-[pulse_0.6s_ease-in-out_2] shadow-[0_0_8px_rgba(234,88,12,0.3)]">
           <span className="text-orange-300 text-sm font-bold">You can react to {currentPlayerName}'s turn! Click a REACT card to interrupt.</span>
         </div>
       )}

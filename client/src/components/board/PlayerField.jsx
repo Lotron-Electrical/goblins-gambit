@@ -82,7 +82,12 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           {gameState?.berserkPlayerIds?.includes(playerId) && (
             <span className={`text-red-500 font-bold animate-pulse ${isMobile ? 'text-[8px]' : 'text-[10px]'}`} title="Berserk — 2x damage!">BERSERK</span>
           )}
-          {isCurrentTurn && <span className={`text-[var(--color-gold)] ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>TURN</span>}
+          {isCurrentTurn && !isOpponent && (
+            <span className={`bg-[var(--color-gold)]/90 text-black font-display rounded shadow animate-[pulse_0.6s_ease-in-out_2] ${
+              isMobile ? 'text-[9px] px-1.5 py-0.5' : 'text-[11px] px-2 py-0.5'
+            }`}>YOUR TURN</span>
+          )}
+          {isCurrentTurn && isOpponent && <span className={`text-[var(--color-gold)] ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>TURN</span>}
           {canDirectAttack && !isMobile && <span className="text-[10px] text-red-400 font-bold">ATTACK DIRECTLY</span>}
         </div>
         <div className={`flex items-center gap-1.5 md:gap-3 ${isMobile ? 'text-[10px]' : 'text-[13px]'}`}>
@@ -91,7 +96,12 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           )}
           <span className={`text-yellow-400 font-bold ${isMobile ? 'text-[11px]' : 'text-[15px]'}`} data-player-sp={playerId}>{player.sp} SP</span>
           <span className="text-blue-300">{player.ap} AP</span>
-          {!isMobile && <span className="text-gray-400">{player.handCount ?? player.hand?.length ?? 0} cards</span>}
+          <span className={`font-bold ${(player.handCount ?? player.hand?.length ?? 0) >= 10 ? 'text-orange-400' : 'text-gray-400'}`}>
+            {player.handCount ?? player.hand?.length ?? 0} cards
+          </span>
+          {(player.handCount ?? player.hand?.length ?? 0) >= 10 && (
+            <span className={`text-orange-400 font-bold ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>ENCUMBERED</span>
+          )}
         </div>
       </div>
 

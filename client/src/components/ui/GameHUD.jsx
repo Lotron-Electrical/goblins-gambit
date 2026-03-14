@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../store.js';
 import { ICONS } from './icons.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
+
+const THEME_ICON = {
+  swamp: '\u{1F33F}',
+  blood: '\u{1F319}',
+  frost: '\u{2744}\u{FE0F}',
+};
 
 export default function GameHUD() {
   const { gameState, setHelpOpen, setMenuOpen } = useStore();
@@ -10,11 +17,15 @@ export default function GameHUD() {
   if (!gameState) return null;
 
   const myPlayer = gameState.players[gameState.myId];
-  const isMyTurn = gameState.currentPlayerId === gameState.myId;
   const [tipDismissed, setTipDismissed] = useState(false);
   const [tipFading, setTipFading] = useState(false);
   const initialAnimRef = useRef(gameState.animations);
   const showTip = !tipDismissed && gameState.turnNumber <= 3;
+
+  const themeInfo = THEME_EFFECTS[gameState.theme] || THEME_EFFECTS.swamp;
+  const themeIcon = THEME_ICON[gameState.theme] || THEME_ICON.swamp;
+  const playerCount = Object.keys(gameState.players).length;
+  const alivePlayers = Object.values(gameState.players).filter(p => !p.eliminated).length;
 
   // Auto-fade on first action
   useEffect(() => {
@@ -28,7 +39,7 @@ export default function GameHUD() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
-      {/* Top bar */}
+      {/* Top bar — game status only */}
       <div className={`flex items-center justify-between ${isMobile ? 'px-2 py-1.5' : 'px-4 py-2'} bg-gray-950/90 border-b border-gray-800 pointer-events-auto`}>
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
           {!isMobile && (
@@ -37,7 +48,12 @@ export default function GameHUD() {
               <span className="text-gray-600 text-[10px]">v{__APP_VERSION__}</span>
             </>
           )}
+          <span className={`${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>
+            <span className="mr-0.5">{themeIcon}</span>
+            <span className="text-gray-300 font-medium">{themeInfo.name}</span>
+          </span>
           <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>Turn {gameState.turnNumber}</span>
+          <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>{alivePlayers}/{playerCount} alive</span>
           {!isMobile && (
             <>
               <span className="text-gray-500 text-[12px]">Deck: {gameState.deckCount}</span>
@@ -46,19 +62,12 @@ export default function GameHUD() {
           )}
         </div>
         <div className="flex items-center gap-1.5 md:gap-3">
-          {isMyTurn && (
-            <span className={`bg-[var(--color-gold)]/90 text-black font-display rounded shadow animate-pulse ${
-              isMobile ? 'text-[10px] px-2 py-0.5' : 'text-sm px-3 py-0.5'
-            }`}>
-              YOUR TURN
-            </span>
+          {isMobile && (
+            <>
+              <span className={`text-gray-500 text-[10px]`}>Deck: {gameState.deckCount}</span>
+              <span className={`text-gray-500 text-[10px]`}>Grave: {gameState.graveyardCount}</span>
+            </>
           )}
-          <span className={`text-yellow-400 font-bold ${isMobile ? 'text-[12px]' : 'text-[16px]'}`}>{myPlayer.sp}/{gameState.winSP}</span>
-          <span className={`text-blue-300 font-bold ${isMobile ? 'text-[11px]' : 'text-[14px]'}`}>{myPlayer.ap} AP</span>
-          {myPlayer.playerShield > 0 && (
-            <span className={`text-cyan-400 font-bold ${isMobile ? 'text-[11px]' : 'text-[14px]'}`}>{myPlayer.playerShield} Sh</span>
-          )}
-          <span className={`text-gray-400 ${isMobile ? 'text-[10px]' : 'text-[13px]'}`}>{myPlayer.hand?.length ?? myPlayer.handCount ?? 0} cards</span>
           {/* Help button */}
           <button
             onClick={() => setHelpOpen(true)}

@@ -34,9 +34,10 @@ export default function App() {
   return (
     <div className="min-h-screen">
       {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 border border-red-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-900/90 border border-amber-500 text-amber-100 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+          <span className="text-amber-300 text-lg">!</span>
           <span>{error}</span>
-          <button onClick={clearError} className="text-red-300 hover:text-white font-bold">X</button>
+          <button onClick={clearError} className="text-amber-400 hover:text-white font-bold">X</button>
         </div>
       )}
 
