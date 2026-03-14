@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../store.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 export default function TargetPicker() {
   const { gameState, selectTarget } = useStore();
   const pending = gameState?.pendingTarget;
+  const isMobile = useIsMobile();
   const [multiSelected, setMultiSelected] = useState([]);
   const prevPromptRef = useRef(null);
 
@@ -49,26 +51,30 @@ export default function TargetPicker() {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 pointer-events-auto">
-      <div className="bg-gray-900 border border-[var(--color-gold)] rounded-xl p-6 max-w-md shadow-2xl">
-        <h3 className="text-xl font-display text-[var(--color-gold)] mb-3">Select Target</h3>
-        <p className="text-[14px] text-gray-300 mb-4">{pending.prompt}</p>
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 pointer-events-auto p-3">
+      <div className={`bg-gray-900 border border-[var(--color-gold)] rounded-xl shadow-2xl w-full ${
+        isMobile ? 'p-3 max-w-sm' : 'p-6 max-w-md'
+      }`}>
+        <h3 className={`font-display text-[var(--color-gold)] ${isMobile ? 'text-lg mb-2' : 'text-xl mb-3'}`}>Select Target</h3>
+        <p className={`text-gray-300 ${isMobile ? 'text-[13px] mb-3' : 'text-[14px] mb-4'}`}>{pending.prompt}</p>
 
-        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+        <div className={`space-y-2 overflow-y-auto ${isMobile ? 'max-h-[250px]' : 'max-h-[300px]'}`}>
           {pending.validTargets.map((target) => {
             const isMultiSel = multiSelected.some(t => t.uid === target.uid);
             return (
               <button
                 key={target.uid}
                 onClick={() => handleSelect(target)}
-                className={`w-full text-left border rounded-lg p-3 transition flex items-center justify-between ${
+                className={`w-full text-left border rounded-lg transition flex items-center justify-between ${
+                  isMobile ? 'p-3.5' : 'p-3'
+                } ${
                   isMultiSel
                     ? 'bg-[var(--color-gold)]/20 border-[var(--color-gold)]'
                     : 'bg-gray-800 hover:bg-red-900/50 border-gray-700 hover:border-red-500'
                 }`}
               >
-                <span className="text-white font-medium text-[14px]">{target.name}</span>
-                <span className="text-gray-400 text-[12px]">
+                <span className={`text-white font-medium ${isMobile ? 'text-[13px]' : 'text-[14px]'}`}>{target.name}</span>
+                <span className={`text-gray-400 ${isMobile ? 'text-[11px]' : 'text-[12px]'}`}>
                   {isPlayerTarget
                     ? `${gameState.players[target.ownerId]?.sp || 0} SP`
                     : target.slot

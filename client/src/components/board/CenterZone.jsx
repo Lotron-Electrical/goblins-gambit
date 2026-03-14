@@ -176,7 +176,9 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
           {volcano?.active && !dragon?.active && (
             <button
               onClick={() => setVolcanoOpen(true)}
-              className="relative flex flex-col items-center px-2 py-1 rounded-lg bg-orange-900/40 border border-orange-600/50 hover:bg-orange-900/60 transition cursor-pointer"
+              className={`relative flex flex-col items-center rounded-lg bg-orange-900/40 border border-orange-600/50 hover:bg-orange-900/60 transition cursor-pointer ${
+                isMobile ? 'px-3 py-2' : 'px-2 py-1'
+              }`}
               title="Volcano Bank"
             >
               <span className={`text-xl ${isMobile ? 'text-base' : ''}`}>&#x1F30B;</span>
@@ -216,7 +218,9 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
           {jargon?.active && (
             <button
               onClick={() => setJargonOpen(true)}
-              className="relative flex flex-col items-center px-2 py-1 rounded-lg bg-purple-900/40 border border-purple-500/50 hover:bg-purple-900/60 transition cursor-pointer"
+              className={`relative flex flex-col items-center rounded-lg bg-purple-900/40 border border-purple-500/50 hover:bg-purple-900/60 transition cursor-pointer ${
+                isMobile ? 'px-3 py-2' : 'px-2 py-1'
+              }`}
               title="Jargon the Vendor"
             >
               <span className={`text-xl ${isMobile ? 'text-base' : ''}`}>&#x1F9D9;</span>

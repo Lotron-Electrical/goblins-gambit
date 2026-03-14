@@ -94,7 +94,7 @@ export default function HandBar() {
                 <button
                   key={tab.type}
                   onClick={() => setActiveTab(tab.type)}
-                  className={`flex-1 flex items-center justify-center gap-0.5 py-2 text-[11px] font-bold transition-colors border-b-2 ${
+                  className={`flex-1 flex items-center justify-center gap-0.5 py-3 text-[11px] font-bold transition-colors border-b-2 ${
                     isActive ? tab.active : tab.inactive
                   } ${isGlowing ? 'animate-[pulse_0.4s_ease-in-out_3] ring-1 ring-white/40' : ''}`}
                 >
@@ -115,7 +115,7 @@ export default function HandBar() {
               onClick={drawCard}
               disabled={!isMyTurn || myPlayer.ap < 1}
               data-tutorial="draw-btn"
-              className="bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-2 py-1.5 rounded text-[10px] transition"
+              className="bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-3 py-2.5 rounded text-[11px] transition"
             >
               Draw
             </button>
@@ -123,7 +123,7 @@ export default function HandBar() {
               onClick={buyAP}
               disabled={!isMyTurn || !canBuyAP}
               data-tutorial="buy-ap-btn"
-              className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-2 py-1.5 rounded text-[10px] transition"
+              className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-3 py-2.5 rounded text-[11px] transition"
             >
               Buy
             </button>
@@ -131,7 +131,7 @@ export default function HandBar() {
               onClick={endTurn}
               disabled={!isMyTurn}
               data-tutorial="end-turn-btn"
-              className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-2 py-1.5 rounded text-[10px] transition"
+              className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-3 py-2.5 rounded text-[11px] transition"
             >
               End
             </button>

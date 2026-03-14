@@ -26,9 +26,9 @@ export default function CardChoiceModal() {
           {pending.type === 'dead_meme' ? 'Dead Meme Revive' : pending.type === 'ama_reveal' ? 'AMA - Hand Revealed' : isPeek ? 'Woke - Deck Peek' : 'Choose a Card'}
         </h3>
         <p className="text-[13px] sm:text-[14px] text-gray-300 mb-3 sm:mb-4">{pending.prompt}</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {isPeek && pending.cards.length === 0 && (
-            <div className="col-span-3 text-center text-gray-500 py-4">Deck is empty!</div>
+            <div className="col-span-2 sm:col-span-3 text-center text-gray-500 py-4">Deck is empty!</div>
           )}
           {pending.cards.map((card) => (
             <button
