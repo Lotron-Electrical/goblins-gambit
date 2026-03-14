@@ -59,23 +59,21 @@ export default function CardAnnouncement({ announcement }) {
       {announcement && !isMajor && (
         <motion.div
           key="toast"
-          className={`fixed z-50 pointer-events-none ${
-            isMobile ? 'bottom-36 left-1/2 -translate-x-1/2' : 'top-16 right-4'
-          }`}
-          initial={isMobile ? { opacity: 0, y: 20 } : { opacity: 0, x: 80 }}
-          animate={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, x: 0 }}
-          exit={isMobile ? { opacity: 0, y: -10 } : { opacity: 0, x: 40 }}
+          className="fixed z-50 pointer-events-none left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: dur }}
         >
-          <div className={`flex items-center gap-2 border rounded-lg shadow-lg backdrop-blur-sm ${
-            isMobile ? 'px-3 py-2' : 'px-4 py-2.5'
+          <div className={`flex items-center gap-2 border rounded-lg shadow-lg backdrop-blur-sm text-center ${
+            isMobile ? 'px-4 py-2.5' : 'px-5 py-3'
           } ${TYPE_BORDER[announcement.type] || 'border-gray-600/60'} ${TYPE_BG[announcement.type] || 'bg-gray-900/80'}`}>
             <div>
-              <div className={`font-display ${isMobile ? 'text-base' : 'text-lg'} ${TYPE_COLOR[announcement.type] || 'text-white'}`}>
+              <div className={`font-display ${isMobile ? 'text-lg' : 'text-xl'} ${TYPE_COLOR[announcement.type] || 'text-white'}`}>
                 {announcement.name}
               </div>
               {announcement.flavor && (
-                <div className={`text-[var(--color-gold)] font-display ${isMobile ? 'text-[11px]' : 'text-sm'}`}>
+                <div className={`text-[var(--color-gold)] font-display ${isMobile ? 'text-[12px]' : 'text-base'}`}>
                   {announcement.flavor}
                 </div>
               )}
