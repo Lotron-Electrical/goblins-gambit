@@ -42,43 +42,60 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
-      {/* Top bar — three-column layout: left brand | centered stats | right buttons */}
-      <div className={`relative flex items-center ${isMobile ? 'px-2 py-1.5' : 'px-4 py-2'} bg-gray-950/90 border-b border-gray-800 pointer-events-auto`}>
-        {/* LEFT — brand (desktop only) */}
-        {!isMobile && (
+      {/* Top bar */}
+      {isMobile ? (
+        <div className="flex items-center justify-evenly px-1 py-1.5 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
+          <button
+            onClick={() => setThemeExpanded(!themeExpanded)}
+            className="text-[10px] hover:opacity-80 transition"
+            title="Tap to see theme effects"
+          >
+            <span className="mr-0.5">{themeIcon}</span>
+            <span className="text-gray-300 font-medium">{themeInfo.name}</span>
+          </button>
+          <span className="text-gray-500 text-[10px]">Turn {gameState.turnNumber}</span>
+          <span className="text-gray-500 text-[10px]">{alivePlayers}/{playerCount}</span>
+          <span className="text-gray-500 text-[10px]">Dk {gameState.deckCount}</span>
+          <span className="text-gray-500 text-[10px]">Gv {gameState.graveyardCount}</span>
+          {setMobileLogOpen && (
+            <button
+              onClick={() => setMobileLogOpen(!mobileLogOpen)}
+              className={`flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px] ${mobileLogOpen ? 'text-white' : 'text-gray-400'}`}
+              title="Activity Log"
+            >
+              {'\u{1F4DC}'}
+            </button>
+          )}
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
+            title="Help"
+          >
+            ?
+          </button>
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
+            title="Settings"
+          >
+            {ICONS.gear}
+          </button>
+        </div>
+      ) : (
+        <div className="relative flex items-center px-4 py-2 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
+          {/* LEFT — brand */}
           <div className="flex items-center gap-2 shrink-0">
             <span className="font-display text-[var(--color-gold)] text-lg leading-none">Goblin's Gambit</span>
             <span className="text-gray-600 text-[10px]">v{__APP_VERSION__}</span>
           </div>
-        )}
 
-        {/* CENTER — game stats, absolutely positioned for true centering */}
-        <div className="absolute inset-x-0 flex items-center justify-center pointer-events-none">
-          {isMobile ? (
-            <div className="flex flex-col items-center pointer-events-auto">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setThemeExpanded(!themeExpanded)}
-                  className="text-[10px] hover:opacity-80 transition"
-                  title="Tap to see theme effects"
-                >
-                  <span className="mr-0.5">{themeIcon}</span>
-                  <span className="text-gray-300 font-medium">{themeInfo.name}</span>
-                </button>
-                <span className="text-gray-500 text-[10px]">Turn {gameState.turnNumber}</span>
-                <span className="text-gray-500 text-[10px]">{alivePlayers}/{playerCount} alive</span>
-              </div>
-              <div className="flex items-center gap-2 -mt-0.5">
-                <span className="text-gray-600 text-[9px]">Deck {gameState.deckCount}</span>
-                <span className="text-gray-600 text-[9px]">Grave {gameState.graveyardCount}</span>
-              </div>
-            </div>
-          ) : (
+          {/* CENTER — game stats */}
+          <div className="absolute inset-x-0 flex items-center justify-center pointer-events-none">
             <div className="flex items-center gap-3 pointer-events-auto">
               <button
                 onClick={() => setThemeExpanded(!themeExpanded)}
                 className="text-[12px] hover:opacity-80 transition"
-                title="Tap to see theme effects"
+                title="Click to see theme effects"
               >
                 <span className="mr-0.5">{themeIcon}</span>
                 <span className="text-gray-300 font-medium">{themeInfo.name}</span>
@@ -89,43 +106,27 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen }) {
               <span className="text-gray-500 text-[12px]">Deck {gameState.deckCount}</span>
               <span className="text-gray-500 text-[12px]">Grave {gameState.graveyardCount}</span>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* RIGHT — action buttons */}
-        <div className="flex items-center gap-1.5 md:gap-2 ml-auto shrink-0">
-          {/* Log button (mobile only) */}
-          {isMobile && setMobileLogOpen && (
+          {/* RIGHT — buttons */}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <button
-              onClick={() => setMobileLogOpen(!mobileLogOpen)}
-              className={`flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px] ${mobileLogOpen ? 'text-white' : 'text-gray-400'}`}
-              title="Activity Log"
+              onClick={() => setHelpOpen(true)}
+              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
+              title="Help"
             >
-              {'\u{1F4DC}'}
+              ?
             </button>
-          )}
-          {/* Help button */}
-          <button
-            onClick={() => setHelpOpen(true)}
-            className={`flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition ${
-              isMobile ? 'w-7 h-7 text-[12px]' : 'w-8 h-8 text-[14px]'
-            }`}
-            title="Help"
-          >
-            ?
-          </button>
-          {/* Menu button (gear) */}
-          <button
-            onClick={() => setMenuOpen(true)}
-            className={`flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition ${
-              isMobile ? 'w-7 h-7 text-[12px]' : 'w-8 h-8 text-[14px]'
-            }`}
-            title="Settings"
-          >
-            {ICONS.gear}
-          </button>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
+              title="Settings"
+            >
+              {ICONS.gear}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Theme effects expandable */}
       {themeExpanded && gameState.theme !== 'swamp' && (
