@@ -52,7 +52,7 @@ function OpponentBar({ player, playerId, isCurrentTurn, isExpanded, onTap, gameS
 }
 
 export default function GameScreen() {
-  const { gameState, musicMuted, theme } = useStore();
+  const { gameState, musicMuted, theme, tutorialMode } = useStore();
   const boardRef = useRef(null);
   const isMobile = useIsMobile();
 
@@ -382,8 +382,8 @@ export default function GameScreen() {
       {/* Card choice modal (Dead Meme, Woke) */}
       {gameState.pendingChoice && <CardChoiceModal />}
 
-      {/* Game over */}
-      {gameState.winner && <GameOverModal />}
+      {/* Game over (not during tutorial — TutorialOverlay handles victory) */}
+      {gameState.winner && !tutorialMode && <GameOverModal />}
 
       {/* Card zoom panel */}
       <CardZoom />

@@ -54,30 +54,33 @@ export default function TutorialOverlay() {
     endTutorial();
   };
 
-  // Completion screen
+  // Victory / completion screen
   if (isComplete) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
         <div className={`bg-gray-900 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl text-center ${
           isMobile ? 'mx-2 px-5 py-6 max-w-[340px]' : 'px-8 py-8 max-w-md'
         }`}>
-          <h2 className={`font-display text-[var(--color-gold-bright)] mb-4 ${
-            isMobile ? 'text-2xl' : 'text-3xl'
+          <div className={`font-display text-[var(--color-gold-bright)] mb-2 ${
+            isMobile ? 'text-4xl' : 'text-5xl'
           }`}>
-            You've learned the basics!
-          </h2>
-          <div className={`text-gray-300 text-left space-y-2 mb-6 ${isMobile ? 'text-[13px]' : 'text-[15px]'}`}>
+            VICTORY!
+          </div>
+          <p className={`text-gray-300 mb-5 ${isMobile ? 'text-[13px]' : 'text-[15px]'}`}>
+            You defeated Gnarl the Goblin!
+          </p>
+          <div className={`text-gray-400 text-left space-y-2 mb-6 ${isMobile ? 'text-[12px]' : 'text-[14px]'}`}>
             <p><span className="text-blue-400 font-bold">Draw</span> cards to build your hand</p>
             <p><span className="text-green-400 font-bold">Tricks</span> are free and give instant SP</p>
             <p><span className="text-red-400 font-bold">Creatures</span> go to your Swamp — attack enemies to earn SP</p>
             <p><span className="text-blue-300 font-bold">Magic</span> cards buff, debuff, and destroy</p>
           </div>
-          <p className={`text-gray-500 italic mb-6 ${isMobile ? 'text-[12px]' : 'text-[13px]'}`}>
+          <p className={`text-gray-500 italic mb-6 ${isMobile ? 'text-[11px]' : 'text-[13px]'}`}>
             In real games you'll also discover Armour sets, creature abilities, and chaotic events like Dragons and Volcanos!
           </p>
           <button
             onClick={handleFinish}
-            className={`w-full bg-[var(--color-card-green)] hover:bg-green-600 text-white font-bold rounded-lg transition ${
+            className={`w-full bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold rounded-lg transition ${
               isMobile ? 'py-3 text-[15px]' : 'py-3 text-lg'
             }`}
           >

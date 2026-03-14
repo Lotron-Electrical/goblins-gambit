@@ -63,7 +63,7 @@ function baseState(overrides = {}) {
     phase: 'playing',
     turnPhase: 'main',
     theme: 'swamp',
-    winSP: 10000,
+    winSP: 2000,
     pendingTarget: null,
     pendingChoice: null,
     winner: null,
@@ -88,7 +88,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'draw',
     title: 'Draw a Card',
-    instruction: 'Welcome to Goblin\'s Gambit! Reach 10,000 SP to win. Start by drawing a card — tap Draw.',
+    instruction: 'Welcome to Goblin\'s Gambit! Reach 2,000 SP to win. Start by drawing a card — tap Draw.',
     highlight: '[data-tutorial="draw-btn"]',
     tabHint: null,
     expectedAction: 'draw_card',
@@ -207,11 +207,11 @@ export const TUTORIAL_STEPS = [
     },
   },
 
-  // Step 6: Play a Magic Card
+  // Step 6: Play Ooft magic card (triggers targeting)
   {
     id: 'play-magic',
     title: 'Use Magic',
-    instruction: 'Magic cards have powerful effects! Tap Ooft to buff Happy Hippy\'s ATK by +200.',
+    instruction: 'Magic cards have powerful effects! Tap Ooft to select it, then tap again to play.',
     highlight: null,
     highlightCardUid: 'tut-ooft',
     tabHint: 'Magic',
@@ -223,22 +223,102 @@ export const TUTORIAL_STEPS = [
       // Remove Ooft from hand
       state.players['tutorial-player'].hand = state.players['tutorial-player'].hand.filter(c => c.uid !== 'tut-ooft');
       state.players['tutorial-player'].handCount = 1;
-      // Buff Happy Hippy
-      state.players['tutorial-player'].swamp[0].currentAttack = 600;
       state.players['tutorial-player'].ap = 1;
+      // Set pending target — TargetPicker will appear
+      state.pendingTarget = {
+        prompt: 'Choose a creature to buff +200 ATK',
+        targetType: 'creature',
+        validTargets: [
+          { uid: 'tut-happy-hippy', name: 'Happy Hippy', ownerId: 'tutorial-player' },
+        ],
+      };
+      return state;
+    },
+  },
+
+  // Step 7: Select target for buff
+  {
+    id: 'select-target',
+    title: 'Choose Target',
+    instruction: 'Select Happy Hippy to buff its ATK by +200!',
+    highlight: null,
+    tabHint: null,
+    expectedAction: 'select_target',
+    expectedPayload: { targetUid: 'tut-happy-hippy' },
+    setupState: null,
+    onComplete: (prevState) => {
+      const state = JSON.parse(JSON.stringify(prevState));
+      // Clear pending target
+      state.pendingTarget = null;
+      // Buff Happy Hippy ATK
+      state.players['tutorial-player'].swamp[0].currentAttack = 600;
       state.graveyardCount = 2;
       return state;
     },
   },
 
-  // Step 7: Tutorial Complete (no action needed)
+  // Step 8: End turn — opponent plays another creature
+  {
+    id: 'end-turn-2',
+    title: 'End Your Turn',
+    instruction: 'Happy Hippy is powered up to 600 ATK! End your turn.',
+    highlight: '[data-tutorial="end-turn-btn"]',
+    tabHint: null,
+    expectedAction: 'end_turn',
+    opponentDelay: true,
+    setupState: null,
+    onComplete: (prevState) => {
+      const state = JSON.parse(JSON.stringify(prevState));
+      // Opponent plays another Stoner
+      const opponentStoner2 = stoner();
+      opponentStoner2.uid = 'tut-stoner-2';
+      opponentStoner2.currentAttack = 300;
+      opponentStoner2.currentDefence = 200;
+      opponentStoner2._slot = 0;
+      state.players['tutorial-opponent'].swamp = [opponentStoner2];
+      state.players['tutorial-opponent'].handCount = 3;
+      // New turn for player
+      state.currentPlayerId = 'tutorial-player';
+      state.turnNumber = 3;
+      state.players['tutorial-player'].ap = 2;
+      state.players['tutorial-player'].swamp[0].hasAttacked = false;
+      state.players['tutorial-player'].swamp[0].turnsOnField = 2;
+      return state;
+    },
+  },
+
+  // Step 9: Final attack — win the game!
+  {
+    id: 'final-attack',
+    title: 'Finish Him!',
+    instruction: 'Your 600 ATK vs 200 DEF — crush Gnarl\'s creature and claim victory!',
+    highlight: null,
+    tabHint: null,
+    expectedAction: 'attack',
+    expectedPayload: { attackerUid: 'tut-happy-hippy' },
+    setupState: null,
+    onComplete: (prevState) => {
+      const state = JSON.parse(JSON.stringify(prevState));
+      // Kill opponent creature
+      state.players['tutorial-opponent'].swamp = [];
+      // Player reaches win SP
+      state.players['tutorial-player'].sp = 2000;
+      state.players['tutorial-player'].swamp[0].hasAttacked = true;
+      state.graveyardCount = 3;
+      // Victory!
+      state.winner = 'tutorial-player';
+      return state;
+    },
+  },
+
+  // Step 10: Victory! (completion screen)
   {
     id: 'complete',
-    title: 'Tutorial Complete!',
+    title: 'Victory!',
     instruction: null, // Completion overlay handles this
     highlight: null,
     tabHint: null,
-    expectedAction: null, // No action — completion screen shown
+    expectedAction: null, // No action — victory screen shown
     setupState: null,
     onComplete: null,
   },
