@@ -135,9 +135,9 @@ export default function CenterZone({ deckCount, graveyardCount, graveyard, stage
 
       {/* Staged card stack — center, Uno-style */}
       {stagedCards.length > 0 && (
-        <div className="relative z-10" style={{ width: isMobile ? 50 : 110, height: isMobile ? 70 : 154 }}>
-          <div style={isMobile ? { transform: `scale(${mobileScale + 0.15})`, transformOrigin: 'center center' } : undefined}>
-            <div className="relative" style={{ width: isMobile ? 72 : 110, height: isMobile ? 100 : 154 }}>
+        <div className="relative z-10" style={{ width: isMobile ? 70 : 110, height: isMobile ? 98 : 154, overflow: 'visible' }}>
+          <div style={isMobile ? { transform: 'scale(0.85)', transformOrigin: 'center center' } : undefined}>
+            <div className="relative" style={{ width: isMobile ? 82 : 110, height: isMobile ? 115 : 154 }}>
               <AnimatePresence>
                 {stagedCards.map((card) => (
                   <motion.div

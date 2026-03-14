@@ -54,13 +54,29 @@ function OpponentBar({ player, playerId, isCurrentTurn, isExpanded, onTap, gameS
 export default function GameScreen() {
   const { gameState, musicMuted, theme, tutorialMode } = useStore();
   const boardRef = useRef(null);
+  const midZoneRef = useRef(null);
   const isMobile = useIsMobile();
+  const [mobileCenterY, setMobileCenterY] = useState(null);
 
   // Lock body scroll on mobile while game is active
   useEffect(() => {
     document.documentElement.classList.add('game-active');
     return () => document.documentElement.classList.remove('game-active');
   }, []);
+
+  // Track vertical center of the mid-zone (between opponents and my field) on mobile
+  useEffect(() => {
+    if (!isMobile || !midZoneRef.current) return;
+    const update = () => {
+      const rect = midZoneRef.current?.getBoundingClientRect();
+      if (rect) setMobileCenterY(Math.round(rect.top + rect.height / 2));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(midZoneRef.current);
+    window.addEventListener('resize', update);
+    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
+  }, [isMobile]);
 
   // Apply saved theme on mount + sync to sound manager
   useEffect(() => {
@@ -349,6 +365,7 @@ export default function GameScreen() {
       )}
 
       {/* Center zone: deck + graveyard */}
+      <div ref={midZoneRef}>
       <CenterZone
         deckCount={gameState.deckCount}
         graveyardCount={gameState.graveyardCount}
@@ -358,6 +375,7 @@ export default function GameScreen() {
         dragon={gameState.dragon}
         jargon={gameState.jargon}
       />
+      </div>
 
       {/* My field */}
       <div className="p-1 md:p-2 shrink-0">
@@ -377,10 +395,10 @@ export default function GameScreen() {
       <GameMenu />
 
       {/* Target picker overlay */}
-      {gameState.pendingTarget && <TargetPicker />}
+      {gameState.pendingTarget && <TargetPicker mobileCenterY={isMobile ? mobileCenterY : null} />}
 
       {/* Card choice modal (Dead Meme, Woke) */}
-      {gameState.pendingChoice && <CardChoiceModal />}
+      {gameState.pendingChoice && <CardChoiceModal mobileCenterY={isMobile ? mobileCenterY : null} />}
 
       {/* Game over (not during tutorial — TutorialOverlay handles victory) */}
       {gameState.winner && !tutorialMode && <GameOverModal />}
@@ -404,7 +422,7 @@ export default function GameScreen() {
       <ChatPanel expanded={chatOpen} onClose={() => handleSetChatOpen(false)} />
 
       {/* Card play announcement */}
-      <CardAnnouncement announcement={announcement} />
+      <CardAnnouncement announcement={announcement} mobileCenterY={isMobile ? mobileCenterY : null} />
 
       {/* VFX overlays */}
       <DamageNumber damages={activeDamages} />
@@ -414,6 +432,7 @@ export default function GameScreen() {
           dice={diceData.dice}
           result={diceData.result}
           onComplete={handleDiceComplete}
+          mobileCenterY={isMobile ? mobileCenterY : null}
         />
       )}
     </motion.div>

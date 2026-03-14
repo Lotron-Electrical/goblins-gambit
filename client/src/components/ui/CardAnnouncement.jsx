@@ -26,30 +26,36 @@ const TYPE_BG = {
 // Major events get the big centered treatment
 const MAJOR_EVENTS = ['Event'];
 
-export default function CardAnnouncement({ announcement }) {
+export default function CardAnnouncement({ announcement, mobileCenterY }) {
   const animationsOff = useStore(s => s.animationsOff);
   const isMobile = useIsMobile();
   const dur = animationsOff ? 0 : 0.25;
 
   const isMajor = announcement && MAJOR_EVENTS.includes(announcement.type);
 
+  // On mobile, position at the center zone midpoint; fall back to 30%
+  const mobileTop = mobileCenterY ? `${mobileCenterY}px` : '30%';
+
   return (
     <AnimatePresence>
       {announcement && isMajor && (
         <motion.div
           key="major"
-          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+          className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2 ${
+            isMobile ? '' : 'inset-0 !left-auto !top-auto !translate-x-0 !translate-y-0 flex items-center justify-center'
+          }`}
+          style={isMobile ? { top: mobileTop } : undefined}
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.2 }}
           transition={{ duration: dur }}
         >
           <div className="text-center">
-            <div className="font-display text-4xl text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+            <div className={`font-display text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
               {announcement.name}
             </div>
             {announcement.flavor && (
-              <div className="text-xl text-[var(--color-gold)] font-display mt-2 drop-shadow-md">
+              <div className={`text-[var(--color-gold)] font-display mt-2 drop-shadow-md ${isMobile ? 'text-base' : 'text-xl'}`}>
                 {announcement.flavor}
               </div>
             )}
@@ -59,7 +65,8 @@ export default function CardAnnouncement({ announcement }) {
       {announcement && !isMajor && (
         <motion.div
           key="toast"
-          className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2 ${isMobile ? 'top-[30%]' : 'top-[35%]'}`}
+          className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2 ${isMobile ? '' : 'top-[35%]'}`}
+          style={isMobile ? { top: mobileTop } : undefined}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}

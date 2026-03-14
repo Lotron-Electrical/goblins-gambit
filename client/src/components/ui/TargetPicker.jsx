@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../store.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 
-export default function TargetPicker() {
+export default function TargetPicker({ mobileCenterY }) {
   const { gameState, selectTarget } = useStore();
   const pending = gameState?.pendingTarget;
   const isMobile = useIsMobile();
@@ -51,7 +51,15 @@ export default function TargetPicker() {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 pointer-events-auto p-3">
+    <div className="fixed inset-0 z-40 bg-black/50 pointer-events-auto">
+      <div
+        className={`absolute p-3 ${
+          mobileCenterY
+            ? 'left-0 right-0 -translate-y-1/2 flex justify-center'
+            : 'inset-0 flex items-center justify-center'
+        }`}
+        style={mobileCenterY ? { top: `${mobileCenterY}px` } : undefined}
+      >
       <div className={`bg-gray-900 border border-[var(--color-gold)] rounded-xl shadow-2xl w-full ${
         isMobile ? 'p-3 max-w-sm' : 'p-6 max-w-md'
       }`}>
@@ -101,6 +109,7 @@ export default function TargetPicker() {
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

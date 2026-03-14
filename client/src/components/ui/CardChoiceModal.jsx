@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from '../../store.js';
 
-export default function CardChoiceModal() {
+export default function CardChoiceModal({ mobileCenterY }) {
   const { gameState, chooseCard, clearHoveredCard } = useStore();
   const pending = gameState?.pendingChoice;
 
@@ -20,7 +20,15 @@ export default function CardChoiceModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 pointer-events-auto p-3">
+    <div className="fixed inset-0 z-40 bg-black/60 pointer-events-auto">
+      <div
+        className={`absolute p-3 ${
+          mobileCenterY
+            ? 'left-0 right-0 -translate-y-1/2 flex justify-center'
+            : 'inset-0 flex items-center justify-center'
+        }`}
+        style={mobileCenterY ? { top: `${mobileCenterY}px` } : undefined}
+      >
       <div className="bg-gray-900 border border-[var(--color-gold)] rounded-xl p-4 sm:p-6 max-w-lg w-full shadow-2xl">
         <h3 className="text-lg sm:text-xl font-display text-[var(--color-gold)] mb-2 sm:mb-3">
           {pending.type === 'dead_meme' ? 'Dead Meme Revive' : pending.type === 'ama_reveal' ? 'AMA - Hand Revealed' : isPeek ? 'Woke - Deck Peek' : 'Choose a Card'}
@@ -60,6 +68,7 @@ export default function CardChoiceModal() {
             Got it
           </button>
         )}
+      </div>
       </div>
     </div>
   );
