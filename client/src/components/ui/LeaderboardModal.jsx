@@ -7,7 +7,7 @@ export default function LeaderboardModal({ onClose }) {
 
   useEffect(() => {
     getLeaderboard()
-      .then(data => setPlayers(data.players || []))
+      .then(data => setPlayers(Array.isArray(data) ? data : data.players || []))
       .catch(() => setPlayers([]))
       .finally(() => setLoading(false));
   }, []);
@@ -41,14 +41,14 @@ export default function LeaderboardModal({ onClose }) {
               </thead>
               <tbody>
                 {players.map((p, i) => {
-                  const winRate = p.gamesPlayed > 0 ? Math.round((p.wins / p.gamesPlayed) * 100) : 0;
+                  const winRate = p.gamesPlayed > 0 ? Math.round((p.gamesWon / p.gamesPlayed) * 100) : 0;
                   return (
                     <tr key={p.username} className="border-b border-gray-800/50 hover:bg-gray-900/50">
                       <td className={`py-2 px-2 font-bold ${i < 3 ? 'text-[var(--color-gold)]' : 'text-gray-500'}`}>
                         {i + 1}
                       </td>
                       <td className="py-2 px-2 text-white">{p.username}</td>
-                      <td className="py-2 px-2 text-right text-green-400">{p.wins}</td>
+                      <td className="py-2 px-2 text-right text-green-400">{p.gamesWon}</td>
                       <td className="py-2 px-2 text-right text-gray-300">{p.gamesPlayed}</td>
                       <td className="py-2 px-2 text-right text-blue-300">{winRate}%</td>
                     </tr>

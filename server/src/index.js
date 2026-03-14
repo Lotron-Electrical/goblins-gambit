@@ -36,14 +36,26 @@ app.post('/api/register', (req, res) => {
   const { username, password } = req.body;
   const result = register(username, password);
   if (result.error) return res.status(400).json({ error: result.error });
-  res.json(result);
+  const profile = getProfile(username);
+  res.json({ token: result.token, user: profile });
 });
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const result = login(username, password);
   if (result.error) return res.status(401).json({ error: result.error });
-  res.json(result);
+  const profile = getProfile(result.username);
+  res.json({ token: result.token, user: profile });
+});
+
+app.get('/api/profile', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const username = validateToken(token);
+  if (!username) return res.status(401).json({ error: 'Not authenticated' });
+  const profile = getProfile(username);
+  if (!profile) return res.status(404).json({ error: 'User not found' });
+  res.json({ user: profile });
 });
 
 app.get('/api/profile/:username', (req, res) => {

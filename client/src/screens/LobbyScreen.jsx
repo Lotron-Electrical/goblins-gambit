@@ -157,13 +157,13 @@ export default function LobbyScreen() {
           <div className="w-full max-w-xs bg-gray-950 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
             <h2 className="font-display text-xl text-[var(--color-gold)] mb-4 text-center">{authUser.username}</h2>
             <div className="space-y-2 text-[14px]">
-              <div className="flex justify-between"><span className="text-gray-400">Games Played</span><span className="text-white font-bold">{authUser.gamesPlayed ?? 0}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Wins</span><span className="text-green-400 font-bold">{authUser.wins ?? 0}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Losses</span><span className="text-red-400 font-bold">{authUser.losses ?? 0}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Games Played</span><span className="text-white font-bold">{authUser.stats?.gamesPlayed ?? 0}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Wins</span><span className="text-green-400 font-bold">{authUser.stats?.gamesWon ?? 0}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Losses</span><span className="text-red-400 font-bold">{(authUser.stats?.gamesPlayed ?? 0) - (authUser.stats?.gamesWon ?? 0)}</span></div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Win Rate</span>
                 <span className="text-blue-300 font-bold">
-                  {(authUser.gamesPlayed ?? 0) > 0 ? Math.round(((authUser.wins ?? 0) / authUser.gamesPlayed) * 100) : 0}%
+                  {(authUser.stats?.gamesPlayed ?? 0) > 0 ? Math.round(((authUser.stats?.gamesWon ?? 0) / authUser.stats.gamesPlayed) * 100) : 0}%
                 </span>
               </div>
             </div>

@@ -3,13 +3,17 @@
  * No external dependencies — uses Node.js built-in crypto for password hashing.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { randomBytes, createHash } from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ACCOUNTS_FILE = path.join(__dirname, 'data', 'accounts.json');
+const DATA_DIR = path.join(__dirname, 'data');
+const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json');
+
+// Ensure data directory exists
+if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 
 // In-memory store, synced to disk
 let accounts = {};
