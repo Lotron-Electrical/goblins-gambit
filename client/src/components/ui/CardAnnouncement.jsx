@@ -59,7 +59,7 @@ export default function CardAnnouncement({ announcement }) {
       {announcement && !isMajor && (
         <motion.div
           key="toast"
-          className="fixed z-50 pointer-events-none left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2"
+          className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2 ${isMobile ? 'top-[30%]' : 'top-[35%]'}`}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}

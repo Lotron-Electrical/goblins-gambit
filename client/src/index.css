@@ -19,6 +19,14 @@ html, body {
   touch-action: manipulation;
 }
 
+html.game-active, html.game-active body {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
+  height: 100vh;
+}
+
 body {
   font-family: var(--font-body);
   background: linear-gradient(180deg, #080a04 0%, #19200c 35%, #1a2210 55%, #0e1206 100%);

@@ -161,26 +161,34 @@ export default function LobbyScreen() {
           <div className="mt-6">
             <h2 className="text-xl font-display text-[var(--color-gold)] mb-3">Open Games</h2>
             <div className="space-y-2">
-              {rooms.map((room) => (
-                <div
-                  key={room.id}
-                  className="bg-gray-900/80 border border-gray-700 rounded-lg p-4 flex items-center justify-between hover:border-[var(--color-gold)]/50 transition"
-                >
-                  <div>
-                    <span className="text-white font-medium">{room.host}'s game</span>
-                    <span className="text-gray-400 ml-3 text-sm">
-                      {room.playerCount}/{room.maxPlayers} players
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleJoin(room.id)}
-                    disabled={!name.trim()}
-                    className="bg-[var(--color-card-blue)] hover:bg-blue-600 disabled:bg-gray-700 text-white font-bold py-2 px-4 rounded transition"
+              {rooms.map((room) => {
+                const themeIcon = { swamp: '\u{1F33F}', blood: '\u{1F319}', frost: '\u{2744}\u{FE0F}' }[room.theme] || '\u{1F33F}';
+                const themeName = { swamp: 'Swamp', blood: 'Blood Moon', frost: 'Frost' }[room.theme] || 'Swamp';
+                return (
+                  <div
+                    key={room.id}
+                    className="bg-gray-900/80 border border-gray-700 rounded-lg p-4 flex items-center justify-between hover:border-[var(--color-gold)]/50 transition"
                   >
-                    Join
-                  </button>
-                </div>
-              ))}
+                    <div className="min-w-0">
+                      <span className="text-white font-medium">{room.host}'s game</span>
+                      <span className="text-gray-400 ml-3 text-sm">
+                        {room.playerCount}/{room.maxPlayers} players
+                      </span>
+                      <div className="flex items-center gap-3 mt-1 text-[12px]">
+                        <span className="text-gray-400">{themeIcon} {themeName}</span>
+                        <span className="text-yellow-400">{(room.winSP || 10000).toLocaleString()} SP</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleJoin(room.id)}
+                      disabled={!name.trim()}
+                      className="bg-[var(--color-card-blue)] hover:bg-blue-600 disabled:bg-gray-700 text-white font-bold py-2 px-4 rounded transition shrink-0"
+                    >
+                      Join
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

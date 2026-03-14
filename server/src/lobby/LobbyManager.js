@@ -123,6 +123,8 @@ export class LobbyManager {
           playerCount: room.players.length,
           maxPlayers: room.maxPlayers,
           quickGame: room.quickGame,
+          theme: room.theme || 'swamp',
+          winSP: room.winSP || (room.quickGame ? QUICK_WIN_SP : WIN_SP),
         });
       }
     }

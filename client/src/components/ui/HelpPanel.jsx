@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useStore } from '../../store.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 
 const GLOSSARY = [
   { term: 'SP', def: 'Swamp Points - the victory currency. Reach the target SP to win.' },
@@ -16,6 +17,8 @@ const GLOSSARY = [
   { term: 'Taunt', def: 'You must attack this creature before any others (Gamer Boy).' },
   { term: 'Silence', def: 'Disables a creature\'s ability for 1 turn (STFU).' },
 ];
+
+const THEME_ICON = { swamp: '\u{1F33F}', blood: '\u{1F319}', frost: '\u{2744}\u{FE0F}' };
 
 export default function HelpPanel() {
   const { helpOpen, setHelpOpen } = useStore();
@@ -37,11 +40,39 @@ export default function HelpPanel() {
           <button onClick={() => setHelpOpen(false)} className="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 rounded-lg">X</button>
         </div>
 
-        <div className="text-[14px] text-gray-300 mb-4 leading-relaxed">
-          Draw cards, play creatures to your swamp, equip armour, cast magic spells, and pull off tricks
-          to earn SP. First to reach the target SP wins!
+        {/* How to Win */}
+        <h3 className="font-display text-[16px] text-white mb-1">How to Win</h3>
+        <p className="text-[13px] text-gray-300 mb-3 leading-relaxed">
+          Earn SP by attacking opponents with your creatures. First player to reach the target SP wins the game.
+        </p>
+
+        {/* Turn Structure */}
+        <h3 className="font-display text-[16px] text-white mb-1">Turn Structure</h3>
+        <ol className="text-[13px] text-gray-300 mb-3 leading-relaxed list-decimal list-inside space-y-0.5">
+          <li>Draw cards (costs 1 AP each)</li>
+          <li>Play cards from your hand (creatures, magic, armour, tricks)</li>
+          <li>Attack with your creatures</li>
+          <li>End your turn</li>
+        </ol>
+
+        {/* Card Types */}
+        <h3 className="font-display text-[16px] text-white mb-1">Card Types</h3>
+        <div className="text-[13px] text-gray-300 mb-3 space-y-1">
+          <div><span className="text-red-400 font-bold">\u2694 Creature</span> — Place on the field. Attacks opponents to earn SP.</div>
+          <div><span className="text-blue-400 font-bold">\u2728 Magic</span> — One-time spells: buffs, damage, control. Costs AP.</div>
+          <div><span className="text-gray-300 font-bold">\uD83D\uDEE1 Armour</span> — Equip to gear slots for passive effects. Collect sets for bonuses.</div>
+          <div><span className="text-green-400 font-bold">\uD83C\uDFB2 Tricks</span> — Free actions (0 AP). Gain SP instantly.</div>
         </div>
 
+        {/* Themes */}
+        <h3 className="font-display text-[16px] text-white mb-1">Themes</h3>
+        <div className="text-[13px] text-gray-300 mb-4 space-y-1">
+          {Object.entries(THEME_EFFECTS).map(([key, t]) => (
+            <div key={key}><span className="font-bold">{THEME_ICON[key]} {t.name}</span> — {t.description}</div>
+          ))}
+        </div>
+
+        {/* Glossary */}
         <h3 className="font-display text-[16px] text-white mb-2">Glossary</h3>
         <div className="space-y-2">
           {GLOSSARY.map(({ term, def }) => (

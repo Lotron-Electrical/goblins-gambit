@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../../store.js';
 import { ICONS } from './icons.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
@@ -10,31 +10,35 @@ const THEME_ICON = {
   frost: '\u{2744}\u{FE0F}',
 };
 
+const FIRST_GAME_KEY = 'gg_seen_rules_prompt';
+
 export default function GameHUD() {
   const { gameState, setHelpOpen, setMenuOpen } = useStore();
   const isMobile = useIsMobile();
+  const [themeExpanded, setThemeExpanded] = useState(false);
 
   if (!gameState) return null;
-
-  const [tipDismissed, setTipDismissed] = useState(false);
-  const [tipFading, setTipFading] = useState(false);
-  const initialAnimRef = useRef(gameState.animations);
-  const showTip = !tipDismissed && gameState.turnNumber <= 3;
 
   const themeInfo = THEME_EFFECTS[gameState.theme] || THEME_EFFECTS.swamp;
   const themeIcon = THEME_ICON[gameState.theme] || THEME_ICON.swamp;
   const playerCount = Object.keys(gameState.players).length;
   const alivePlayers = Object.values(gameState.players).filter(p => !p.eliminated).length;
 
-  // Auto-fade on first action
-  useEffect(() => {
-    if (tipDismissed || !showTip) return;
-    if (gameState.animations && gameState.animations !== initialAnimRef.current && gameState.animations.length > 0) {
-      setTipFading(true);
-      const timer = setTimeout(() => setTipDismissed(true), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [gameState.animations, tipDismissed, showTip]);
+  // First-game rules prompt — only shows once ever
+  const [showRulesPrompt, setShowRulesPrompt] = useState(() => {
+    return !localStorage.getItem(FIRST_GAME_KEY);
+  });
+
+  const handleRulesYes = () => {
+    localStorage.setItem(FIRST_GAME_KEY, '1');
+    setShowRulesPrompt(false);
+    setHelpOpen(true);
+  };
+
+  const handleRulesNo = () => {
+    localStorage.setItem(FIRST_GAME_KEY, '1');
+    setShowRulesPrompt(false);
+  };
 
   return (
     <div className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
@@ -47,10 +51,14 @@ export default function GameHUD() {
               <span className="text-gray-600 text-[10px]">v{__APP_VERSION__}</span>
             </>
           )}
-          <span className={`${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>
+          <button
+            onClick={() => setThemeExpanded(!themeExpanded)}
+            className={`${isMobile ? 'text-[10px]' : 'text-[12px]'} hover:opacity-80 transition`}
+            title="Tap to see theme effects"
+          >
             <span className="mr-0.5">{themeIcon}</span>
             <span className="text-gray-300 font-medium">{themeInfo.name}</span>
-          </span>
+          </button>
           <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>Turn {gameState.turnNumber}</span>
           <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>{alivePlayers}/{playerCount} alive</span>
           {!isMobile && (
@@ -90,18 +98,49 @@ export default function GameHUD() {
         </div>
       </div>
 
-      {/* First-turn instruction — fades out on first action */}
-      {showTip && (
-        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto transition-opacity duration-700 ${tipFading ? 'opacity-0' : 'opacity-100'}`}>
-          <div className={`bg-gray-900/90 border border-gray-700 rounded-lg px-3 py-2 text-gray-300 text-center flex items-center gap-3 ${
-            isMobile ? 'text-[11px] max-w-[280px]' : 'text-[13px] max-w-sm'
-          }`}>
-            <span>Draw cards, play creatures to your swamp, and attack to earn SP!</span>
-            <button onClick={() => { setTipFading(true); setTimeout(() => setTipDismissed(true), 700); }} className="text-gray-500 hover:text-white shrink-0 leading-none">&times;</button>
-          </div>
+      {/* Theme effects expandable */}
+      {themeExpanded && gameState.theme !== 'swamp' && (
+        <div
+          className={`bg-gray-900/95 border-b border-gray-700 pointer-events-auto ${isMobile ? 'px-2 py-1.5 text-[10px]' : 'px-4 py-1.5 text-[12px]'}`}
+          onClick={() => setThemeExpanded(false)}
+        >
+          <span className="text-gray-300">{themeIcon} {themeInfo.description}</span>
         </div>
       )}
 
+      {/* First-game rules dialog */}
+      {showRulesPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center pointer-events-auto">
+          <div className={`bg-gray-900 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl text-center ${
+            isMobile ? 'mx-4 px-5 py-6 max-w-[300px]' : 'px-8 py-8 max-w-sm'
+          }`}>
+            <h2 className={`font-display text-[var(--color-gold)] mb-3 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+              First time playing?
+            </h2>
+            <p className={`text-gray-300 mb-5 ${isMobile ? 'text-[13px]' : 'text-[15px]'}`}>
+              Would you like to read the rules before your first game?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleRulesYes}
+                className={`flex-1 bg-[var(--color-card-green)] hover:bg-green-600 text-white font-bold rounded-lg transition ${
+                  isMobile ? 'py-2.5 text-[13px]' : 'py-3 text-[15px]'
+                }`}
+              >
+                Show me the rules
+              </button>
+              <button
+                onClick={handleRulesNo}
+                className={`flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-lg transition ${
+                  isMobile ? 'py-2.5 text-[13px]' : 'py-3 text-[15px]'
+                }`}
+              >
+                I'll figure it out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

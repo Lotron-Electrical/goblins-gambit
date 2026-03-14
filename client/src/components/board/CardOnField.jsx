@@ -11,6 +11,8 @@ const TYPE_BORDER = {
   Tricks: 'border-green-600',
 };
 
+const TYPE_LETTER = { Creature: 'C', Magic: 'M', Armour: 'A', Tricks: 'T' };
+
 const TYPE_GLOW = {
   Creature: '0 0 20px rgba(220, 38, 38, 0.5)',
   Magic: '0 0 20px rgba(37, 99, 235, 0.5)',
@@ -18,7 +20,7 @@ const TYPE_GLOW = {
   Tricks: '0 0 20px rgba(22, 163, 74, 0.5)',
 };
 
-export default function CardOnField({ card, isOpponent, onClick, isValidTarget, isAttacking, isDefending }) {
+export default function CardOnField({ card, isOpponent, onClick, isValidTarget, isAttacking, isDefending, prediction }) {
   const { selectedCard, selectCard, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
   const [hovered, setHovered] = useState(false);
   const isSelected = selectedCard?.uid === card.uid;
@@ -109,12 +111,23 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       )}
 
 
-      {/* Ability indicator */}
-      {!invisible && card.abilityId && (
-        <div className={`absolute top-0.5 right-0.5 bg-yellow-600/80 rounded-full flex items-center justify-center ${
-          isMobile ? 'w-3 h-3' : 'w-4 h-4'
+      {/* Type letter badge */}
+      {!invisible && (
+        <div className={`absolute top-0.5 right-0.5 flex items-center gap-0.5 z-10 ${
+          isMobile ? '' : ''
         }`}>
-          <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.lightning}</span>
+          {card.abilityId && (
+            <div className={`bg-yellow-600/80 rounded-full flex items-center justify-center ${
+              isMobile ? 'w-3 h-3' : 'w-4 h-4'
+            }`}>
+              <span className={isMobile ? 'text-[6px]' : 'text-[8px]'}>{ICONS.lightning}</span>
+            </div>
+          )}
+          <div className={`bg-black/70 rounded-full flex items-center justify-center font-bold ${
+            isMobile ? 'w-3.5 h-3.5 text-[7px]' : 'w-4.5 h-4.5 text-[9px]'
+          }`}>
+            {TYPE_LETTER[card.type]}
+          </div>
         </div>
       )}
 
@@ -136,6 +149,15 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
           isMobile ? 'text-[7px] py-0' : 'text-[9px] py-0.5'
         }`}>
           {card.name}
+        </div>
+      )}
+
+      {/* Damage prediction overlay */}
+      {prediction && (
+        <div className={`absolute left-0 right-0 z-20 text-center font-bold ${
+          isMobile ? 'bottom-[22px] text-[7px] py-0' : 'bottom-[26px] text-[9px] py-0.5'
+        } ${prediction.kills ? 'bg-green-900/90 text-green-300' : 'bg-yellow-900/90 text-yellow-300'}`}>
+          {prediction.kills ? `${prediction.atk} vs ${prediction.def} — Kill!` : `${prediction.atk} vs ${prediction.def} — ${prediction.atk} dmg`}
         </div>
       )}
 

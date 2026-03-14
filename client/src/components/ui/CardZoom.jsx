@@ -13,7 +13,7 @@ const TYPE_COLOR = {
 };
 
 export default function CardZoom() {
-  const { zoomedCard, setZoomedCard, gameState, discardCard, recycleCreature } = useStore();
+  const { zoomedCard, setZoomedCard, gameState, discardCard, recycleCreature, playCard, selectCard } = useStore();
   const isMobile = useIsMobile();
   const [confirmAction, setConfirmAction] = useState(null); // 'discard' | 'recycle' | null
 
@@ -39,7 +39,10 @@ export default function CardZoom() {
   const isOnMyField = myPlayer?.swamp?.some(c => c.uid === card.uid);
   const isMyTurn = gameState?.currentPlayerId === myId;
   const canDiscard = isInMyHand && isMyTurn;
+  const canPlay = isInMyHand && isMyTurn;
   const canRecycle = isOnMyField && card.type === 'Creature' && isMyTurn;
+  const recycleSPCost = canRecycle ? Math.ceil((card.sp || 0) / 2) : 0;
+  const canAffordRecycle = canRecycle && (myPlayer?.sp ?? 0) >= recycleSPCost;
 
   // Compute effective cost with theme modifiers
   const themeEffects = THEME_EFFECTS[useStore.getState().theme] || THEME_EFFECTS.swamp;
@@ -131,14 +134,14 @@ export default function CardZoom() {
           </div>
 
           {/* Action buttons */}
-          {(canDiscard || canRecycle) && (
+          {(canPlay || canDiscard || canRecycle) && (
             <div className="px-3 pb-2">
               {confirmAction ? (
                 <div className="bg-red-950 border border-red-700 rounded-lg p-3 space-y-2">
                   <p className="text-[13px] text-red-200 text-center">
                     {confirmAction === 'discard'
                       ? `Discard ${card.name} from your hand? This cannot be undone.`
-                      : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? This cannot be undone.`}
+                      : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Costs ${recycleSPCost} SP. This cannot be undone.`}
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -156,7 +159,22 @@ export default function CardZoom() {
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  {canPlay && (
+                    <button
+                      onClick={() => {
+                        if (card.type === 'Creature') {
+                          selectCard(card);
+                        } else {
+                          playCard(card.uid);
+                        }
+                        setZoomedCard(null);
+                      }}
+                      className="flex-1 bg-green-800 hover:bg-green-700 border border-green-600 text-white font-bold py-2 rounded-lg text-[13px] transition"
+                    >
+                      {card.type === 'Creature' ? 'Select to Place' : 'Play'}
+                    </button>
+                  )}
                   {canDiscard && (
                     <button
                       onClick={() => setConfirmAction('discard')}
@@ -168,9 +186,14 @@ export default function CardZoom() {
                   {canRecycle && (
                     <button
                       onClick={() => setConfirmAction('recycle')}
-                      className="flex-1 bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 font-bold py-2 rounded-lg text-[13px] transition"
+                      disabled={!canAffordRecycle}
+                      className={`flex-1 border font-bold py-2 rounded-lg text-[13px] transition ${
+                        canAffordRecycle
+                          ? 'bg-purple-900/80 hover:bg-purple-800 border-purple-700 text-purple-200'
+                          : 'bg-gray-800 border-gray-600 text-gray-500 cursor-not-allowed'
+                      }`}
                     >
-                      Recycle (+{Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield)
+                      Recycle ({recycleSPCost} SP, +{Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield)
                     </button>
                   )}
                 </div>
@@ -281,14 +304,14 @@ export default function CardZoom() {
         )}
 
         {/* Action buttons */}
-        {(canDiscard || canRecycle) && (
+        {(canPlay || canDiscard || canRecycle) && (
           <div className="border-t border-gray-800 pt-3">
             {confirmAction ? (
               <div className="bg-red-950 border border-red-700 rounded-lg p-3 space-y-2">
                 <p className="text-[12px] text-red-200 text-center">
                   {confirmAction === 'discard'
                     ? `Discard ${card.name}? This cannot be undone.`
-                    : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Cannot be undone.`}
+                    : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Costs ${recycleSPCost} SP. Cannot be undone.`}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -307,6 +330,21 @@ export default function CardZoom() {
               </div>
             ) : (
               <div className="space-y-2">
+                {canPlay && (
+                  <button
+                    onClick={() => {
+                      if (card.type === 'Creature') {
+                        selectCard(card);
+                      } else {
+                        playCard(card.uid);
+                      }
+                      setZoomedCard(null);
+                    }}
+                    className="w-full bg-green-800 hover:bg-green-700 border border-green-600 text-white font-bold py-2 rounded-lg text-[12px] transition"
+                  >
+                    {card.type === 'Creature' ? 'Select to Place' : 'Play'}
+                  </button>
+                )}
                 {canDiscard && (
                   <button
                     onClick={() => setConfirmAction('discard')}
@@ -318,9 +356,14 @@ export default function CardZoom() {
                 {canRecycle && (
                   <button
                     onClick={() => setConfirmAction('recycle')}
-                    className="w-full bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 font-bold py-2 rounded-lg text-[12px] transition"
+                    disabled={!canAffordRecycle}
+                    className={`w-full border font-bold py-2 rounded-lg text-[12px] transition ${
+                      canAffordRecycle
+                        ? 'bg-purple-900/80 hover:bg-purple-800 border-purple-700 text-purple-200'
+                        : 'bg-gray-800 border-gray-600 text-gray-500 cursor-not-allowed'
+                    }`}
                   >
-                    Recycle (+{Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield)
+                    Recycle ({recycleSPCost} SP, +{Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield)
                   </button>
                 )}
               </div>

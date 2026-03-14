@@ -3,6 +3,7 @@ import { useStore } from '../../store.js';
 import CardOnField from './CardOnField.jsx';
 import { hasActivatedAbility } from '../ui/abilityInfo.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 
 const THEME_FIELD_NAME = {
   swamp: 'The Swamp',
@@ -52,6 +53,31 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
   const gearSlots = ['head', 'body', 'feet'];
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
 
+  // Damage prediction helper
+  const themeEffects = THEME_EFFECTS[gameState?.theme] || THEME_EFFECTS.swamp;
+  const myId = gameState?.myId;
+  const isBerserk = gameState?.berserkPlayerIds?.includes(myId);
+
+  const getPrediction = (targetCreature) => {
+    if (!isOpponent || !isMyTurn || !selectedCard || selectedCard._zone !== 'swamp') return null;
+    const atkBase = (selectedCard.attack || 0) + (selectedCard._attackBuff || 0);
+    let atk = Math.floor(atkBase * (themeEffects.atkMultiplier || 1));
+    if (isBerserk && themeEffects.berserkMultiplier) atk = Math.floor(atk * themeEffects.berserkMultiplier);
+    const targetDef = Math.max(0, (targetCreature.defence || 0) - (targetCreature._defenceDamage || 0) + (targetCreature._defenceBuff || 0) + (targetCreature._tempShield || 0));
+    const kills = atk >= targetDef;
+    return { atk, def: targetDef, kills };
+  };
+
+  const getDirectPrediction = () => {
+    if (!selectedCard || selectedCard._zone !== 'swamp') return null;
+    const atkBase = (selectedCard.attack || 0) + (selectedCard._attackBuff || 0);
+    let atk = Math.floor(atkBase * (themeEffects.atkMultiplier || 1));
+    if (isBerserk && themeEffects.berserkMultiplier) atk = Math.floor(atk * themeEffects.berserkMultiplier);
+    const shield = player.playerShield || 0;
+    const effectiveDmg = Math.max(0, atk - shield);
+    return { atk, shield, effectiveDmg };
+  };
+
   // Direct attack: can target opponent player if they have no visible creatures
   const visibleCreatures = player.swamp.filter(c => !c._invisible);
   const canDirectAttack = isOpponent && isMyTurn && selectedCard && selectedCard._zone === 'swamp'
@@ -80,6 +106,15 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
       }`}
       onClick={canDirectAttack ? handleDirectAttack : undefined}
     >
+      {/* Direct attack prediction */}
+      {canDirectAttack && (() => {
+        const pred = getDirectPrediction();
+        return pred ? (
+          <div className={`absolute top-0 right-1 z-10 bg-red-900/90 border border-red-600 rounded px-1.5 py-0.5 ${isMobile ? 'text-[8px]' : 'text-[10px]'}`}>
+            <span className="text-red-300">Direct: {pred.atk} ATK{pred.shield > 0 ? ` (-${pred.shield} Sh)` : ''} = <span className="text-white font-bold">{pred.effectiveDmg} dmg</span></span>
+          </div>
+        ) : null;
+      })()}
       {/* Player info bar */}
       <div
         className="flex items-center justify-between mb-1 px-1 rounded"
@@ -191,6 +226,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                         }
                         isAttacking={attackingCardUid === creature.uid}
                         isDefending={defendingCardUid === creature.uid}
+                        prediction={getPrediction(creature)}
                       />
                       {/* Activated ability button (own creatures only, on your turn) */}
                       {!isOpponent && isMyTurn && hasActivatedAbility(creature.abilityId) && !creature._silenced && (

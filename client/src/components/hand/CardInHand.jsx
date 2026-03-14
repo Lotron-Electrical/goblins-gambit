@@ -20,6 +20,7 @@ const TYPE_BORDER_STYLE = {
   Tricks: 'border-dotted',
 };
 
+const TYPE_LETTER = { Creature: 'C', Magic: 'M', Armour: 'A', Tricks: 'T' };
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 
 export default function CardInHand({ card, isSelected }) {
@@ -109,11 +110,11 @@ export default function CardInHand({ card, isSelected }) {
         {costText}
       </div>
 
-      {/* Type icon badge */}
-      <div className={`absolute top-0.5 left-0.5 bg-black/60 rounded-full flex items-center justify-center z-10 ${
-        isMobile ? 'text-[10px] w-4 h-4' : 'text-[14px] w-6 h-6'
+      {/* Type letter badge */}
+      <div className={`absolute top-0.5 left-0.5 bg-black/70 rounded-full flex items-center justify-center z-10 font-bold ${
+        isMobile ? 'text-[9px] w-4 h-4' : 'text-[12px] w-6 h-6'
       }`}>
-        {TYPE_ICON[card.type]}
+        {TYPE_LETTER[card.type]}
       </div>
 
       {/* Ability indicator */}

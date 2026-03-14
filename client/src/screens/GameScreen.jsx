@@ -21,6 +21,7 @@ import DamageNumber from '../components/ui/DamageNumber.jsx';
 import DiceRoll from '../components/ui/DiceRoll.jsx';
 import FieldParticles from '../components/ui/FieldParticles.jsx';
 import SPParticles from '../components/ui/SPParticles.jsx';
+import MobileActivityLog from '../components/ui/MobileActivityLog.jsx';
 import { motion } from 'framer-motion';
 
 // Compact opponent bar for mobile — shows key info, tap to expand
@@ -53,6 +54,12 @@ export default function GameScreen() {
   const { gameState, musicMuted, theme } = useStore();
   const boardRef = useRef(null);
   const isMobile = useIsMobile();
+
+  // Lock body scroll on mobile while game is active
+  useEffect(() => {
+    document.documentElement.classList.add('game-active');
+    return () => document.documentElement.classList.remove('game-active');
+  }, []);
 
   // Apply saved theme on mount + sync to sound manager
   useEffect(() => {
@@ -367,6 +374,9 @@ export default function GameScreen() {
 
       {/* Help panel */}
       <HelpPanel />
+
+      {/* Mobile activity log */}
+      {isMobile && <MobileActivityLog />}
 
       {/* Card play announcement */}
       <CardAnnouncement announcement={announcement} />

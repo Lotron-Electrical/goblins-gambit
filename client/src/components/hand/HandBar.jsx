@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../store.js';
 import CardInHand from './CardInHand.jsx';
 import ActivityLog from '../ui/ActivityLog.jsx';
@@ -6,6 +6,8 @@ import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { TYPE_ICON } from '../ui/icons.js';
 
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
+
+const TAB_LABELS = { Creature: 'Creat.', Magic: 'Magic', Armour: 'Armr.', Tricks: 'Tricks' };
 
 const HAND_TABS = [
   { type: 'Creature', inactive: 'bg-red-950/40 border-red-800/50 text-red-400', active: 'bg-red-700 border-red-500 text-white' },
@@ -40,6 +42,32 @@ export default function HandBar() {
   // Mobile: tabbed hand by card type
   const [activeTab, setActiveTab] = useState('Creature');
 
+  // Track hand counts per type for draw glow
+  const prevCountsRef = useRef({});
+  const [glowingTabs, setGlowingTabs] = useState({});
+
+  useEffect(() => {
+    const newCounts = {};
+    for (const tab of HAND_TABS) {
+      newCounts[tab.type] = hand.filter(c => c.type === tab.type).length;
+    }
+    const prev = prevCountsRef.current;
+    prevCountsRef.current = newCounts;
+    if (Object.keys(prev).length > 0) {
+      const glows = {};
+      for (const type of Object.keys(newCounts)) {
+        if (newCounts[type] > (prev[type] || 0)) {
+          glows[type] = true;
+        }
+      }
+      if (Object.keys(glows).length > 0) {
+        setGlowingTabs(glows);
+        const timer = setTimeout(() => setGlowingTabs({}), 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [hand.length]);
+
   if (isMobile) {
     const filteredCards = hand.filter(c => c.type === activeTab);
     const tabCounts = {};
@@ -60,15 +88,17 @@ export default function HandBar() {
           {HAND_TABS.map(tab => {
             const isActive = activeTab === tab.type;
             const count = tabCounts[tab.type];
+            const isGlowing = glowingTabs[tab.type];
             return (
               <button
                 key={tab.type}
                 onClick={() => setActiveTab(tab.type)}
-                className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-[11px] font-bold transition-colors border-b-2 ${
+                className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-[12px] font-bold transition-colors border-b-2 ${
                   isActive ? tab.active : tab.inactive
-                }`}
+                } ${isGlowing ? 'animate-[pulse_0.4s_ease-in-out_3] ring-1 ring-white/40' : ''}`}
               >
                 <span className="text-[13px]">{TYPE_ICON[tab.type]}</span>
+                <span className="truncate">{TAB_LABELS[tab.type]}</span>
                 {count > 0 && (
                   <span className={`text-[10px] rounded-full min-w-[16px] h-[16px] flex items-center justify-center ${
                     isActive ? 'bg-white/20' : 'bg-gray-700'
