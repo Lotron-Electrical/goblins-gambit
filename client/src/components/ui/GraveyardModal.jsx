@@ -35,7 +35,7 @@ export default function GraveyardModal() {
       onClick={() => setGraveyardOpen(false)}
     >
       <div
-        className="bg-gray-900 border border-[var(--color-gold)]/50 rounded-xl p-4 max-w-[600px] max-h-[70vh] overflow-auto shadow-2xl"
+        className="bg-gray-900 border border-[var(--color-gold)]/50 rounded-xl p-4 w-[90vw] max-w-[600px] max-h-[70vh] overflow-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
@@ -53,11 +53,11 @@ export default function GraveyardModal() {
         {graveyard.length === 0 ? (
           <div className="text-gray-500 text-center py-8">No cards in the graveyard</div>
         ) : (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {[...graveyard].reverse().map((card, idx) => (
               <div
                 key={`${card.uid}-${idx}`}
-                className={`relative w-[120px] h-[168px] rounded-lg border-2 cursor-pointer overflow-hidden ${
+                className={`relative w-full aspect-[5/7] rounded-lg border-2 cursor-pointer overflow-hidden ${
                   TYPE_BORDER[card.type] || 'border-gray-600'
                 } hover:ring-2 hover:ring-[var(--color-gold)]`}
                 onContextMenu={(e) => {
