@@ -51,7 +51,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/profile', async (req, res) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  const username = validateToken(token);
+  const username = await validateToken(token);
   if (!username) return res.status(401).json({ error: 'Not authenticated' });
   const profile = await getProfile(username);
   if (!profile) return res.status(404).json({ error: 'User not found' });

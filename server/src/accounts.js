@@ -49,8 +49,13 @@ async function initDatabase() {
       cards_played INT DEFAULT 0,
       creatures_killed INT DEFAULT 0,
       favourite_card VARCHAR(50),
-      card_counts JSONB DEFAULT '{}'
+      card_counts JSONB DEFAULT '{}',
+      session_token VARCHAR(64)
     );
+  `);
+  // Add session_token column if upgrading from older schema
+  await pool.query(`
+    ALTER TABLE gg_accounts ADD COLUMN IF NOT EXISTS session_token VARCHAR(64);
   `);
   console.log('[Accounts] Postgres connected, gg_accounts table ready');
 }
@@ -116,6 +121,7 @@ async function register(username, password) {
 
     const token = generateToken();
     sessions.set(token, username);
+    await pool.query('UPDATE gg_accounts SET session_token = $1 WHERE username = $2', [token, key]);
     return { success: true, token, username };
   }
 
@@ -163,6 +169,7 @@ async function login(username, password) {
 
     const token = generateToken();
     sessions.set(token, row.display_name);
+    await pool.query('UPDATE gg_accounts SET session_token = $1 WHERE username = $2', [token, key]);
     return { success: true, token, username: row.display_name };
   }
 
@@ -251,9 +258,24 @@ async function getLeaderboard() {
     .slice(0, 50);
 }
 
-function validateToken(token) {
+async function validateToken(token) {
   if (!token) return null;
-  return sessions.get(token) || null;
+  // Check in-memory first
+  const cached = sessions.get(token);
+  if (cached) return cached;
+  // Check Postgres if available
+  if (usePostgres) {
+    const result = await pool.query(
+      'SELECT display_name FROM gg_accounts WHERE session_token = $1',
+      [token]
+    );
+    if (result.rows.length > 0) {
+      const username = result.rows[0].display_name;
+      sessions.set(token, username); // Re-cache
+      return username;
+    }
+  }
+  return null;
 }
 
 async function updateStatsAfterGame(gameState, winnerId) {

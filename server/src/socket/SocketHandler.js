@@ -177,8 +177,8 @@ export function setupSocketHandlers(io, lobby) {
     let playerName = 'Player';
 
     // Authenticate socket with account token
-    socket.on('authenticate', ({ token }, callback) => {
-      const username = validateToken(token);
+    socket.on('authenticate', async ({ token }, callback) => {
+      const username = await validateToken(token);
       if (username) {
         socketAccounts.set(socket.id, username);
         callback?.({ success: true, username });
