@@ -30,11 +30,7 @@ export default function TargetPicker() {
         return [...prev, target];
       });
     } else {
-      if (isPlayerTarget) {
-        selectTarget(target.ownerId, target.uid);
-      } else {
-        selectTarget(target.ownerId, target.uid);
-      }
+      selectTarget(target.ownerId, target.uid);
     }
   };
 

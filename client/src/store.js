@@ -1,8 +1,15 @@
 import { create } from 'zustand';
 import { socket } from './socket.js';
 import { EVENTS, ACTION } from '../../shared/src/constants.js';
+import { login as apiLogin, register as apiRegister, getProfile as apiGetProfile } from './api.js';
 
 export const useStore = create((set, get) => ({
+  // Auth
+  authToken: localStorage.getItem('gg_token') || null,
+  authUser: null,
+  authLoading: false,
+  authError: null,
+
   // Connection
   connected: false,
   playerName: '',
@@ -37,6 +44,52 @@ export const useStore = create((set, get) => ({
 
   // Actions
   setPlayerName: (name) => set({ playerName: name }),
+
+  loginUser: async (username, password) => {
+    set({ authLoading: true, authError: null });
+    try {
+      const data = await apiLogin(username, password);
+      localStorage.setItem('gg_token', data.token);
+      set({ authToken: data.token, authUser: data.user, authLoading: false, playerName: data.user.username });
+    } catch (err) {
+      set({ authLoading: false, authError: err.message });
+    }
+  },
+
+  registerUser: async (username, password) => {
+    set({ authLoading: true, authError: null });
+    try {
+      const data = await apiRegister(username, password);
+      localStorage.setItem('gg_token', data.token);
+      set({ authToken: data.token, authUser: data.user, authLoading: false, playerName: data.user.username });
+    } catch (err) {
+      set({ authLoading: false, authError: err.message });
+    }
+  },
+
+  loadProfile: async () => {
+    const token = get().authToken;
+    if (!token) return;
+    try {
+      const data = await apiGetProfile();
+      set({ authUser: data.user, playerName: data.user.username });
+    } catch {
+      // Token invalid — clear it
+      localStorage.removeItem('gg_token');
+      set({ authToken: null, authUser: null });
+    }
+  },
+
+  logout: () => {
+    localStorage.removeItem('gg_token');
+    set({ authToken: null, authUser: null, playerName: '', screen: 'lobby' });
+  },
+
+  clearAuthError: () => set({ authError: null }),
+
+  skipAuth: () => {
+    set({ authToken: 'guest' });
+  },
 
   connect: () => {
     socket.connect();
@@ -136,6 +189,26 @@ export const useStore = create((set, get) => ({
     }, (res) => {
       if (res?.error) set({ error: res.error });
     });
+  },
+
+  discardCard: (cardUid) => {
+    socket.emit(EVENTS.GAME_ACTION, {
+      type: ACTION.DISCARD_CARD,
+      cardUid,
+    }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+    set({ selectedCard: null, zoomedCard: null });
+  },
+
+  recycleCreature: (cardUid) => {
+    socket.emit(EVENTS.GAME_ACTION, {
+      type: ACTION.RECYCLE_CREATURE,
+      cardUid,
+    }, (res) => {
+      if (res?.error) set({ error: res.error });
+    });
+    set({ selectedCard: null, zoomedCard: null });
   },
 
   endTurn: () => {

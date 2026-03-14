@@ -1,15 +1,23 @@
 import { useEffect } from 'react';
 import { useStore } from './store.js';
+import LoginScreen from './screens/LoginScreen.jsx';
 import LobbyScreen from './screens/LobbyScreen.jsx';
 import RoomScreen from './screens/RoomScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
 
 export default function App() {
-  const { screen, connected, error, clearError, connect } = useStore();
+  const { screen, connected, error, clearError, connect, authToken, loadProfile } = useStore();
+
+  // Auto-login with saved token on mount
+  useEffect(() => {
+    if (authToken && authToken !== 'guest') {
+      loadProfile();
+    }
+  }, []);
 
   useEffect(() => {
-    connect();
-  }, [connect]);
+    if (authToken) connect();
+  }, [authToken, connect]);
 
   useEffect(() => {
     if (error) {
@@ -17,6 +25,11 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [error, clearError]);
+
+  // Show login screen if not authenticated
+  if (!authToken) {
+    return <LoginScreen />;
+  }
 
   return (
     <div className="min-h-screen">

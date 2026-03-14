@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store.js';
 import { soundManager } from '../audio/SoundManager.js';
 import SparkleParticles from '../components/ui/SparkleParticles.jsx';
+import LeaderboardModal from '../components/ui/LeaderboardModal.jsx';
 
 export default function LobbyScreen() {
-  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms } = useStore();
+  const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, authUser, authToken, logout } = useStore();
   const [name, setName] = useState(playerName || '');
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const isGuest = authToken === 'guest';
 
   useEffect(() => {
     refreshRooms();
@@ -49,6 +53,40 @@ export default function LobbyScreen() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
       <SparkleParticles />
+
+      {/* User header bar */}
+      <div className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-2 bg-gray-950/80 border-b border-gray-800">
+        <div className="flex items-center gap-3">
+          {authUser ? (
+            <>
+              <span className="text-[var(--color-gold)] font-bold text-[14px]">{authUser.username}</span>
+              <button
+                onClick={() => setShowStats(!showStats)}
+                className="text-gray-400 hover:text-white text-[12px] transition"
+              >
+                Stats
+              </button>
+            </>
+          ) : isGuest ? (
+            <span className="text-gray-400 text-[14px]">Guest</span>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowLeaderboard(true)}
+            className="text-gray-400 hover:text-[var(--color-gold)] text-[12px] transition"
+          >
+            Leaderboard
+          </button>
+          <button
+            onClick={logout}
+            className="text-gray-500 hover:text-red-400 text-[12px] transition"
+          >
+            {isGuest ? 'Sign In' : 'Logout'}
+          </button>
+        </div>
+      </div>
+
       <div className="text-center mb-8 relative z-10">
         <h1 className="text-3xl md:text-6xl font-display text-[var(--color-gold-bright)] drop-shadow-[0_0_30px_rgba(212,160,23,0.5)] mb-2">
           Goblin's Gambit
@@ -112,6 +150,30 @@ export default function LobbyScreen() {
           <p className="text-gray-500 text-center mt-6">No open games. Create one to get started.</p>
         )}
       </div>
+
+      {/* Stats popup */}
+      {showStats && authUser && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setShowStats(false)}>
+          <div className="w-full max-w-xs bg-gray-950 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-display text-xl text-[var(--color-gold)] mb-4 text-center">{authUser.username}</h2>
+            <div className="space-y-2 text-[14px]">
+              <div className="flex justify-between"><span className="text-gray-400">Games Played</span><span className="text-white font-bold">{authUser.gamesPlayed ?? 0}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Wins</span><span className="text-green-400 font-bold">{authUser.wins ?? 0}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Losses</span><span className="text-red-400 font-bold">{authUser.losses ?? 0}</span></div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Win Rate</span>
+                <span className="text-blue-300 font-bold">
+                  {(authUser.gamesPlayed ?? 0) > 0 ? Math.round(((authUser.wins ?? 0) / authUser.gamesPlayed) * 100) : 0}%
+                </span>
+              </div>
+            </div>
+            <button onClick={() => setShowStats(false)} className="w-full mt-4 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-[14px] transition">Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Leaderboard modal */}
+      {showLeaderboard && <LeaderboardModal onClose={() => setShowLeaderboard(false)} />}
     </div>
   );
 }

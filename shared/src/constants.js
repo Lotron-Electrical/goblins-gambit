@@ -99,6 +99,8 @@ export const ACTION = {
   BUY_AP: 'buy_ap',
   USE_ABILITY: 'use_ability',
   CHOOSE_CARD: 'choose_card',
+  DISCARD_CARD: 'discard_card',
+  RECYCLE_CREATURE: 'recycle_creature',
 };
 
 // Socket events

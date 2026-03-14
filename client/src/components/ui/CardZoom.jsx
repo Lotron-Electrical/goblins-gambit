@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../../store.js';
 import { hasActivatedAbility } from './abilityInfo.js';
 import { ICONS, TYPE_ICON } from './icons.js';
@@ -13,8 +13,14 @@ const TYPE_COLOR = {
 };
 
 export default function CardZoom() {
-  const { zoomedCard, setZoomedCard, gameState } = useStore();
+  const { zoomedCard, setZoomedCard, gameState, discardCard, recycleCreature } = useStore();
   const isMobile = useIsMobile();
+  const [confirmAction, setConfirmAction] = useState(null); // 'discard' | 'recycle' | null
+
+  // Reset confirmation when zoomed card changes
+  useEffect(() => {
+    setConfirmAction(null);
+  }, [zoomedCard?.uid]);
 
   useEffect(() => {
     if (!zoomedCard) return;
@@ -25,6 +31,15 @@ export default function CardZoom() {
 
   if (!zoomedCard) return null;
   const card = zoomedCard;
+
+  // Determine if card is in player's hand or on their field
+  const myId = gameState?.myId;
+  const myPlayer = myId ? gameState.players[myId] : null;
+  const isInMyHand = myPlayer?.hand?.some(c => c.uid === card.uid);
+  const isOnMyField = myPlayer?.swamp?.some(c => c.uid === card.uid);
+  const isMyTurn = gameState?.currentPlayerId === myId;
+  const canDiscard = isInMyHand && isMyTurn;
+  const canRecycle = isOnMyField && card.type === 'Creature' && isMyTurn;
 
   // Compute effective cost with theme modifiers
   const themeEffects = THEME_EFFECTS[useStore.getState().theme] || THEME_EFFECTS.swamp;
@@ -114,6 +129,54 @@ export default function CardZoom() {
               </div>
             )}
           </div>
+
+          {/* Action buttons */}
+          {(canDiscard || canRecycle) && (
+            <div className="px-3 pb-2">
+              {confirmAction ? (
+                <div className="bg-red-950 border border-red-700 rounded-lg p-3 space-y-2">
+                  <p className="text-[13px] text-red-200 text-center">
+                    {confirmAction === 'discard'
+                      ? `Discard ${card.name} from your hand? This cannot be undone.`
+                      : `Sacrifice ${card.name} for +${card.sp ?? 0} shield? This cannot be undone.`}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setConfirmAction(null)}
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded-lg text-[13px] transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmAction === 'discard' ? discardCard(card.uid) : recycleCreature(card.uid)}
+                      className="flex-1 bg-red-700 hover:bg-red-600 text-white font-bold py-2 rounded-lg text-[13px] transition"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  {canDiscard && (
+                    <button
+                      onClick={() => setConfirmAction('discard')}
+                      className="flex-1 bg-red-900/80 hover:bg-red-800 border border-red-700 text-red-200 font-bold py-2 rounded-lg text-[13px] transition"
+                    >
+                      Discard
+                    </button>
+                  )}
+                  {canRecycle && (
+                    <button
+                      onClick={() => setConfirmAction('recycle')}
+                      className="flex-1 bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 font-bold py-2 rounded-lg text-[13px] transition"
+                    >
+                      Recycle (+{card.sp ?? 0} shield)
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Close button */}
           <button
@@ -214,6 +277,54 @@ export default function CardZoom() {
             {card._stonerShield && <div className="text-[12px] text-green-400">{ICONS.shield} Shield Active</div>}
             {card._invisible && <div className="text-[12px] text-gray-400">{ICONS.ghost} Invisible</div>}
             {card._snaccReturn && <div className="text-[12px] text-purple-400">{ICONS.clock} Returns to owner next turn</div>}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {(canDiscard || canRecycle) && (
+          <div className="border-t border-gray-800 pt-3">
+            {confirmAction ? (
+              <div className="bg-red-950 border border-red-700 rounded-lg p-3 space-y-2">
+                <p className="text-[12px] text-red-200 text-center">
+                  {confirmAction === 'discard'
+                    ? `Discard ${card.name}? This cannot be undone.`
+                    : `Sacrifice ${card.name} for +${card.sp ?? 0} shield? Cannot be undone.`}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmAction(null)}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-1.5 rounded text-[12px] transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => confirmAction === 'discard' ? discardCard(card.uid) : recycleCreature(card.uid)}
+                    className="flex-1 bg-red-700 hover:bg-red-600 text-white font-bold py-1.5 rounded text-[12px] transition"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {canDiscard && (
+                  <button
+                    onClick={() => setConfirmAction('discard')}
+                    className="w-full bg-red-900/80 hover:bg-red-800 border border-red-700 text-red-200 font-bold py-2 rounded-lg text-[12px] transition"
+                  >
+                    Discard from Hand
+                  </button>
+                )}
+                {canRecycle && (
+                  <button
+                    onClick={() => setConfirmAction('recycle')}
+                    className="w-full bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 font-bold py-2 rounded-lg text-[12px] transition"
+                  >
+                    Recycle (+{card.sp ?? 0} shield)
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

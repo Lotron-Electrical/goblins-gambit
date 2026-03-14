@@ -118,7 +118,13 @@ export function decideBotAction(state, difficulty = 'medium') {
     return { type: ACTION.BUY_AP };
   }
 
-  // 6. Draw if we still have AP
+  // 6. Recycle a creature that's about to die (low HP, high defence value for shield)
+  if (difficulty !== 'easy') {
+    const recycleAction = pickRecycle(state, me);
+    if (recycleAction) return recycleAction;
+  }
+
+  // 7. Draw if we still have AP
   if (me.hand.length < MAX_HAND_SIZE && me.ap >= 1) {
     return { type: ACTION.DRAW_CARD };
   }
@@ -568,6 +574,24 @@ function pickAbility(state, me) {
     }
   }
 
+  return null;
+}
+
+// --- Recycle Logic ---
+
+function pickRecycle(state, me) {
+  // Consider recycling creatures that are nearly dead but still have decent defence for shield
+  for (const creature of me.swamp) {
+    if (creature._harambeOwner) continue; // Don't recycle opponent's Harambe
+    const hp = effectiveHP(creature, state.theme);
+    const sp = creature.sp || 0;
+    const spCost = Math.ceil(sp / 2);
+    // Only recycle if: creature is close to death (HP <= 200), has meaningful defence left,
+    // and we can afford the SP cost
+    if (hp <= 200 && hp > 0 && me.sp >= spCost && spCost > 0) {
+      return { type: ACTION.RECYCLE_CREATURE, cardUid: creature.uid };
+    }
+  }
   return null;
 }
 

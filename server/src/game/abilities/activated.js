@@ -217,11 +217,11 @@ export function activate_rhy_bear_split(state, playerId, card, targetInfo) {
     const targetCard = state.players[targetOwnerId]?.swamp.find(c => c.uid === targetUid);
     if (targetCard) {
       targetCard._defenceDamage = (targetCard._defenceDamage || 0) + damagePerTarget;
-      events.push({ type: 'damage', cardUid: targetUid, amount: damagePerTarget });
+      events.push({ type: 'damage', cardUid: targetUid, amount: damagePerTarget, attackerOwner: playerId, attackerUid: card.uid });
       const stats = getEffectiveStats(state, targetOwnerId, targetCard);
       if (stats.defence <= 0) {
         player.sp += stats.sp;
-        events.push({ type: 'destroy', cardUid: targetUid, owner: targetOwnerId });
+        events.push({ type: 'destroy', cardUid: targetUid, owner: targetOwnerId, attackerOwner: playerId, attackerUid: card.uid });
         events.push({ type: 'sp_change', playerId, amount: stats.sp });
         killCreature(state, targetOwnerId, targetUid);
       }
@@ -264,11 +264,11 @@ export function activate_crack_head_multi(state, playerId, card, targetInfo) {
     const targetCard = state.players[targetOwnerId]?.swamp.find(c => c.uid === targetUid);
     if (targetCard) {
       targetCard._defenceDamage = (targetCard._defenceDamage || 0) + 200;
-      events.push({ type: 'damage', cardUid: targetUid, amount: 200 });
+      events.push({ type: 'damage', cardUid: targetUid, amount: 200, attackerOwner: playerId, attackerUid: card.uid });
       const stats = getEffectiveStats(state, targetOwnerId, targetCard);
       if (stats.defence <= 0) {
         player.sp += stats.sp;
-        events.push({ type: 'destroy', cardUid: targetUid, owner: targetOwnerId });
+        events.push({ type: 'destroy', cardUid: targetUid, owner: targetOwnerId, attackerOwner: playerId, attackerUid: card.uid });
         events.push({ type: 'sp_change', playerId, amount: stats.sp });
         killCreature(state, targetOwnerId, targetUid);
       }

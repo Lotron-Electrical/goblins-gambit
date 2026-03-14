@@ -1,5 +1,6 @@
 import { EVENTS, ACTION } from '../../../shared/src/constants.js';
 import { createBotId, getBotName, releaseBotName, decideBotAction } from '../bot/BotPlayer.js';
+import { validateToken, updateStatsAfterGame } from '../accounts.js';
 
 export function setupSocketHandlers(io, lobby) {
   // Track which rooms have bots and bot IDs + difficulty
@@ -122,6 +123,7 @@ export function setupSocketHandlers(io, lobby) {
       }
 
       if (result.gameOver) {
+        updateStatsAfterGame(engine.state, result.winner);
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
           winnerName: engine.state.players[result.winner]?.name || 'Unknown',
@@ -168,8 +170,22 @@ export function setupSocketHandlers(io, lobby) {
     }
   }
 
+  // Track socket -> account username for logged-in players
+  const socketAccounts = new Map(); // socketId -> username
+
   io.on('connection', (socket) => {
     let playerName = 'Player';
+
+    // Authenticate socket with account token
+    socket.on('authenticate', ({ token }, callback) => {
+      const username = validateToken(token);
+      if (username) {
+        socketAccounts.set(socket.id, username);
+        callback?.({ success: true, username });
+      } else {
+        callback?.({ error: 'Invalid token' });
+      }
+    });
 
     socket.on(EVENTS.CREATE_ROOM, ({ name, options }, callback) => {
       playerName = name || 'Player';
@@ -325,6 +341,14 @@ export function setupSocketHandlers(io, lobby) {
         return;
       }
 
+      // Attach account usernames to player state for stat tracking
+      for (const p of result.room.players) {
+        const username = socketAccounts.get(p.id);
+        if (username && result.engine.state.players[p.id]) {
+          result.engine.state.players[p.id]._accountUsername = username;
+        }
+      }
+
       // Wire up pending choice timeout callback (broadcasts state + triggers bots)
       result.engine._onPendingChoiceTimeout = () => {
         broadcastState(roomId, result.engine);
@@ -364,6 +388,7 @@ export function setupSocketHandlers(io, lobby) {
       broadcastState(roomId, engine);
 
       if (result.gameOver) {
+        updateStatsAfterGame(engine.state, result.winner);
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
           winnerName: engine.state.players[result.winner].name,
@@ -382,6 +407,7 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on('disconnect', () => {
+      socketAccounts.delete(socket.id);
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) return;
 

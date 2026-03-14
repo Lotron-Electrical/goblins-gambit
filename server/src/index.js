@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { LobbyManager } from './lobby/LobbyManager.js';
 import { setupSocketHandlers } from './socket/SocketHandler.js';
+import { register, login, getProfile, getLeaderboard, validateToken } from './accounts.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
@@ -27,6 +28,32 @@ app.use(express.json());
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', rooms: lobby.getRoomList().length });
+});
+
+// --- Player Accounts ---
+
+app.post('/api/register', (req, res) => {
+  const { username, password } = req.body;
+  const result = register(username, password);
+  if (result.error) return res.status(400).json({ error: result.error });
+  res.json(result);
+});
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  const result = login(username, password);
+  if (result.error) return res.status(401).json({ error: result.error });
+  res.json(result);
+});
+
+app.get('/api/profile/:username', (req, res) => {
+  const profile = getProfile(req.params.username);
+  if (!profile) return res.status(404).json({ error: 'User not found' });
+  res.json(profile);
+});
+
+app.get('/api/leaderboard', (req, res) => {
+  res.json(getLeaderboard());
 });
 
 // In-game feedback -> create GitHub issue

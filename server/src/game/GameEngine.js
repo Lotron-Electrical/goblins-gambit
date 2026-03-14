@@ -108,6 +108,12 @@ export class GameEngine {
       case ACTION.USE_ABILITY:
         return this.handleUseAbility(player, playerId, action);
 
+      case ACTION.DISCARD_CARD:
+        return this.handleDiscardCard(player, playerId, action);
+
+      case ACTION.RECYCLE_CREATURE:
+        return this.handleRecycleCreature(player, playerId, action);
+
       default:
         return { success: false, error: 'Unknown action' };
     }
@@ -387,80 +393,12 @@ export class GameEngine {
       }
     }
 
-    // Harambe round countdown — check ALL players' swamps
-    for (const [pid, p] of Object.entries(this.state.players)) {
-      const harambes = p.swamp.filter(c => c.abilityId === 'harambe_plant' && c._roundsRemaining !== undefined);
-      for (const h of harambes) {
-        if (h._roundsRemaining <= 0) {
-          // Harambe dies, owner gets SP
-          const stats = getEffectiveStats(this.state, pid, h);
-          const harambeOwner = this.state.players[h._harambeOwner];
-          if (harambeOwner) {
-            harambeOwner.sp += stats.sp;
-            events.push({ type: 'sp_change', playerId: h._harambeOwner, amount: stats.sp, reason: 'Harambe expired' });
-          }
-          events.push({ type: 'destroy', cardUid: h.uid, owner: pid, reason: 'Harambe expired' });
-          killCreature(this.state, pid, h.uid);
-        } else {
-          h._roundsRemaining--;
-        }
-      }
-    }
-
-    // Crystal armour income (only if player has at least 1 creature)
-    if (player.swamp.length > 0) {
-      for (const slot of ['head', 'body', 'feet']) {
-        const armour = player.gear[slot];
-        if (armour?.abilityId === 'crystal_income') {
-          player.sp += armour.incomeAmount;
-          events.push({ type: 'sp_change', playerId, amount: armour.incomeAmount, reason: armour.name });
-        }
-      }
-    }
-
-    // Swapeewee toggle
-    for (const c of player.swamp) {
-      if (c.abilityId === 'swapeewee_swap' && !c._silenced) {
-        c._swapped = !c._swapped;
-        events.push({ type: 'buff', cardUid: c.uid, text: 'Stats swapped!' });
-      }
-    }
-
-    // Digital Artist +100 temp shield (creature DEF) + 100 player shield
-    for (const c of player.swamp) {
-      if (c.abilityId === 'digital_artist_shield' && !c._silenced) {
-        c._tempShield = (c._tempShield || 0) + 100;
-        player.playerShield += 100;
-        events.push({ type: 'buff', cardUid: c.uid, text: '+100 shield' });
-      }
-    }
+    // Run end-of-turn effects (Harambe, Crystal income, Swapeewee, Digital Artist, armour durability)
+    this.tickEndOfTurnEffects(player, playerId, events);
 
     // Clear AMA reveals at end of turn
     if (this.state._revealedHands?.[playerId]) {
       delete this.state._revealedHands[playerId];
-    }
-
-    // Armour durability countdown — only for the current player (expires per round, not per turn)
-    for (const slot of ['head', 'body', 'feet']) {
-      const armour = player.gear[slot];
-      if (!armour || armour._turnsRemaining === undefined) continue;
-      // Skip degradation on the turn armour was played
-      if (armour._justEquipped) { delete armour._justEquipped; continue; }
-      armour._turnsRemaining--;
-      if (armour._turnsRemaining <= 0) {
-        // Remove Lucky shield contribution when armour expires
-        if (armour.abilityId === 'lucky_shield') {
-          player.playerShield = Math.max(0, player.playerShield - (armour.shieldAmount || 0));
-          // Check if Lucky set bonus was active (all 3 pieces) — remove 500 bonus
-          const luckyBefore = ['head', 'body', 'feet'].filter(s => player.gear[s]?.abilityId === 'lucky_shield').length;
-          if (luckyBefore === 3) {
-            player.playerShield = Math.max(0, player.playerShield - 500);
-          }
-        }
-        events.push({ type: 'destroy', cardUid: armour.uid, owner: playerId, reason: `${armour.name} expired` });
-        this.state.graveyard.push(armour);
-        player.gear[slot] = null;
-      }
     }
 
     // Advance to next player
@@ -516,6 +454,9 @@ export class GameEngine {
       }
       const reason = skipLagg ? 'Lagg!' : 'Disconnected';
       events.push({ type: 'turn_skipped', playerId: curId, reason });
+
+      // Run end-of-turn effects for skipped player (same as handleEndTurn)
+      this.tickEndOfTurnEffects(cur, curId, events);
 
       this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
       this.state.turnNumber++;
@@ -777,6 +718,142 @@ export class GameEngine {
           }
           break;
         }
+      }
+    }
+  }
+
+  handleDiscardCard(player, playerId, action) {
+    const { cardUid } = action;
+    if (player.ap < 1) {
+      return { success: false, error: 'Need 1 AP to discard' };
+    }
+
+    const cardIdx = player.hand.findIndex(c => c.uid === cardUid);
+    if (cardIdx === -1) {
+      return { success: false, error: 'Card not in hand' };
+    }
+
+    player.ap -= 1;
+    const [card] = player.hand.splice(cardIdx, 1);
+    this.state.graveyard.push(card);
+
+    const events = [
+      { type: 'card_discarded', playerId, cardUid: card.uid, card },
+    ];
+
+    this.logAction(playerId, 'discard', { cardUid: card.uid });
+    this.state.animations.push(...events);
+    return { success: true, events };
+  }
+
+  handleRecycleCreature(player, playerId, action) {
+    const { cardUid } = action;
+    const creatureIdx = player.swamp.findIndex(c => c.uid === cardUid);
+    if (creatureIdx === -1) {
+      return { success: false, error: 'Creature not on your field' };
+    }
+
+    const creature = player.swamp[creatureIdx];
+    const stats = getEffectiveStats(this.state, playerId, creature);
+    const spCost = Math.ceil(stats.sp / 2);
+
+    if (player.sp < spCost) {
+      return { success: false, error: `Need ${spCost} SP to recycle (half of ${stats.sp} SP value)` };
+    }
+
+    // Deduct SP cost
+    player.sp -= spCost;
+
+    // Grant temp player shield equal to remaining defence
+    const remainingDef = Math.max(0, stats.defence);
+    if (remainingDef > 0) {
+      player.playerShield += remainingDef;
+    }
+
+    // Kill creature and send to graveyard
+    killCreature(this.state, playerId, creature.uid);
+
+    const events = [
+      { type: 'sp_change', playerId, amount: -spCost, reason: 'Recycle cost' },
+      { type: 'creature_recycled', playerId, cardUid: creature.uid, card: creature, shieldGained: remainingDef },
+      { type: 'destroy', cardUid: creature.uid, owner: playerId, reason: 'Recycled' },
+    ];
+
+    if (remainingDef > 0) {
+      events.push({ type: 'buff', text: `+${remainingDef} player shield from recycling` });
+    }
+
+    this.logAction(playerId, 'recycle', { cardUid: creature.uid, spCost, shieldGained: remainingDef });
+    this.state.animations.push(...events);
+    return this.checkWin({ success: true, events });
+  }
+
+  /** Run end-of-turn effects for a player (Harambe, armour durability, Swapeewee, Digital Artist, Crystal income) */
+  tickEndOfTurnEffects(player, playerId, events) {
+    // Harambe round countdown — check ALL players' swamps
+    for (const [pid, p] of Object.entries(this.state.players)) {
+      const harambes = p.swamp.filter(c => c.abilityId === 'harambe_plant' && c._roundsRemaining !== undefined);
+      for (const h of harambes) {
+        if (h._roundsRemaining <= 0) {
+          const stats = getEffectiveStats(this.state, pid, h);
+          const harambeOwner = this.state.players[h._harambeOwner];
+          if (harambeOwner) {
+            harambeOwner.sp += stats.sp;
+            events.push({ type: 'sp_change', playerId: h._harambeOwner, amount: stats.sp, reason: 'Harambe expired' });
+          }
+          events.push({ type: 'destroy', cardUid: h.uid, owner: pid, reason: 'Harambe expired' });
+          killCreature(this.state, pid, h.uid);
+        } else {
+          h._roundsRemaining--;
+        }
+      }
+    }
+
+    // Crystal armour income (only if player has at least 1 creature)
+    if (player.swamp.length > 0) {
+      for (const slot of ['head', 'body', 'feet']) {
+        const armour = player.gear[slot];
+        if (armour?.abilityId === 'crystal_income') {
+          player.sp += armour.incomeAmount;
+          events.push({ type: 'sp_change', playerId, amount: armour.incomeAmount, reason: armour.name });
+        }
+      }
+    }
+
+    // Swapeewee toggle
+    for (const c of player.swamp) {
+      if (c.abilityId === 'swapeewee_swap' && !c._silenced) {
+        c._swapped = !c._swapped;
+        events.push({ type: 'buff', cardUid: c.uid, text: 'Stats swapped!' });
+      }
+    }
+
+    // Digital Artist +100 temp shield (creature DEF) + 100 player shield
+    for (const c of player.swamp) {
+      if (c.abilityId === 'digital_artist_shield' && !c._silenced) {
+        c._tempShield = (c._tempShield || 0) + 100;
+        player.playerShield += 100;
+        events.push({ type: 'buff', cardUid: c.uid, text: '+100 shield' });
+      }
+    }
+
+    // Armour durability countdown
+    for (const slot of ['head', 'body', 'feet']) {
+      const armour = player.gear[slot];
+      if (!armour || armour._turnsRemaining === undefined) continue;
+      if (armour._justEquipped) { delete armour._justEquipped; continue; }
+      armour._turnsRemaining--;
+      if (armour._turnsRemaining <= 0) {
+        if (armour.abilityId === 'lucky_shield') {
+          player.playerShield = Math.max(0, player.playerShield - (armour.shieldAmount || 0));
+          const luckyBefore = ['head', 'body', 'feet'].filter(s => player.gear[s]?.abilityId === 'lucky_shield').length;
+          if (luckyBefore === 3) {
+            player.playerShield = Math.max(0, player.playerShield - 500);
+          }
+        }
+        events.push({ type: 'destroy', cardUid: armour.uid, owner: playerId, reason: `${armour.name} expired` });
+        this.state.graveyard.push(armour);
+        player.gear[slot] = null;
       }
     }
   }
