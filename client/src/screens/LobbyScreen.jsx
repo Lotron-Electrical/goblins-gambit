@@ -88,36 +88,32 @@ export default function LobbyScreen() {
       <SparkleParticles />
 
       {/* User header bar */}
-      <div className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-2 bg-gray-950/80 border-b border-gray-800">
-        <div className="flex items-center gap-3">
-          {authUser ? (
-            <>
-              <span className="text-[var(--color-gold)] font-bold text-[14px]">{authUser.username}</span>
-              <button
-                onClick={() => setShowStats(!showStats)}
-                className="text-gray-400 hover:text-white text-[12px] transition"
-              >
-                Stats
-              </button>
-            </>
-          ) : isGuest ? (
-            <span className="text-gray-400 text-[14px]">Guest</span>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-3">
+      <div className="fixed top-0 left-0 right-0 z-20 flex items-center justify-evenly px-4 py-2 bg-gray-950/80 border-b border-gray-800">
+        {authUser ? (
+          <span className="text-[var(--color-gold)] font-bold text-[14px]">{authUser.username}</span>
+        ) : isGuest ? (
+          <span className="text-gray-400 text-[14px]">Guest</span>
+        ) : <span />}
+        {authUser && (
           <button
-            onClick={() => setShowLeaderboard(true)}
-            className="text-gray-400 hover:text-[var(--color-gold)] text-[12px] transition"
+            onClick={() => setShowStats(!showStats)}
+            className="text-gray-400 hover:text-white text-[12px] transition"
           >
-            Leaderboard
+            Stats
           </button>
-          <button
-            onClick={logout}
-            className="text-gray-500 hover:text-red-400 text-[12px] transition"
-          >
-            {isGuest ? 'Sign In' : 'Logout'}
-          </button>
-        </div>
+        )}
+        <button
+          onClick={() => setShowLeaderboard(true)}
+          className="text-gray-400 hover:text-[var(--color-gold)] text-[12px] transition"
+        >
+          Leaderboard
+        </button>
+        <button
+          onClick={logout}
+          className="text-gray-500 hover:text-red-400 text-[12px] transition"
+        >
+          {isGuest ? 'Sign In' : 'Logout'}
+        </button>
       </div>
 
       <div className="text-center mb-8 relative z-10">
