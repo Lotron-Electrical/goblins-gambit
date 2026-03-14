@@ -169,7 +169,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
           return (
             <div
               key={slot}
-              className={`flex-1 ${isMobile ? 'h-5' : 'h-7'} rounded border cursor-pointer ${
+              className={`flex-1 ${isMobile ? 'h-6' : 'h-7'} rounded border cursor-pointer ${
                 armour ? 'border-purple-600 bg-purple-950/40 hover:border-purple-400' : 'border-gray-800 bg-gray-900/40'
               } flex items-center justify-center`}
               onClick={() => handleArmourClick(armour)}
@@ -191,7 +191,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
       <div>
           <div className={`text-gray-500 text-center mb-0.5 ${isMobile ? 'text-[9px]' : 'text-[11px] mb-1'}`}>{THEME_FIELD_NAME[theme] || 'The Swamp'}</div>
           <div className={`flex gap-0.5 justify-center bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-0.5 md:p-1 overflow-hidden ${
-            isMobile ? 'min-h-[56px]' : 'min-h-[100px] max-w-[600px] mx-auto'
+            isMobile ? 'min-h-[64px]' : 'min-h-[100px] max-w-[600px] mx-auto'
           }`}>
             {Array.from({ length: 5 }).map((_, slotIdx) => {
               const creature = player.swamp.find(c => c._slot === slotIdx) || null;
@@ -208,7 +208,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                       : canPlace
                         ? 'border-dashed border-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15'
                         : 'border-dashed border-gray-700/50 bg-gray-900/20'
-                  } ${isMobile ? 'min-h-[48px]' : 'min-h-[90px]'} flex items-center justify-center transition`}
+                  } ${isMobile ? 'min-h-[56px]' : 'min-h-[90px]'} flex items-center justify-center transition`}
                   onClick={() => {
                     if (canPlace) {
                       playCard(selectedCard.uid, { slotIndex: slotIdx });
