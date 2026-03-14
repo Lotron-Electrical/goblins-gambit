@@ -195,8 +195,31 @@ export default function GameScreen() {
   const [activeDamages, setActiveDamages] = useState([]);
   const [spEvents, setSPEvents] = useState([]);
   const [diceData, setDiceData] = useState(null);
+  const [attackLine, setAttackLine] = useState(null);
   const damageIdRef = useRef(0);
   const spIdRef = useRef(0);
+
+  // Drag preview state (mobile touch position)
+  const dragTouchPos = useRef({ x: 0, y: 0 });
+  const [dragPos, setDragPos] = useState(null);
+  const draggingCard = useStore(s => s.draggingCard);
+
+  // Track touch position globally for drag preview
+  useEffect(() => {
+    if (!draggingCard) {
+      setDragPos(null);
+      return;
+    }
+    const onTouchMove = (e) => {
+      const touch = e.touches[0];
+      if (touch) {
+        dragTouchPos.current = { x: touch.clientX, y: touch.clientY };
+        setDragPos({ x: touch.clientX, y: touch.clientY });
+      }
+    };
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
+    return () => document.removeEventListener('touchmove', onTouchMove);
+  }, [draggingCard]);
 
   const { setAttackAnimation, clearAttackAnimation } = useStore();
 
@@ -204,9 +227,23 @@ export default function GameScreen() {
   useEffect(() => {
     if (!currentAnimation) return;
 
-    // Attack animation: set attacking/defending card UIDs
+    // Attack animation: set attacking/defending card UIDs + attack line
     if (currentAnimation.type === 'attack' && currentAnimation.attacker) {
       setAttackAnimation(currentAnimation.attacker, currentAnimation.defender);
+
+      // Capture DOM positions for attack line SVG
+      const attackerEl = document.querySelector(`[data-card-uid="${currentAnimation.attacker}"]`);
+      const defenderEl = document.querySelector(`[data-card-uid="${currentAnimation.defender}"]`);
+      if (attackerEl && defenderEl) {
+        const aRect = attackerEl.getBoundingClientRect();
+        const dRect = defenderEl.getBoundingClientRect();
+        setAttackLine({
+          from: { x: aRect.left + aRect.width / 2, y: aRect.top + aRect.height / 2 },
+          to: { x: dRect.left + dRect.width / 2, y: dRect.top + dRect.height / 2 },
+        });
+        setTimeout(() => setAttackLine(null), 400);
+      }
+
       setTimeout(() => clearAttackAnimation(), 350);
     }
 
@@ -434,6 +471,99 @@ export default function GameScreen() {
           onComplete={handleDiceComplete}
           mobileCenterY={isMobile ? mobileCenterY : null}
         />
+      )}
+
+      {/* Drag preview ghost (mobile only) */}
+      {draggingCard && dragPos && draggingCard.image && (
+        <div
+          style={{
+            position: 'fixed',
+            left: dragPos.x - 30,
+            top: dragPos.y - 42,
+            width: 60,
+            height: 84,
+            pointerEvents: 'none',
+            zIndex: 9999,
+            opacity: 0.8,
+          }}
+        >
+          <img
+            src={`/cards/${draggingCard.image}`}
+            alt={draggingCard.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', borderRadius: 6, border: '2px solid #ef4444' }}
+            draggable={false}
+          />
+        </div>
+      )}
+
+      {/* Attack line SVG overlay */}
+      {attackLine && !animationsOff && (
+        <svg
+          style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 40 }}
+        >
+          <defs>
+            <linearGradient id="attack-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+            <filter id="attack-glow">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {/* Glow line */}
+          <line
+            x1={attackLine.from.x} y1={attackLine.from.y}
+            x2={attackLine.to.x} y2={attackLine.to.y}
+            stroke="url(#attack-grad)"
+            strokeWidth="6"
+            strokeLinecap="round"
+            filter="url(#attack-glow)"
+            opacity="0.5"
+          >
+            <animate attributeName="opacity" values="0;0.5;0" dur="0.4s" fill="freeze" />
+          </line>
+          {/* Main slash line */}
+          <line
+            x1={attackLine.from.x} y1={attackLine.from.y}
+            x2={attackLine.to.x} y2={attackLine.to.y}
+            stroke="url(#attack-grad)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={(() => {
+              const dx = attackLine.to.x - attackLine.from.x;
+              const dy = attackLine.to.y - attackLine.from.y;
+              const len = Math.sqrt(dx * dx + dy * dy);
+              return `${len}`;
+            })()}
+            strokeDashoffset={(() => {
+              const dx = attackLine.to.x - attackLine.from.x;
+              const dy = attackLine.to.y - attackLine.from.y;
+              return Math.sqrt(dx * dx + dy * dy);
+            })()}
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              from={(() => {
+                const dx = attackLine.to.x - attackLine.from.x;
+                const dy = attackLine.to.y - attackLine.from.y;
+                return Math.sqrt(dx * dx + dy * dy);
+              })()}
+              to="0"
+              dur="0.2s"
+              fill="freeze"
+            />
+            <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.5;1" dur="0.4s" fill="freeze" />
+          </line>
+          {/* Impact burst at endpoint */}
+          <circle cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill="#f97316" opacity="0">
+            <animate attributeName="r" values="0;12;0" dur="0.3s" begin="0.15s" fill="freeze" />
+            <animate attributeName="opacity" values="0;0.8;0" dur="0.3s" begin="0.15s" fill="freeze" />
+          </circle>
+        </svg>
       )}
     </motion.div>
   );

@@ -22,15 +22,22 @@ const TYPE_BORDER_STYLE = {
 
 const TYPE_LETTER = { Creature: 'C', Magic: 'M', Armour: 'A', Tricks: 'T' };
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
+const DRAG_THRESHOLD = 15;
 
 export default function CardInHand({ card, isSelected }) {
-  const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
+  const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff, setDraggingCard, clearDraggingCard } = useStore();
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
   const isReaction = REACTION_ABILITIES.includes(card.abilityId);
   const isMobile = useIsMobile();
   const longPressTimer = useRef(null);
+  const isDragging = useRef(false);
+  const touchStart = useRef(null);
+
+  const canDrag = card.type === 'Creature' && (isMyTurn || isReaction);
 
   const handleClick = () => {
+    // If we just finished a drag, don't fire click
+    if (isDragging.current) return;
     if (!isMyTurn && !isReaction) return;
     if (isSelected || (!isMyTurn && isReaction)) {
       // Creatures are placed via swamp slot click, not double-click
@@ -46,20 +53,83 @@ export default function CardInHand({ card, isSelected }) {
     setZoomedCard(card);
   };
 
-  // Long-press to zoom on mobile
+  // Long-press to zoom on mobile, with drag detection
   const handleTouchStart = useCallback((e) => {
+    const touch = e.touches[0];
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+    isDragging.current = false;
+
     longPressTimer.current = setTimeout(() => {
-      setZoomedCard(card);
+      if (!isDragging.current) {
+        setZoomedCard(card);
+      }
       longPressTimer.current = null;
     }, 400);
   }, [card, setZoomedCard]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchMove = useCallback((e) => {
+    if (!touchStart.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStart.current.x;
+    const dy = touch.clientY - touchStart.current.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (!isDragging.current && dist > DRAG_THRESHOLD && canDrag) {
+      // Cancel long-press and start drag
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      isDragging.current = true;
+      setDraggingCard(card);
+    }
+
+    if (isDragging.current) {
+      e.preventDefault(); // prevent scroll while dragging
+    }
+  }, [card, canDrag, setDraggingCard]);
+
+  const handleTouchEnd = useCallback((e) => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-  }, []);
+
+    if (isDragging.current) {
+      // Check if we dropped on a valid slot
+      const touch = e.changedTouches[0];
+      const dropEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      const slotEl = dropEl?.closest?.('[data-drop-slot]');
+      if (slotEl) {
+        const slotIdx = parseInt(slotEl.getAttribute('data-drop-slot'), 10);
+        playCard(card.uid, { slotIndex: slotIdx });
+      }
+      clearDraggingCard();
+      // Prevent the click handler from firing after drag
+      setTimeout(() => { isDragging.current = false; }, 0);
+    } else {
+      isDragging.current = false;
+    }
+    touchStart.current = null;
+  }, [card, playCard, clearDraggingCard]);
+
+  // Desktop HTML5 drag
+  const handleDragStart = useCallback((e) => {
+    if (!canDrag) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', card.uid);
+    setDraggingCard(card);
+  }, [card, canDrag, setDraggingCard]);
+
+  const handleDragEnd = useCallback(() => {
+    clearDraggingCard();
+  }, [clearDraggingCard]);
+
+  const draggingCard = useStore(s => s.draggingCard);
+  const isBeingDragged = draggingCard?.uid === card.uid;
 
   // Compute effective cost with theme modifiers (Blood Moon 2x spells, Frost free spells)
   const themeEffects = THEME_EFFECTS[gameState?.theme] || THEME_EFFECTS.swamp;
@@ -79,11 +149,12 @@ export default function CardInHand({ card, isSelected }) {
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${TYPE_BORDER_STYLE[card.type] || ''} ${
         isSelected ? 'ring-2 ring-[var(--color-gold)] z-10' : ''
-      } ${!canAfford ? 'opacity-50' : ''}`}
+      } ${!canAfford ? 'opacity-50' : ''} ${isBeingDragged ? 'opacity-50' : ''}`}
       data-card-hover
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onTouchStart={isMobile ? handleTouchStart : undefined}
+      onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
       onTouchCancel={isMobile ? handleTouchEnd : undefined}
       onMouseEnter={isMobile ? undefined : (e) => setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: 'hand' })}
@@ -92,6 +163,9 @@ export default function CardInHand({ card, isSelected }) {
       whileHover={animationsOff || isMobile ? undefined : { y: -12, scale: 1.05, zIndex: 50 }}
       animate={animationsOff ? {} : (isSelected ? { y: isMobile ? -6 : -12, scale: isMobile ? 1.02 : 1.05 } : {})}
       layout
+      draggable={!isMobile && canDrag}
+      onDragStart={!isMobile ? handleDragStart : undefined}
+      onDragEnd={!isMobile ? handleDragEnd : undefined}
     >
       {/* Card art — cropped to artwork only, hiding text portion */}
       {card.image && (
