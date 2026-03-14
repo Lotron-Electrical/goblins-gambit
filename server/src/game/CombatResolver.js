@@ -55,6 +55,9 @@ export function resolveAttack(state, attackerId, attackerUid, defenderOwnerId, d
     // Karen sacrifices herself after counter-killing
     killCreature(state, defenderOwnerId, defenderCard.uid);
     events.push({ type: 'destroy', cardUid: defenderUid, owner: defenderOwnerId, reason: 'Karen sacrifice' });
+    // Tag the attack event as a killshot
+    const atkEvt = events.find(e => e.type === 'attack');
+    if (atkEvt) atkEvt.killshot = true;
     return { defenderKilled: true, attackerKilled: true, spGained, events };
   }
 
@@ -175,6 +178,12 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
         killCreature(state, defenderOwnerId, adj.uid);
       }
     }
+  }
+
+  // Tag the attack event with kill info so the client can show a killshot animation
+  if (defenderKilled) {
+    const atkEvt = events.find(e => e.type === 'attack');
+    if (atkEvt) atkEvt.killshot = true;
   }
 
   return { defenderKilled, attackerKilled: false, spGained, events, deadMemeTriggered, deadMemeChoice };

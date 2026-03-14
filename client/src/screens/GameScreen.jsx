@@ -240,8 +240,9 @@ export default function GameScreen() {
         setAttackLine({
           from: { x: aRect.left + aRect.width / 2, y: aRect.top + aRect.height / 2 },
           to: { x: dRect.left + dRect.width / 2, y: dRect.top + dRect.height / 2 },
+          killshot: !!currentAnimation.killshot,
         });
-        setTimeout(() => setAttackLine(null), 400);
+        setTimeout(() => setAttackLine(null), currentAnimation.killshot ? 600 : 400);
       }
 
       setTimeout(() => clearAttackAnimation(), 350);
@@ -497,74 +498,69 @@ export default function GameScreen() {
       )}
 
       {/* Attack line SVG overlay */}
-      {attackLine && !animationsOff && (
-        <svg
-          style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 40 }}
-        >
-          <defs>
-            <linearGradient id="attack-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
-            <filter id="attack-glow">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          {/* Glow line */}
-          <line
-            x1={attackLine.from.x} y1={attackLine.from.y}
-            x2={attackLine.to.x} y2={attackLine.to.y}
-            stroke="url(#attack-grad)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            filter="url(#attack-glow)"
-            opacity="0.5"
-          >
-            <animate attributeName="opacity" values="0;0.5;0" dur="0.4s" fill="freeze" />
-          </line>
-          {/* Main slash line */}
-          <line
-            x1={attackLine.from.x} y1={attackLine.from.y}
-            x2={attackLine.to.x} y2={attackLine.to.y}
-            stroke="url(#attack-grad)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray={(() => {
-              const dx = attackLine.to.x - attackLine.from.x;
-              const dy = attackLine.to.y - attackLine.from.y;
-              const len = Math.sqrt(dx * dx + dy * dy);
-              return `${len}`;
-            })()}
-            strokeDashoffset={(() => {
-              const dx = attackLine.to.x - attackLine.from.x;
-              const dy = attackLine.to.y - attackLine.from.y;
-              return Math.sqrt(dx * dx + dy * dy);
-            })()}
-          >
-            <animate
-              attributeName="stroke-dashoffset"
-              from={(() => {
-                const dx = attackLine.to.x - attackLine.from.x;
-                const dy = attackLine.to.y - attackLine.from.y;
-                return Math.sqrt(dx * dx + dy * dy);
-              })()}
-              to="0"
-              dur="0.2s"
-              fill="freeze"
-            />
-            <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.5;1" dur="0.4s" fill="freeze" />
-          </line>
-          {/* Impact burst at endpoint */}
-          <circle cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill="#f97316" opacity="0">
-            <animate attributeName="r" values="0;12;0" dur="0.3s" begin="0.15s" fill="freeze" />
-            <animate attributeName="opacity" values="0;0.8;0" dur="0.3s" begin="0.15s" fill="freeze" />
-          </circle>
-        </svg>
-      )}
+      {attackLine && !animationsOff && (() => {
+        const k = attackLine.killshot;
+        const dx = attackLine.to.x - attackLine.from.x;
+        const dy = attackLine.to.y - attackLine.from.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const dur = k ? '0.6s' : '0.4s';
+        const drawDur = k ? '0.15s' : '0.2s';
+        return (
+          <svg style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 40 }}>
+            <defs>
+              <linearGradient id="attack-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={k ? '#ffffff' : '#ef4444'} />
+                <stop offset="100%" stopColor={k ? '#fbbf24' : '#f97316'} />
+              </linearGradient>
+              <filter id="attack-glow">
+                <feGaussianBlur stdDeviation={k ? 8 : 4} result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Glow line */}
+            <line
+              x1={attackLine.from.x} y1={attackLine.from.y}
+              x2={attackLine.to.x} y2={attackLine.to.y}
+              stroke="url(#attack-grad)"
+              strokeWidth={k ? 12 : 6}
+              strokeLinecap="round"
+              filter="url(#attack-glow)"
+              opacity="0.5"
+            >
+              <animate attributeName="opacity" values={k ? '0;0.7;0' : '0;0.5;0'} dur={dur} fill="freeze" />
+            </line>
+            {/* Main slash line */}
+            <line
+              x1={attackLine.from.x} y1={attackLine.from.y}
+              x2={attackLine.to.x} y2={attackLine.to.y}
+              stroke="url(#attack-grad)"
+              strokeWidth={k ? 5 : 3}
+              strokeLinecap="round"
+              strokeDasharray={`${len}`}
+              strokeDashoffset={len}
+            >
+              <animate attributeName="stroke-dashoffset" from={len} to="0" dur={drawDur} fill="freeze" />
+              <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.5;1" dur={dur} fill="freeze" />
+            </line>
+            {/* Impact burst at endpoint */}
+            <circle cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill={k ? '#fbbf24' : '#f97316'} opacity="0">
+              <animate attributeName="r" values={k ? '0;24;0' : '0;12;0'} dur={k ? '0.4s' : '0.3s'} begin="0.15s" fill="freeze" />
+              <animate attributeName="opacity" values={k ? '0;1;0' : '0;0.8;0'} dur={k ? '0.4s' : '0.3s'} begin="0.15s" fill="freeze" />
+            </circle>
+            {/* Killshot: extra shockwave ring */}
+            {k && (
+              <circle cx={attackLine.to.x} cy={attackLine.to.y} r="0" fill="none" stroke="#ffffff" strokeWidth="2" opacity="0">
+                <animate attributeName="r" values="0;40;60" dur="0.5s" begin="0.2s" fill="freeze" />
+                <animate attributeName="opacity" values="0;0.6;0" dur="0.5s" begin="0.2s" fill="freeze" />
+                <animate attributeName="stroke-width" values="3;1;0" dur="0.5s" begin="0.2s" fill="freeze" />
+              </circle>
+            )}
+          </svg>
+        );
+      })()}
     </motion.div>
   );
 }

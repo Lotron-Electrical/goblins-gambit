@@ -500,6 +500,17 @@ const SOUNDS = {
     playNoise(ctx, 0.12, 0.5);
     playTone(ctx, 100, 0.15, 'sawtooth', 0.3, 50);
   },
+  killshot: (ctx) => {
+    // Heavy impact — layered noise burst + deep bass hit + metallic ring
+    playNoise(ctx, 0.25, 0.6);
+    playTone(ctx, 60, 0.3, 'sawtooth', 0.4, 25);
+    playTone(ctx, 180, 0.2, 'square', 0.2, 60);
+    setTimeout(() => {
+      playTone(ctx, 800, 0.15, 'triangle', 0.15, 200);
+      playNoise(ctx, 0.15, 0.3);
+    }, 80);
+    setTimeout(() => playTone(ctx, 40, 0.4, 'sine', 0.2, 20), 150);
+  },
   death: (ctx) => {
     // Creature death — descending low pitched rumble
     playNoise(ctx, 0.4, 0.35);
