@@ -1,8 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../store.js';
 import { soundManager } from '../audio/SoundManager.js';
 import SparkleParticles from '../components/ui/SparkleParticles.jsx';
 import LeaderboardModal from '../components/ui/LeaderboardModal.jsx';
+
+const WELCOME_LINES = [
+  '{name} is ready to destroy',
+  '{name} has entered the swamp',
+  '{name} sharpens their claws',
+  '{name} smells blood',
+  '{name} crawls from the muck',
+  '{name} hungers for SP',
+  '{name} is here for chaos',
+  'The goblins fear {name}',
+  '{name} cracks their knuckles',
+  '{name} has returned for vengeance',
+  '{name} emerges from the shadows',
+  'All tremble before {name}',
+  '{name} is out for blood',
+  '{name} lights the swamp fires',
+  'The cards bow to {name}',
+  '{name} has unfinished business',
+];
 
 export default function LobbyScreen() {
   const { playerName, setPlayerName, rooms, createRoom, joinRoom, refreshRooms, authUser, authToken, logout } = useStore();
@@ -10,6 +29,20 @@ export default function LobbyScreen() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const isGuest = authToken === 'guest';
+
+  // Auto-set name from account for logged-in users
+  useEffect(() => {
+    if (authUser?.username && !isGuest) {
+      setName(authUser.username);
+      setPlayerName(authUser.username);
+    }
+  }, [authUser]);
+
+  const welcomeLine = useMemo(() => {
+    if (!authUser?.username) return '';
+    return WELCOME_LINES[Math.floor(Math.random() * WELCOME_LINES.length)]
+      .replace('{name}', authUser.username);
+  }, [authUser?.username]);
 
   useEffect(() => {
     refreshRooms();
@@ -96,17 +129,23 @@ export default function LobbyScreen() {
       </div>
 
       <div className="w-full max-w-md space-y-5 relative z-10">
-        <div>
-          <label className="block text-gray-300 text-sm mb-1">Your Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name..."
-            maxLength={20}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-lg focus:outline-none focus:border-[var(--color-gold)] transition"
-          />
-        </div>
+        {authUser && !isGuest ? (
+          <div className="text-center py-2">
+            <p className="text-[var(--color-gold)] font-display text-lg italic">{welcomeLine}</p>
+          </div>
+        ) : (
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">Your Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name..."
+              maxLength={20}
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-lg focus:outline-none focus:border-[var(--color-gold)] transition"
+            />
+          </div>
+        )}
 
         <div className="flex gap-3">
           <button
