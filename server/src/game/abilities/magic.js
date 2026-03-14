@@ -397,9 +397,8 @@ export function lerker_draw(state, playerId, card, cardIdx, targetInfo) {
   events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
 
   const d1 = Math.ceil(Math.random() * 6);
-  const d2 = Math.ceil(Math.random() * 6);
-  const drawCount = d1 + d2;
-  events.push({ type: 'dice_roll', dice: [d1, d2], result: drawCount, playerId, reason: 'Lerker draw' });
+  const drawCount = d1;
+  events.push({ type: 'dice_roll', dice: [d1], result: drawCount, playerId, reason: 'Lerker draw' });
 
   let drawn = 0;
   let discarded = 0;
