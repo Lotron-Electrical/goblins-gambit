@@ -106,6 +106,7 @@ export function setupSocketHandlers(io, lobby) {
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
           winnerName: engine.state.players[result.winner]?.name || 'Unknown',
+          stats: engine.state.stats,
         });
         return;
       }
@@ -340,6 +341,7 @@ export function setupSocketHandlers(io, lobby) {
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
           winnerName: engine.state.players[result.winner].name,
+          stats: engine.state.stats,
         });
         return;
       }

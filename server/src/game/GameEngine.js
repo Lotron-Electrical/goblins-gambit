@@ -139,6 +139,10 @@ export class GameEngine {
       }
     }
 
+    if (this.state.stats[playerId]) {
+      this.state.stats[playerId].cardsDrawn++;
+    }
+
     this.logAction(playerId, 'draw', { cardId: card.id });
     this.state.animations.push(...events);
     return this.checkWin({ success: true, events });
@@ -158,6 +162,21 @@ export class GameEngine {
       this.state.animations.push(...(result.events || []));
       return { success: true, events: result.events, needsTarget: true };
     }
+
+    if (this.state.stats[playerId]) {
+      this.state.stats[playerId].cardsPlayed++;
+      // Check if a creature was played by scanning events
+      const playedEvt = result.events?.find(e => e.type === 'card_played' && e.card?.type === 'Creature');
+      if (playedEvt) {
+        this.state.stats[playerId].creaturesPlayed++;
+        this.state.stats[playerId].creatureStats[playedEvt.card.uid] = {
+          name: playedEvt.card.name,
+          kills: 0,
+          damageDealt: 0,
+        };
+      }
+    }
+    this.trackEvents(result.events);
 
     this.logAction(playerId, 'play', { cardUid });
     this.state.animations.push(...(result.events || []));
@@ -237,6 +256,21 @@ export class GameEngine {
         }
       }
 
+      // Track direct attack stats
+      if (this.state.stats[playerId]) {
+        const totalDmg = aStats.attack; // total damage before shield
+        this.state.stats[playerId].damageDealt += totalDmg;
+        if (this.state.stats[playerId].creatureStats[attackerUid]) {
+          this.state.stats[playerId].creatureStats[attackerUid].damageDealt += totalDmg;
+        }
+      }
+      // Track SP gains from events
+      for (const evt of events) {
+        if (evt.type === 'sp_change' && evt.amount > 0 && this.state.stats[evt.playerId]) {
+          this.state.stats[evt.playerId].spEarned += evt.amount;
+        }
+      }
+
       this.logAction(playerId, 'attack', { attackerUid, defenderOwnerId, directAttack: true });
       this.state.animations.push(...events);
       return this.checkWin({ success: true, events });
@@ -287,6 +321,28 @@ export class GameEngine {
           if (this._onPendingChoiceTimeout) this._onPendingChoiceTimeout();
         }
       }, 20000);
+    }
+
+    // Track creature attack stats
+    if (this.state.stats[playerId] && result.events) {
+      for (const evt of result.events) {
+        if (evt.type === 'damage') {
+          const dmg = evt.amount || 0;
+          this.state.stats[playerId].damageDealt += dmg;
+          if (this.state.stats[playerId].creatureStats[attackerUid]) {
+            this.state.stats[playerId].creatureStats[attackerUid].damageDealt += dmg;
+          }
+        }
+        if (evt.type === 'destroy' && evt.owner !== playerId) {
+          this.state.stats[playerId].creaturesKilled++;
+          if (this.state.stats[playerId].creatureStats[attackerUid]) {
+            this.state.stats[playerId].creatureStats[attackerUid].kills++;
+          }
+        }
+        if (evt.type === 'sp_change' && evt.amount > 0 && this.state.stats[evt.playerId]) {
+          this.state.stats[evt.playerId].spEarned += evt.amount;
+        }
+      }
     }
 
     this.logAction(playerId, 'attack', { attackerUid, defenderUid, defenderOwnerId });
@@ -525,6 +581,11 @@ export class GameEngine {
 
     if (!result.success) return result;
 
+    if (this.state.stats[playerId]) {
+      this.state.stats[playerId].abilitiesUsed++;
+    }
+    this.trackEvents(result.events);
+
     this.logAction(playerId, 'ability', { cardUid, ability: card.abilityId });
     this.state.animations.push(...(result.events || []));
     return this.checkWin({ success: true, events: result.events });
@@ -562,6 +623,7 @@ export class GameEngine {
       const result = handler(this.state, playerId, card, targetInfo);
       this.state.pendingTarget = null;
       this.state.turnPhase = TURN_PHASE.MAIN;
+      this.trackEvents(result.events);
       if (result.events) this.state.animations.push(...result.events);
       return this.checkWin({ success: true, events: result.events });
     }
@@ -572,6 +634,7 @@ export class GameEngine {
       cursed_set_bonus(this.state, playerId, targetInfo.targetOwnerId, events);
       this.state.pendingTarget = null;
       this.state.turnPhase = TURN_PHASE.MAIN;
+      this.trackEvents(events);
       this.state.animations.push(...events);
       return this.checkWin({ success: true, events });
     }
@@ -580,6 +643,7 @@ export class GameEngine {
     const result = resolvePlayCard(this.state, playerId, pending.cardUid, targetInfo);
     this.state.pendingTarget = null;
     this.state.turnPhase = TURN_PHASE.MAIN;
+    this.trackEvents(result.events);
 
     if (result.events) {
       this.state.animations.push(...result.events);
@@ -636,6 +700,49 @@ export class GameEngine {
       }
     }
     return result;
+  }
+
+  /** Scan events array and update per-player stats */
+  trackEvents(events) {
+    if (!events || !this.state.stats) return;
+    for (const evt of events) {
+      switch (evt.type) {
+        case 'damage': {
+          const ownerStats = this.state.stats[evt.attackerOwner];
+          if (ownerStats) {
+            ownerStats.damageDealt += evt.amount || 0;
+            if (evt.attackerUid && ownerStats.creatureStats[evt.attackerUid]) {
+              ownerStats.creatureStats[evt.attackerUid].damageDealt += evt.amount || 0;
+            }
+          }
+          break;
+        }
+        case 'sp_change': {
+          // Direct SP damage also counts as damageDealt for the attacker
+          if (evt.amount < 0 && evt.attackerOwner) {
+            const ownerStats = this.state.stats[evt.attackerOwner];
+            if (ownerStats) {
+              ownerStats.damageDealt += Math.abs(evt.amount);
+            }
+          }
+          // SP gains
+          if (evt.amount > 0 && evt.playerId && this.state.stats[evt.playerId]) {
+            this.state.stats[evt.playerId].spEarned += evt.amount;
+          }
+          break;
+        }
+        case 'destroy': {
+          // Creature killed — attribute to attacker if known
+          if (evt.attackerOwner && this.state.stats[evt.attackerOwner]) {
+            this.state.stats[evt.attackerOwner].creaturesKilled++;
+            if (evt.attackerUid && this.state.stats[evt.attackerOwner].creatureStats[evt.attackerUid]) {
+              this.state.stats[evt.attackerOwner].creatureStats[evt.attackerUid].kills++;
+            }
+          }
+          break;
+        }
+      }
+    }
   }
 
   logAction(playerId, type, data) {

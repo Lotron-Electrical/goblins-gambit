@@ -14,6 +14,7 @@ export const useStore = create((set, get) => ({
 
   // Game
   gameState: null,
+  gameStats: null,
   error: null,
   selectedCard: null,
   targetMode: false,
@@ -251,6 +252,7 @@ socket.on(EVENTS.GAME_STATE, (state) => {
     gameState: state,
     screen: 'game',
     ...(clearHover ? { hoveredCard: null, hoverPosition: null } : {}),
+    ...(state.stats ? { gameStats: state.stats } : {}),
   });
 });
 
@@ -258,8 +260,10 @@ socket.on(EVENTS.GAME_ERROR, ({ error }) => {
   useStore.setState({ error });
 });
 
-socket.on(EVENTS.GAME_OVER, ({ winner, winnerName }) => {
-  // Game over is reflected in gameState already
+socket.on(EVENTS.GAME_OVER, ({ winner, winnerName, stats }) => {
+  if (stats) {
+    useStore.setState({ gameStats: stats });
+  }
 });
 
 socket.on(EVENTS.PLAYER_DISCONNECTED, ({ playerName }) => {

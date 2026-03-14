@@ -64,6 +64,21 @@ export function createGameState(playerIds, playerNames, settings = {}) {
     baseAP,                 // custom base AP for this game
   };
 
+  // Initialize per-player stats
+  state.stats = {};
+  for (const pid of playerIds) {
+    state.stats[pid] = {
+      cardsPlayed: 0,
+      creaturesPlayed: 0,
+      creaturesKilled: 0,
+      damageDealt: 0,
+      spEarned: 0,
+      cardsDrawn: 0,
+      abilitiesUsed: 0,
+      creatureStats: {},  // uid -> { name, kills, damageDealt }
+    };
+  }
+
   // Deal starting hands
   for (const pid of playerIds) {
     for (let i = 0; i < startingHandSize; i++) {
@@ -166,6 +181,7 @@ export function getClientState(state, playerId) {
     myId: playerId,
     theme: state.theme || 'swamp',
     berserkPlayerIds: getBerserkPlayerIds(state),
+    ...(state.winner ? { stats: state.stats } : {}),
   };
 }
 
