@@ -5,13 +5,21 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
-let commitCount;
-try {
-  commitCount = execSync('git rev-list --count HEAD').toString().trim();
-  // Shallow clones return 1 — fall back to hash
-  if (commitCount === '1') commitCount = null;
-} catch { commitCount = null; }
-const APP_VERSION = commitCount ? `0.2.${commitCount}` : `0.2-${commitHash}`;
+
+// Goblin-themed codenames — one per build, picked by commit hash
+const CODENAMES = [
+  'Sneaky Goblin', 'Bog Lurker', 'Swamp Thing', 'Grim Toad',
+  'Foul Brew', 'Mud Fang', 'Rat King', 'Sludge Lord',
+  'Cave Creep', 'Wart Nose', 'Stink Eye', 'Bone Picker',
+  'Muck Raker', 'Frog Breath', 'Snaggletooth', 'Dung Beetle',
+  'Moss Brain', 'Rusty Shank', 'Belly Flop', 'Troll Snot',
+  'Grub Muncher', 'Bog Witch', 'Slime Trail', 'Night Crawler',
+  'Fizz Bang', 'Skull Bash', 'Ankle Biter', 'Doom Croak',
+  'Gutter Rat', 'Blister Pop', 'Worm Tongue', 'Puddle Jump',
+];
+const hashNum = parseInt(commitHash, 16);
+const codename = CODENAMES[hashNum % CODENAMES.length];
+const APP_VERSION = `0.2.${codename.replace(' ', '-')}`;
 
 export default defineConfig({
   root: path.resolve(__dirname),

@@ -103,35 +103,34 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
         </div>
       )}
 
-      <div className="flex gap-1 md:gap-2">
-        {/* Gear zone */}
-        <div className={`flex flex-col gap-0.5 md:gap-1 shrink-0 min-w-0 ${isMobile ? 'w-14' : isCompact ? 'w-20' : 'w-28'}`}>
-          <div className={`text-gray-500 text-center ${isMobile ? 'text-[9px]' : 'text-[11px]'}`}>Gear</div>
-          {gearSlots.map((slot) => {
-            const armour = player.gear[slot];
-            return (
-              <div
-                key={slot}
-                className={`${isMobile ? 'h-7' : isCompact ? 'h-10' : 'h-14'} rounded border cursor-pointer ${
-                  armour ? 'border-purple-600 bg-purple-950/40 hover:border-purple-400' : 'border-gray-800 bg-gray-900/40'
-                } flex items-center justify-center`}
-                onClick={() => handleArmourClick(armour)}
-              >
-                {armour ? (
-                  <div className="text-center px-0.5">
-                    <div className={`text-purple-300 font-medium truncate ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{armour.name}</div>
-                    {!isCompact && <div className="text-gray-400 text-[9px]">{armour._turnsRemaining ?? armour.durability}T left</div>}
-                  </div>
-                ) : (
-                  <span className={`text-gray-700 ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{slot}</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* Gear zone — horizontal strip */}
+      <div className="flex gap-0.5 md:gap-1 mb-1 px-1">
+        <div className={`text-gray-500 flex items-center ${isMobile ? 'text-[9px] mr-1' : 'text-[11px] mr-1.5'}`}>Gear</div>
+        {gearSlots.map((slot) => {
+          const armour = player.gear[slot];
+          return (
+            <div
+              key={slot}
+              className={`flex-1 ${isMobile ? 'h-6' : 'h-7'} rounded border cursor-pointer ${
+                armour ? 'border-purple-600 bg-purple-950/40 hover:border-purple-400' : 'border-gray-800 bg-gray-900/40'
+              } flex items-center justify-center`}
+              onClick={() => handleArmourClick(armour)}
+            >
+              {armour ? (
+                <div className="flex items-center gap-1 px-1">
+                  <span className={`text-purple-300 font-medium truncate ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{armour.name}</span>
+                  <span className={`text-gray-400 ${isMobile ? 'text-[6px]' : 'text-[9px]'}`}>{armour._turnsRemaining ?? armour.durability}T</span>
+                </div>
+              ) : (
+                <span className={`text-gray-700 ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{slot}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-        {/* Swamp zone */}
-        <div className="flex-1 min-w-0">
+      {/* Swamp zone — full width */}
+      <div>
           <div className={`text-gray-500 text-center mb-0.5 ${isMobile ? 'text-[9px]' : 'text-[11px] mb-1'}`}>{THEME_FIELD_NAME[theme] || 'The Swamp'}</div>
           <div className={`flex gap-0.5 justify-center bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-0.5 md:p-1 overflow-hidden ${
             isMobile ? 'min-h-[70px]' : 'min-h-[100px] max-w-[600px] mx-auto'
@@ -190,7 +189,6 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
               );
             })}
           </div>
-        </div>
       </div>
 
       {/* Revealed hand (AMA) */}
