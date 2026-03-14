@@ -2,8 +2,9 @@ import { EVENTS, ACTION } from '../../../shared/src/constants.js';
 import { createBotId, getBotName, decideBotAction } from '../bot/BotPlayer.js';
 
 export function setupSocketHandlers(io, lobby) {
-  // Track which rooms have bots and bot IDs
+  // Track which rooms have bots and bot IDs + difficulty
   const botIds = new Set();
+  const botDifficulty = new Map(); // botId -> 'easy' | 'medium' | 'hard'
 
   function broadcastState(roomId, engine) {
     const room = lobby.getRoom(roomId);
@@ -59,7 +60,7 @@ export function setupSocketHandlers(io, lobby) {
         && !botIds.has(engine.state.pendingChoice.playerId);
       if (pendingForHuman) return;
 
-      const action = decideBotAction(botState);
+      const action = decideBotAction(botState, botDifficulty.get(botId) || 'medium');
       if (!action) {
         // Bot is stuck — force end turn to prevent freeze
         if (botState.currentPlayerId === botId) {
@@ -193,7 +194,7 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     // --- Bot management ---
-    socket.on(EVENTS.ADD_BOT, (_, callback) => {
+    socket.on(EVENTS.ADD_BOT, (data, callback) => {
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
@@ -210,12 +211,15 @@ export function setupSocketHandlers(io, lobby) {
         return;
       }
 
+      const difficulty = data?.difficulty || 'medium';
       const botId = createBotId();
       const botName = getBotName();
       botIds.add(botId);
+      botDifficulty.set(botId, difficulty);
 
+      const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
       // Add bot to room directly
-      room.players.push({ id: botId, name: botName, ready: true, isBot: true });
+      room.players.push({ id: botId, name: `${botName}`, ready: true, isBot: true, difficulty });
       lobby.playerRooms.set(botId, roomId);
 
       io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
@@ -239,6 +243,7 @@ export function setupSocketHandlers(io, lobby) {
       room.players = room.players.filter(p => p.id !== botId);
       lobby.playerRooms.delete(botId);
       botIds.delete(botId);
+      botDifficulty.delete(botId);
 
       io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
       io.emit(EVENTS.ROOM_LIST, lobby.getRoomList());

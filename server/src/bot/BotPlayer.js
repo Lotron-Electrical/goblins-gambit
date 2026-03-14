@@ -33,7 +33,7 @@ export function getBotName() {
  * Given a game state from the bot's perspective, decide the next action.
  * Returns an action object or null if the bot should end its turn.
  */
-export function decideBotAction(state) {
+export function decideBotAction(state, difficulty = 'medium') {
   const me = state.players[state.myId];
   const isMyTurn = state.currentPlayerId === state.myId;
 
@@ -50,31 +50,40 @@ export function decideBotAction(state) {
   if (!isMyTurn) return null;
   if (me.ap <= 0) return { type: ACTION.END_TURN };
 
+  // Easy: randomly skip good plays 40% of the time (plays dumber)
+  const skip = difficulty === 'easy' ? () => Math.random() < 0.4 : () => false;
+
   // --- Decision priority ---
 
-  // 0. Lethal detection — can we win this turn by going face?
-  const lethalAction = checkLethal(state, me);
-  if (lethalAction) return lethalAction;
+  // 0. Lethal detection — hard only
+  if (difficulty === 'hard') {
+    const lethalAction = checkLethal(state, me);
+    if (lethalAction) return lethalAction;
+  }
 
   // 1. Play high-value cards from hand
-  const cardToPlay = pickCardToPlay(state, me);
-  if (cardToPlay) return cardToPlay;
+  if (!skip()) {
+    const cardToPlay = pickCardToPlay(state, me);
+    if (cardToPlay) return cardToPlay;
+  }
 
   // 2. Attack with creatures on field (focus-fire coordination)
   const attackAction = pickAttack(state, me);
   if (attackAction) return attackAction;
 
-  // 3. Use activated abilities
-  const abilityAction = pickAbility(state, me);
-  if (abilityAction) return abilityAction;
+  // 3. Use activated abilities — medium and hard only
+  if (difficulty !== 'easy') {
+    const abilityAction = pickAbility(state, me);
+    if (abilityAction) return abilityAction;
+  }
 
   // 4. Draw cards if hand is small and we have AP
   if (me.hand.length < 5 && me.ap >= 1) {
     return { type: ACTION.DRAW_CARD };
   }
 
-  // 5. Buy AP if we have lots of SP and useful cards/attacks remaining
-  if (me.sp >= 2000 && me.hand.length > 3 && me.ap <= 1) {
+  // 5. Buy AP if we have lots of SP and useful cards/attacks remaining — hard only
+  if (difficulty === 'hard' && me.sp >= 2000 && me.hand.length > 3 && me.ap <= 1) {
     return { type: ACTION.BUY_AP };
   }
 

@@ -56,7 +56,13 @@ export default function RoomScreen() {
                   <span className="text-xs bg-[var(--color-gold)]/20 text-[var(--color-gold)] px-2 py-0.5 rounded">HOST</span>
                 )}
                 {p.isBot && (
-                  <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded">BOT</span>
+                  <span className={`text-xs px-2 py-0.5 rounded ${
+                    p.difficulty === 'easy' ? 'bg-green-600/20 text-green-400' :
+                    p.difficulty === 'hard' ? 'bg-red-600/20 text-red-400' :
+                    'bg-purple-600/20 text-purple-400'
+                  }`}>
+                    {p.difficulty ? p.difficulty.toUpperCase() : 'BOT'}
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -222,14 +228,31 @@ export default function RoomScreen() {
           </div>
         )}
 
-        {/* Add Bot button */}
+        {/* Add Bot buttons */}
         {isHost && !isFull && (
-          <button
-            onClick={addBot}
-            className="w-full mt-4 bg-purple-700 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
-          >
-            <span className="text-lg">+</span> Add Bot
-          </button>
+          <div className="mt-4">
+            <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wide">Add Bot</label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => addBot('easy')}
+                className="bg-green-800 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition text-sm"
+              >
+                Easy
+              </button>
+              <button
+                onClick={() => addBot('medium')}
+                className="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
+              >
+                Medium
+              </button>
+              <button
+                onClick={() => addBot('hard')}
+                className="bg-red-700 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
+              >
+                Hard
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

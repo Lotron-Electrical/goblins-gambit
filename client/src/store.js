@@ -150,8 +150,8 @@ export const useStore = create((set, get) => ({
     });
   },
 
-  addBot: () => {
-    socket.emit(EVENTS.ADD_BOT, null, (res) => {
+  addBot: (difficulty = 'medium') => {
+    socket.emit(EVENTS.ADD_BOT, { difficulty }, (res) => {
       if (res?.error) set({ error: res.error });
     });
   },
