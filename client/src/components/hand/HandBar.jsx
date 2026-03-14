@@ -3,6 +3,8 @@ import CardInHand from './CardInHand.jsx';
 import ActivityLog from '../ui/ActivityLog.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 
+const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
+
 export default function HandBar() {
   const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
   const isMobile = useIsMobile();
@@ -12,6 +14,8 @@ export default function HandBar() {
   const myPlayer = gameState.players[gameState.myId];
   const hand = myPlayer?.hand || [];
   const isMyTurn = gameState.currentPlayerId === gameState.myId;
+  const hasReaction = !isMyTurn && hand.some(c => REACTION_ABILITIES.includes(c.abilityId));
+  const currentPlayerName = isMyTurn ? null : Object.values(gameState.players).find(p => p.id === gameState.currentPlayerId)?.name;
 
   // Compute effective Buy AP cost (Hessian discount)
   let buyAPCost = 1000;
@@ -27,6 +31,12 @@ export default function HandBar() {
   if (isMobile) {
     return (
       <div className="relative bg-gray-950/90 border-t border-gray-800 px-1 py-1 shrink-0 overflow-visible z-30">
+        {/* Reaction banner */}
+        {hasReaction && (
+          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-1 mb-1 mx-1 text-center animate-pulse">
+            <span className="text-orange-300 text-[10px] font-bold">You can react to {currentPlayerName}'s turn! Tap a REACT card.</span>
+          </div>
+        )}
         {/* Cards row */}
         <div className="flex gap-0.5 justify-start items-end overflow-x-auto overflow-y-visible pb-1 px-1">
           {hand.map((card) => (
@@ -71,6 +81,12 @@ export default function HandBar() {
 
   return (
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0 overflow-visible z-30">
+      {/* Reaction banner */}
+      {hasReaction && (
+        <div className="bg-orange-600/20 border border-orange-500/40 rounded px-3 py-1.5 mb-2 text-center animate-pulse">
+          <span className="text-orange-300 text-sm font-bold">You can react to {currentPlayerName}'s turn! Click a REACT card to interrupt.</span>
+        </div>
+      )}
       <div className="flex items-end gap-2">
         {/* Activity log — inline bottom-left */}
         <div className="shrink-0 self-end" style={{ width: '240px' }}>

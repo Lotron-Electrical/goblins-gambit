@@ -70,7 +70,7 @@ export class GameEngine {
     }
 
     // Reaction cards can be played on any player's turn
-    const REACTION_ABILITIES = ['stfu_silence'];
+    const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
     if (action.type === ACTION.PLAY_CARD && playerId !== this.getCurrentPlayerId()) {
       const reactPlayer = state.players[playerId];
       const reactCard = reactPlayer?.hand.find(c => c.uid === action.cardUid);

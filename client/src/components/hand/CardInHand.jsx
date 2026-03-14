@@ -19,7 +19,7 @@ const TYPE_BORDER_STYLE = {
   Tricks: 'border-dotted',
 };
 
-const REACTION_ABILITIES = ['stfu_silence'];
+const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 
 export default function CardInHand({ card, isSelected }) {
   const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
