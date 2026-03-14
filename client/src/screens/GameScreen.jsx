@@ -3,6 +3,7 @@ import { useStore } from '../store.js';
 import { useAnimationQueue } from '../hooks/useAnimationQueue.js';
 import useMusicDirector from '../hooks/useMusicDirector.js';
 import { soundManager } from '../audio/SoundManager.js';
+import { useIsMobile } from '../hooks/useIsMobile.js';
 import PlayerField from '../components/board/PlayerField.jsx';
 import CenterZone from '../components/board/CenterZone.jsx';
 import HandBar from '../components/hand/HandBar.jsx';
@@ -22,10 +23,37 @@ import FieldParticles from '../components/ui/FieldParticles.jsx';
 import SPParticles from '../components/ui/SPParticles.jsx';
 import { motion } from 'framer-motion';
 
+// Compact opponent bar for mobile — shows key info, tap to expand
+function OpponentBar({ player, playerId, isCurrentTurn, isExpanded, onTap, gameState }) {
+  const creatureCount = player.swamp?.length || 0;
+  const spPct = gameState?.winSP ? Math.min(100, (player.sp / gameState.winSP) * 100) : 0;
+  return (
+    <div
+      onClick={onTap}
+      className={`flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer transition ${
+        isCurrentTurn ? 'bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40' : 'bg-gray-900/60'
+      } ${isExpanded ? 'ring-1 ring-blue-500' : ''}`}
+    >
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-red-400 font-bold text-[11px] truncate max-w-[80px]">{player.name}</span>
+        {isCurrentTurn && <span className="text-[var(--color-gold)] text-[9px]">TURN</span>}
+        {player.playerShield > 0 && <span className="text-cyan-400 text-[9px]">{player.playerShield}Sh</span>}
+      </div>
+      <div className="flex items-center gap-2 text-[10px]">
+        <span className="text-gray-400">{creatureCount} creat.</span>
+        <span className="text-yellow-400 font-bold">{player.sp} SP</span>
+        <span className="text-blue-300">{player.ap} AP</span>
+        <span className="text-gray-500 text-[8px]">{isExpanded ? '\u25B2' : '\u25BC'}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function GameScreen() {
   const { gameState, musicMuted, theme } = useStore();
   const boardRef = useRef(null);
   const initRef = useRef(false);
+  const isMobile = useIsMobile();
 
   // Apply saved theme on mount + sync to sound manager
   useEffect(() => {
@@ -76,6 +104,20 @@ export default function GameScreen() {
       soundManager.stopAmbient();
     };
   }, []);
+
+  // Mobile: track which opponent is expanded (defaults to current turn player)
+  const [expandedOpponent, setExpandedOpponent] = useState(null);
+  const prevTurnRef = useRef(null);
+
+  // Auto-expand the opponent whose turn it is
+  useEffect(() => {
+    if (!isMobile || !gameState) return;
+    const currentId = gameState.currentPlayerId;
+    if (currentId !== gameState.myId && currentId !== prevTurnRef.current) {
+      setExpandedOpponent(currentId);
+      prevTurnRef.current = currentId;
+    }
+  }, [gameState?.currentPlayerId, isMobile]);
 
   const { currentAnimation, isAnimating, announcement } = useAnimationQueue(
     gameState?.animations
@@ -198,29 +240,62 @@ export default function GameScreen() {
       <FieldParticles />
 
       {/* Opponent fields */}
-      <div className="flex-1 overflow-auto p-1 md:p-2 pt-12 md:pt-14 min-h-0">
-        <div
-          className="grid gap-2"
-          style={{
-            gridTemplateColumns:
-              opponents.length <= 3
-                ? `repeat(${opponents.length}, 1fr)`
-                : `repeat(${Math.ceil(opponents.length / 2)}, 1fr)`,
-          }}
-        >
-          {opponents.map(({ id, player }) => (
-            <div key={id} className="min-w-0">
-              <PlayerField
-                player={player}
-                playerId={id}
-                isOpponent={true}
-                isCurrentTurn={gameState.currentPlayerId === id}
-                compact={compact}
-              />
-            </div>
-          ))}
+      {isMobile ? (
+        <div className="flex-1 overflow-auto p-1 pt-12 min-h-0">
+          <div className="flex flex-col gap-1">
+            {opponents.map(({ id, player }) => {
+              const isExpanded = expandedOpponent === id;
+              const isTurn = gameState.currentPlayerId === id;
+              return (
+                <div key={id}>
+                  <OpponentBar
+                    player={player}
+                    playerId={id}
+                    isCurrentTurn={isTurn}
+                    isExpanded={isExpanded}
+                    onTap={() => setExpandedOpponent(isExpanded ? null : id)}
+                    gameState={gameState}
+                  />
+                  {isExpanded && (
+                    <div className="mt-1">
+                      <PlayerField
+                        player={player}
+                        playerId={id}
+                        isOpponent={true}
+                        isCurrentTurn={isTurn}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 overflow-auto p-2 pt-14 min-h-0">
+          <div
+            className="grid gap-2"
+            style={{
+              gridTemplateColumns:
+                opponents.length <= 3
+                  ? `repeat(${opponents.length}, 1fr)`
+                  : `repeat(${Math.ceil(opponents.length / 2)}, 1fr)`,
+            }}
+          >
+            {opponents.map(({ id, player }) => (
+              <div key={id} className="min-w-0">
+                <PlayerField
+                  player={player}
+                  playerId={id}
+                  isOpponent={true}
+                  isCurrentTurn={gameState.currentPlayerId === id}
+                  compact={compact}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Center zone: deck + graveyard */}
       <CenterZone

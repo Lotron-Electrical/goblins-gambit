@@ -71,9 +71,15 @@ export function createGameState(playerIds, playerNames, settings = {}) {
     }
   }
 
-  // Give first player their AP
+  // First-player compensation: +1 card, +1 AP
   const firstPlayer = state.turnOrder[0];
-  state.players[firstPlayer].ap = baseAP;
+  drawCardRaw(state, firstPlayer);
+  state.players[firstPlayer].ap = baseAP + 1;
+  state.animations.push({
+    type: 'first_player_bonus',
+    playerId: firstPlayer,
+    text: 'First Player Bonus: +1 card, +1 AP',
+  });
 
   return state;
 }

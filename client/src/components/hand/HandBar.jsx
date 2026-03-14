@@ -56,20 +56,20 @@ export default function HandBar() {
             <button
               onClick={drawCard}
               disabled={myPlayer.ap < 1}
-              className="flex-1 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-1.5 rounded-lg shadow transition text-[11px]"
+              className="flex-1 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg shadow transition text-[12px]"
             >
               Draw
             </button>
             <button
               onClick={buyAP}
               disabled={!canBuyAP}
-              className="flex-1 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-1.5 rounded-lg shadow transition text-[11px]"
+              className="flex-1 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-lg shadow transition text-[12px]"
             >
               Buy AP
             </button>
             <button
               onClick={endTurn}
-              className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-1.5 rounded-lg shadow transition text-[12px]"
+              className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-3 rounded-lg shadow transition text-[13px]"
             >
               End Turn
             </button>

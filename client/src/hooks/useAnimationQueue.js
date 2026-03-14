@@ -29,6 +29,7 @@ const ANIMATION_DURATIONS = {
   cards_discarded: 200,
   card_recovered: 400,
   deck_recycle: 400,
+  first_player_bonus: 2000,
 };
 
 const SOUND_MAP = {
@@ -96,6 +97,16 @@ export function useAnimationQueue(animations) {
         flavor: evt.text,
       });
       setTimeout(() => setAnnouncement(null), 1800);
+    }
+
+    // Show announcement for first-player bonus
+    if (evt.type === 'first_player_bonus') {
+      setAnnouncement({
+        name: 'First Player',
+        type: 'Magic',
+        flavor: evt.text,
+      });
+      setTimeout(() => setAnnouncement(null), 2000);
     }
 
     // Show announcement for card plays

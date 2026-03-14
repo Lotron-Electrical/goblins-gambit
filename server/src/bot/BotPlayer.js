@@ -52,11 +52,15 @@ export function decideBotAction(state) {
 
   // --- Decision priority ---
 
+  // 0. Lethal detection — can we win this turn by going face?
+  const lethalAction = checkLethal(state, me);
+  if (lethalAction) return lethalAction;
+
   // 1. Play high-value cards from hand
   const cardToPlay = pickCardToPlay(state, me);
   if (cardToPlay) return cardToPlay;
 
-  // 2. Attack with creatures on field
+  // 2. Attack with creatures on field (focus-fire coordination)
   const attackAction = pickAttack(state, me);
   if (attackAction) return attackAction;
 
@@ -80,6 +84,45 @@ export function decideBotAction(state) {
   }
 
   return { type: ACTION.END_TURN };
+}
+
+// --- Lethal Detection ---
+
+function checkLethal(state, me) {
+  if (me.ap < 1) return null;
+  const opponents = getOpponents(state);
+
+  for (const opp of opponents) {
+    // Can only go face if opponent has no visible creatures
+    const visibleCreatures = opp.swamp.filter(c => !c._invisible);
+    if (visibleCreatures.length > 0) continue;
+
+    // Calculate total available damage from creatures that haven't attacked
+    let totalDamage = 0;
+    const attackers = [];
+    for (const creature of me.swamp) {
+      if (creature._hasAttacked || creature._harambeOwner) continue;
+      const atk = (creature.attack || 0) + (creature._attackBuff || 0);
+      if (atk > 0) {
+        totalDamage += atk;
+        attackers.push(creature);
+      }
+    }
+
+    // Check if total damage is enough to kill the opponent
+    // (opponent loses when SP <= 0, and direct attacks deal ATK as SP damage)
+    if (totalDamage >= opp.sp && attackers.length > 0 && opp.sp > 0) {
+      // Go all-in: return the first attack, subsequent calls will pick the rest
+      return {
+        type: ACTION.ATTACK,
+        attackerUid: attackers[0].uid,
+        defenderOwnerId: opp.id,
+        defenderUid: opp.id,
+      };
+    }
+  }
+
+  return null;
 }
 
 // --- Card Play Logic ---
@@ -248,24 +291,37 @@ function pickAttack(state, me) {
   if (me.ap < 1) return null;
   const opponents = getOpponents(state);
 
-  for (const creature of me.swamp) {
-    if (creature._hasAttacked) continue;
-    if (creature._harambeOwner) continue; // Don't attack with Harambe plants
+  // Gather all available attackers, sorted by ATK descending (strongest first)
+  const attackers = me.swamp
+    .filter(c => !c._hasAttacked && !c._harambeOwner)
+    .map(c => ({ card: c, atk: (c.attack || 0) + (c._attackBuff || 0) }))
+    .filter(a => a.atk > 0)
+    .sort((a, b) => b.atk - a.atk);
 
-    // Find best target
+  if (attackers.length === 0) return null;
+
+  // Build a damage-planning map to coordinate focus fire
+  // Track planned damage per target uid across all attackers
+  const plannedDamage = {}; // uid -> accumulated planned damage
+
+  for (const { card: creature, atk } of attackers) {
+    let bestAction = null;
+    let bestScore = -Infinity;
+
     for (const opp of opponents) {
       // Direct attack if opponent has no visible creatures
       const visibleCreatures = opp.swamp.filter(c => !c._invisible);
       if (visibleCreatures.length === 0) {
-        const myAtk = (creature.attack || 0) + (creature._attackBuff || 0);
-        if (myAtk > 0) {
-          return {
-            type: ACTION.ATTACK,
-            attackerUid: creature.uid,
-            defenderOwnerId: opp.id,
-            defenderUid: opp.id, // target the player directly
-          };
-        }
+        // Direct face attack — high priority
+        const action = {
+          type: ACTION.ATTACK,
+          attackerUid: creature.uid,
+          defenderOwnerId: opp.id,
+          defenderUid: opp.id,
+        };
+        // Score: prefer face if opponent SP is low
+        const score = 10000 + atk;
+        if (score > bestScore) { bestScore = score; bestAction = action; }
         continue;
       }
 
@@ -273,40 +329,45 @@ function pickAttack(state, me) {
       const taunt = opp.swamp.find(c => c.abilityId === 'gamer_boy_taunt' && !c._silenced);
       const targets = taunt ? [taunt] : opp.swamp;
 
-      // Pick weakest creature we can kill, or strongest we can damage
-      const myAtk = (creature.attack || 0) + (creature._attackBuff || 0);
-      const killable = targets
-        .filter(t => {
-          const hp = (t.defence || 0) - (t._defenceDamage || 0) + (t._defenceBuff || 0) + (t._tempShield || 0);
-          return myAtk >= hp;
-        })
-        .sort((a, b) => (b.sp || 0) - (a.sp || 0)); // Kill highest SP creature
+      for (const t of targets) {
+        const hp = effectiveHP(t);
+        const remainingHP = hp - (plannedDamage[t.uid] || 0);
 
-      if (killable.length > 0) {
-        return {
-          type: ACTION.ATTACK,
-          attackerUid: creature.uid,
-          defenderOwnerId: opp.id,
-          defenderUid: killable[0].uid,
-        };
-      }
+        // Score targets: prefer those closest to death (accounting for planned damage)
+        let score = 0;
+        if (atk >= remainingHP && remainingHP > 0) {
+          // We can finish this target off — high value, prefer high-SP kills
+          score = 5000 + (t.sp || 0);
+        } else if (remainingHP <= 0) {
+          // Already planned to die — don't waste damage, low score
+          score = -1000;
+        } else {
+          // Can't kill yet — prefer targets closest to death (lowest remainingHP)
+          score = 1000 - remainingHP + (t.sp || 0) * 0.1;
+        }
 
-      // If we can't kill anything, attack the weakest to chip damage
-      if (myAtk > 0) {
-        const weakest = targets.sort((a, b) => {
-          const hpA = (a.defence || 0) - (a._defenceDamage || 0);
-          const hpB = (b.defence || 0) - (b._defenceDamage || 0);
-          return hpA - hpB;
-        })[0];
-        if (weakest) {
-          return {
+        if (score > bestScore) {
+          bestScore = score;
+          bestAction = {
             type: ACTION.ATTACK,
             attackerUid: creature.uid,
             defenderOwnerId: opp.id,
-            defenderUid: weakest.uid,
+            defenderUid: t.uid,
+            _targetUid: t.uid, // internal tracking
           };
         }
       }
+    }
+
+    if (bestAction) {
+      // Record planned damage for focus-fire coordination
+      if (bestAction._targetUid) {
+        plannedDamage[bestAction._targetUid] = (plannedDamage[bestAction._targetUid] || 0) + atk;
+      }
+      // Return the first attacker's action (bot processes one action at a time)
+      // Clean up internal tracking field
+      delete bestAction._targetUid;
+      return bestAction;
     }
   }
 
@@ -322,9 +383,10 @@ function pickAbility(state, me) {
     if (!creature.abilityId || creature._silenced) continue;
     if (!hasActivatedAbility(creature.abilityId)) continue;
 
+    const opponents = getOpponents(state);
+
     // Stoner shield — use if opponents have creatures that could attack
     if (creature.abilityId === 'stoner_shield') {
-      const opponents = getOpponents(state);
       if (opponents.some(o => o.swamp.length > 0)) {
         return { type: ACTION.USE_ABILITY, cardUid: creature.uid };
       }
@@ -332,7 +394,6 @@ function pickAbility(state, me) {
 
     // Thief — always steal if opponent has SP
     if (creature.abilityId === 'thief_steal' || creature.abilityId === 'king_thief_steal') {
-      const opponents = getOpponents(state);
       const rich = opponents.find(o => o.sp >= 200);
       if (rich) {
         return {
@@ -341,6 +402,128 @@ function pickAbility(state, me) {
           targetInfo: { targetOwnerId: rich.id },
         };
       }
+    }
+
+    // Troll Swap — cycle stats on opponent creature where swapping weakens it
+    // (target their highest-ATK creature so ATK gets moved to DEF)
+    if (creature.abilityId === 'troll_swap') {
+      let bestTarget = null;
+      let bestAtk = 0;
+      for (const opp of opponents) {
+        for (const t of opp.swamp) {
+          const atk = (t.attack || 0) + (t._attackBuff || 0);
+          if (atk > bestAtk) {
+            bestAtk = atk;
+            bestTarget = { ownerId: opp.id, uid: t.uid, atk, sp: t.sp || 0 };
+          }
+        }
+      }
+      // Only swap if it meaningfully weakens (ATK > SP, so cycling ATK->DEF->SP->ATK reduces ATK)
+      if (bestTarget && bestTarget.atk > bestTarget.sp) {
+        return {
+          type: ACTION.USE_ABILITY,
+          cardUid: creature.uid,
+          targetInfo: { targetOwnerId: bestTarget.ownerId, targetUid: bestTarget.uid },
+        };
+      }
+    }
+
+    // Saving Grace — +300 ATK to 1 creature or +100 ATK to up to 3
+    if (creature.abilityId === 'saving_grace_multi') {
+      const ownCreatures = me.swamp.filter(c => c.uid !== creature.uid || me.swamp.length === 1);
+      if (ownCreatures.length >= 3) {
+        // Multi-mode: buff 3 creatures with +100 each
+        const targets = ownCreatures
+          .sort((a, b) => ((b.attack || 0) + (b._attackBuff || 0)) - ((a.attack || 0) + (a._attackBuff || 0)))
+          .slice(0, 3)
+          .map(c => ({ targetOwnerId: me.id, targetUid: c.uid }));
+        return {
+          type: ACTION.USE_ABILITY,
+          cardUid: creature.uid,
+          targetInfo: { targets },
+        };
+      } else if (ownCreatures.length > 0) {
+        // Single-mode: +300 to strongest creature
+        const strongest = ownCreatures.sort((a, b) =>
+          ((b.attack || 0) + (b._attackBuff || 0)) - ((a.attack || 0) + (a._attackBuff || 0))
+        )[0];
+        return {
+          type: ACTION.USE_ABILITY,
+          cardUid: creature.uid,
+          targetInfo: { targets: [{ targetOwnerId: me.id, targetUid: strongest.uid }] },
+        };
+      }
+    }
+
+    // Rhy Bear Split — 800 to 1 or 400 to 2
+    if (creature.abilityId === 'rhy_bear_split' && !creature._hasAttacked) {
+      const allTargets = [];
+      for (const opp of opponents) {
+        for (const t of opp.swamp) {
+          allTargets.push({ ...t, _ownerId: opp.id, _hp: effectiveHP(t) });
+        }
+      }
+      if (allTargets.length === 0) continue;
+
+      // Check if 2 targets each have <= 400 effective HP (killable with split)
+      const splittable = allTargets.filter(t => t._hp <= 400);
+      if (splittable.length >= 2 && allTargets.length >= 2) {
+        // Split attack — kill 2 creatures
+        const picks = splittable
+          .sort((a, b) => (b.sp || 0) - (a.sp || 0))
+          .slice(0, 2);
+        return {
+          type: ACTION.USE_ABILITY,
+          cardUid: creature.uid,
+          targetInfo: {
+            targets: picks.map(p => ({ targetOwnerId: p._ownerId, targetUid: p.uid })),
+          },
+        };
+      } else {
+        // Focus 800 on highest-value target
+        const best = allTargets.sort((a, b) => {
+          // Prefer killable (hp <= 800), then highest SP
+          const aKill = a._hp <= 800 ? 1 : 0;
+          const bKill = b._hp <= 800 ? 1 : 0;
+          if (bKill !== aKill) return bKill - aKill;
+          return (b.sp || 0) - (a.sp || 0);
+        })[0];
+        return {
+          type: ACTION.USE_ABILITY,
+          cardUid: creature.uid,
+          targetInfo: {
+            targets: [{ targetOwnerId: best._ownerId, targetUid: best.uid }],
+          },
+        };
+      }
+    }
+
+    // Crack Head Multi — 200 damage to 2 creatures
+    if (creature.abilityId === 'crack_head_multi' && !creature._hasAttacked) {
+      const allTargets = [];
+      for (const opp of opponents) {
+        for (const t of opp.swamp) {
+          allTargets.push({ ...t, _ownerId: opp.id, _hp: effectiveHP(t) });
+        }
+      }
+      if (allTargets.length === 0) continue;
+
+      // Prefer targets with <= 200 HP (killable)
+      const sorted = allTargets.sort((a, b) => {
+        const aKill = a._hp <= 200 ? 1 : 0;
+        const bKill = b._hp <= 200 ? 1 : 0;
+        if (bKill !== aKill) return bKill - aKill;
+        return (b.sp || 0) - (a.sp || 0);
+      });
+
+      const picks = sorted.slice(0, 2);
+      return {
+        type: ACTION.USE_ABILITY,
+        cardUid: creature.uid,
+        targetInfo: {
+          targets: picks.map(p => ({ targetOwnerId: p._ownerId, targetUid: p.uid })),
+        },
+      };
     }
   }
 
@@ -458,6 +641,10 @@ function getOpponentCreatureWithAbility(opponents) {
 
 function pickBestOpponent(opponents) {
   return opponents.sort((a, b) => b.sp - a.sp)[0] || null;
+}
+
+function effectiveHP(t) {
+  return (t.defence || 0) - (t._defenceDamage || 0) + (t._defenceBuff || 0) + (t._tempShield || 0);
 }
 
 function countArmourSet(me, setName) {
