@@ -35,8 +35,8 @@ export default function RoomScreen() {
           </h2>
           <div className="w-16" /> {/* spacer for centering */}
         </div>
-        <p className="text-gray-400 text-center mb-1">
-          Room: {currentRoom.id}
+        <p className="text-gray-400 text-center mb-1 font-display">
+          {currentRoom.name || currentRoom.id}
         </p>
         <p className="text-gray-500 text-center text-sm mb-6">
           Waiting for players... ({currentRoom.players.length}/{currentRoom.maxPlayers})

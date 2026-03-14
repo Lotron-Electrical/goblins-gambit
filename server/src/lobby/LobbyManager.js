@@ -1,7 +1,26 @@
 import { MIN_PLAYERS, MAX_PLAYERS, WIN_SP, QUICK_WIN_SP } from '../../../shared/src/constants.js';
 import { GameEngine } from '../game/GameEngine.js';
 
+const ROOM_ADJ = [
+  'Grimy', 'Sneaky', 'Rotten', 'Murky', 'Cursed', 'Soggy', 'Festering',
+  'Twisted', 'Putrid', 'Dodgy', 'Wonky', 'Slimy', 'Boggy', 'Crusty',
+  'Dank', 'Filthy', 'Grotty', 'Manky', 'Toxic', 'Warty', 'Charred',
+  'Jagged', 'Bloated', 'Crooked', 'Savage', 'Rabid', 'Barmy', 'Craggy',
+];
+const ROOM_NOUN = [
+  'Burrow', 'Den', 'Pit', 'Hollow', 'Lair', 'Cavern', 'Hovel',
+  'Stump', 'Marsh', 'Bog', 'Mire', 'Grotto', 'Crypt', 'Shanty',
+  'Hut', 'Cellar', 'Hole', 'Nest', 'Trench', 'Swamp', 'Gutter',
+  'Sewer', 'Dungeon', 'Warren', 'Foxhole', 'Bunker', 'Ditch', 'Tomb',
+];
+
 let nextRoomId = 1;
+
+function generateRoomName() {
+  const adj = ROOM_ADJ[Math.floor(Math.random() * ROOM_ADJ.length)];
+  const noun = ROOM_NOUN[Math.floor(Math.random() * ROOM_NOUN.length)];
+  return `${adj} ${noun}`;
+}
 
 export class LobbyManager {
   constructor() {
@@ -14,6 +33,7 @@ export class LobbyManager {
     const roomId = `room_${nextRoomId++}`;
     const room = {
       id: roomId,
+      name: generateRoomName(),
       host: hostId,
       players: [{ id: hostId, name: hostName, ready: false }],
       maxPlayers: options.maxPlayers || MAX_PLAYERS,
@@ -119,6 +139,7 @@ export class LobbyManager {
       if (!room.started) {
         list.push({
           id: room.id,
+          name: room.name,
           host: room.players.find(p => p.id === room.host)?.name || 'Unknown',
           playerCount: room.players.length,
           maxPlayers: room.maxPlayers,

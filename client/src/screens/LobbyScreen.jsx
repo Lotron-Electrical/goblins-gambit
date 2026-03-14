@@ -170,11 +170,12 @@ export default function LobbyScreen() {
                     className="bg-gray-900/80 border border-gray-700 rounded-lg p-4 flex items-center justify-between hover:border-[var(--color-gold)]/50 transition"
                   >
                     <div className="min-w-0">
-                      <span className="text-white font-medium">{room.host}'s game</span>
+                      <span className="text-white font-medium font-display">{room.name || `${room.host}'s game`}</span>
                       <span className="text-gray-400 ml-3 text-sm">
                         {room.playerCount}/{room.maxPlayers} players
                       </span>
                       <div className="flex items-center gap-3 mt-1 text-[12px]">
+                        <span className="text-gray-500">Host: {room.host}</span>
                         <span className="text-gray-400">{themeIcon} {themeName}</span>
                         <span className="text-yellow-400">{(room.winSP || 10000).toLocaleString()} SP</span>
                       </div>
