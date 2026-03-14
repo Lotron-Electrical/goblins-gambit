@@ -149,7 +149,7 @@ export function useAnimationQueue(animations) {
     let duration = ANIMATION_DURATIONS[evt.type] || 200;
     // Give killshots and direct attacks more time for their animations
     if (evt.type === 'attack' && evt.killshot) duration = 650;
-    if (evt.type === 'attack' && evt.directAttack) duration = 750;
+    if (evt.type === 'attack' && evt.directAttack) duration = 950;
     setTimeout(processNext, duration);
   }, []);
 

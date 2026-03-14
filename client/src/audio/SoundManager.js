@@ -568,6 +568,22 @@ const SOUNDS = {
     setTimeout(() => playTone(ctx, 1100, 0.1, 'sine', 0.2), 100);
     setTimeout(() => playTone(ctx, 1320, 0.15, 'sine', 0.2), 200);
   },
+  coin_clink: (ctx) => {
+    // Metallic coin clink — two bright pings with harmonic shimmer
+    const t = ctx.currentTime;
+    // First clink
+    playTone(ctx, 2400, 0.06, 'triangle', 0.2);
+    playTone(ctx, 3600, 0.04, 'sine', 0.1);
+    // Second clink (slightly higher, slight delay)
+    setTimeout(() => {
+      playTone(ctx, 2800, 0.06, 'triangle', 0.18);
+      playTone(ctx, 4200, 0.04, 'sine', 0.08);
+    }, 90);
+    // Subtle rising shimmer
+    setTimeout(() => {
+      playTone(ctx, 1600, 0.08, 'sine', 0.1, 3200);
+    }, 50);
+  },
   turn_start: (ctx) => {
     playTone(ctx, 220, 0.15, 'sawtooth', 0.2, 440);
     setTimeout(() => playTone(ctx, 330, 0.25, 'triangle', 0.2), 150);

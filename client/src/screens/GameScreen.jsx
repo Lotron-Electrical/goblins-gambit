@@ -199,6 +199,24 @@ export default function GameScreen() {
   const damageIdRef = useRef(0);
   const spIdRef = useRef(0);
 
+  // Cache creature positions so attack lines work even after killed creatures leave the DOM
+  const cardPositionCache = useRef({});
+  useEffect(() => {
+    const update = () => {
+      document.querySelectorAll('[data-card-uid]').forEach(el => {
+        const uid = el.getAttribute('data-card-uid');
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0) {
+          cardPositionCache.current[uid] = {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          };
+        }
+      });
+    };
+    update();
+  });
+
   // Drag preview state (mobile touch position)
   const dragTouchPos = useRef({ x: 0, y: 0 });
   const [dragPos, setDragPos] = useState(null);
@@ -232,23 +250,42 @@ export default function GameScreen() {
       setAttackAnimation(currentAnimation.attacker, currentAnimation.defender);
 
       // Capture DOM positions for attack line SVG
-      const attackerEl = document.querySelector(`[data-card-uid="${currentAnimation.attacker}"]`);
-      // Direct attacks target a player (SP counter), not a card
       const isDirect = !!currentAnimation.directAttack;
-      const defenderEl = isDirect
-        ? document.querySelector(`[data-player-sp="${currentAnimation.defender}"]`)
-        : document.querySelector(`[data-card-uid="${currentAnimation.defender}"]`);
-      if (attackerEl && defenderEl) {
-        const aRect = attackerEl.getBoundingClientRect();
-        const dRect = defenderEl.getBoundingClientRect();
-        const lineType = isDirect ? 'direct' : currentAnimation.killshot ? 'killshot' : 'normal';
+
+      // Get attacker position (from DOM or cache)
+      const attackerEl = document.querySelector(`[data-card-uid="${currentAnimation.attacker}"]`);
+      let fromPos = attackerEl
+        ? (() => { const r = attackerEl.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()
+        : cardPositionCache.current[currentAnimation.attacker];
+
+      // Get defender position (from DOM or cache; direct attacks target SP counter)
+      let toPos = null;
+      if (isDirect) {
+        const spEl = document.querySelector(`[data-player-sp="${currentAnimation.defender}"]`);
+        if (spEl) {
+          const r = spEl.getBoundingClientRect();
+          toPos = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        }
+      } else {
+        const defenderEl = document.querySelector(`[data-card-uid="${currentAnimation.defender}"]`);
+        toPos = defenderEl
+          ? (() => { const r = defenderEl.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()
+          : cardPositionCache.current[currentAnimation.defender];
+      }
+
+      if (fromPos && toPos) {
         setAttackLine({
-          from: { x: aRect.left + aRect.width / 2, y: aRect.top + aRect.height / 2 },
-          to: { x: dRect.left + dRect.width / 2, y: dRect.top + dRect.height / 2 },
+          from: fromPos,
+          to: toPos,
           killshot: !!currentAnimation.killshot,
           direct: isDirect,
         });
-        setTimeout(() => setAttackLine(null), isDirect ? 700 : currentAnimation.killshot ? 600 : 400);
+        // Direct attack needs longer for the SP return line animation
+        setTimeout(() => setAttackLine(null), isDirect ? 900 : currentAnimation.killshot ? 600 : 400);
+        // Play coin clink when the return line reaches the attacker
+        if (isDirect) {
+          setTimeout(() => soundManager.play('coin_clink'), 500);
+        }
       }
 
       setTimeout(() => clearAttackAnimation(), 350);
@@ -275,6 +312,9 @@ export default function GameScreen() {
           const rect = el.getBoundingClientRect();
           x = rect.left + rect.width / 2;
           y = rect.top + rect.height / 3;
+        } else if (cardPositionCache.current[cardUid]) {
+          x = cardPositionCache.current[cardUid].x;
+          y = cardPositionCache.current[cardUid].y - 10;
         }
       }
       const id = ++damageIdRef.current;
@@ -525,6 +565,12 @@ export default function GameScreen() {
                 <stop offset="0%" stopColor={c1} />
                 <stop offset="100%" stopColor={c2} />
               </linearGradient>
+              {d && (
+                <linearGradient id="return-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#fbbf24" />
+                </linearGradient>
+              )}
               <filter id="attack-glow">
                 <feGaussianBlur stdDeviation={blur} result="blur" />
                 <feMerge>
@@ -532,6 +578,15 @@ export default function GameScreen() {
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
+              {d && (
+                <filter id="return-glow">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              )}
             </defs>
             {/* Direct attack: vertical light pillar at target */}
             {d && (
@@ -597,6 +652,41 @@ export default function GameScreen() {
                 <animate attributeName="opacity" values={`0;${0.5 - i * 0.15};0`} dur="0.5s" begin={`${0.15 + i * 0.12}s`} fill="freeze" />
               </circle>
             ))}
+            {/* Direct attack: SP return line (white-to-yellow, defender back to attacker) */}
+            {d && (
+              <>
+                {/* Return glow line */}
+                <line
+                  x1={attackLine.to.x} y1={attackLine.to.y}
+                  x2={attackLine.from.x} y2={attackLine.from.y}
+                  stroke="url(#return-grad)"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  filter="url(#return-glow)"
+                  opacity="0"
+                >
+                  <animate attributeName="opacity" values="0;0.5;0" dur="0.4s" begin="0.35s" fill="freeze" />
+                </line>
+                {/* Return main line */}
+                <line
+                  x1={attackLine.to.x} y1={attackLine.to.y}
+                  x2={attackLine.from.x} y2={attackLine.from.y}
+                  stroke="url(#return-grad)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={`${len}`}
+                  strokeDashoffset={len}
+                >
+                  <animate attributeName="stroke-dashoffset" from={len} to="0" dur="0.2s" begin="0.35s" fill="freeze" />
+                  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.5;1" dur="0.45s" begin="0.35s" fill="freeze" />
+                </line>
+                {/* SP burst at attacker (gold) */}
+                <circle cx={attackLine.from.x} cy={attackLine.from.y} r="0" fill="#fbbf24" opacity="0">
+                  <animate attributeName="r" values="0;18;0" dur="0.35s" begin="0.5s" fill="freeze" />
+                  <animate attributeName="opacity" values="0;0.8;0" dur="0.35s" begin="0.5s" fill="freeze" />
+                </circle>
+              </>
+            )}
           </svg>
         );
       })()}
