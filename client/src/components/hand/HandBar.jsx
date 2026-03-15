@@ -37,10 +37,10 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
   return (
     <motion.div
       key={card.uid}
-      className={`mx-3 mb-2 bg-gray-950/95 rounded-xl overflow-hidden shadow-2xl ${
+      className={`mx-3 mb-2 rounded-xl overflow-hidden shadow-2xl ${
         isTutorialHighlighted
-          ? 'relative z-50 border-2 border-[var(--color-gold)] ring-2 ring-[var(--color-gold)]/50'
-          : 'border border-gray-700'
+          ? 'relative z-50 border-2 border-[var(--color-gold)] ring-2 ring-[var(--color-gold)]/50 bg-gray-900/95 shadow-[0_0_20px_rgba(212,175,55,0.3)]'
+          : 'border border-gray-700 bg-gray-950/95'
       }`}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -50,8 +50,10 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
       <div className="flex gap-2 p-2">
         {/* Card image thumbnail */}
         {card.image && (
-          <div className="w-[80px] h-[112px] rounded-lg overflow-hidden shrink-0 border border-gray-700">
-            <img src={`/cards/${card.image}`} alt={card.name} className="w-full h-[155%] object-cover object-top" draggable={false} />
+          <div className={`w-[80px] h-[112px] rounded-lg overflow-hidden shrink-0 border ${
+            isTutorialHighlighted ? 'border-[var(--color-gold)]/60 shadow-[0_0_8px_rgba(212,175,55,0.4)]' : 'border-gray-700'
+          }`}>
+            <img src={`/cards/${card.image}`} alt={card.name} className="w-full h-[155%] object-cover object-top" style={isTutorialHighlighted ? { filter: 'brightness(1.15)' } : undefined} draggable={false} />
           </div>
         )}
 
