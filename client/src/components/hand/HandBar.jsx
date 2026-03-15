@@ -145,7 +145,7 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
   );
 }
 
-function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd }) {
+function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, scrollToIndex }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef(null);
   const touchStartIndex = useRef(0);
@@ -154,9 +154,19 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
   const rafId = useRef(null);
   const pendingIndex = useRef(null);
   const lastSelectedIdx = useRef(-1);
+  const velocityRef = useRef(0);
+  const lastTouchX = useRef(null);
+  const lastTouchTime = useRef(null);
+  const inertiaRaf = useRef(null);
+  const currentIndexRef = useRef(0); // mirror state for inertia loop
   const RADIUS = 450; // Circle radius — controls arc curvature
-  const ANGLE_STEP = 12; // Degrees between cards — tighter = closer together
+  const ANGLE_STEP = 7; // Degrees between cards — tighter = closer together
   const CARD_WIDTH = 90; // Match CardInHand row variant width
+  const FRICTION = 0.92;
+  const VELOCITY_THRESHOLD = 0.005;
+
+  // Keep ref in sync with state
+  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
 
   // Clamp currentIndex when hand size changes
   useEffect(() => {
@@ -164,6 +174,14 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
       setCurrentIndex(sortedHand.length - 1);
     }
   }, [sortedHand.length, currentIndex]);
+
+  // External scroll-to (draw feedback, tap side card)
+  useEffect(() => {
+    if (scrollToIndex !== null && scrollToIndex !== undefined && scrollToIndex !== currentIndex) {
+      stopInertia();
+      setCurrentIndex(scrollToIndex);
+    }
+  }, [scrollToIndex]);
 
   // Auto-select the centred card — only when the rounded index changes
   useEffect(() => {
@@ -175,17 +193,41 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
     if (card) handleMobileSelect(card, true);
   }, [currentIndex, sortedHand, handleMobileSelect, reorderMode]);
 
+  const stopInertia = useCallback(() => {
+    if (inertiaRaf.current) {
+      cancelAnimationFrame(inertiaRaf.current);
+      inertiaRaf.current = null;
+    }
+  }, []);
+
   const handleTouchStart = useCallback((e) => {
     if (reorderMode) return;
+    stopInertia();
     touchStartX.current = e.touches[0].clientX;
     touchStartIndex.current = currentIndex;
     lastTickIndex.current = Math.round(currentIndex);
+    lastTouchX.current = e.touches[0].clientX;
+    lastTouchTime.current = performance.now();
+    velocityRef.current = 0;
     isDragging.current = true;
-  }, [currentIndex, reorderMode]);
+  }, [currentIndex, reorderMode, stopInertia]);
 
   const handleTouchMove = useCallback((e) => {
     if (reorderMode || touchStartX.current === null) return;
-    const dx = e.touches[0].clientX - touchStartX.current;
+    const touchX = e.touches[0].clientX;
+    const now = performance.now();
+    // Track velocity (cards per ms)
+    if (lastTouchX.current !== null && lastTouchTime.current !== null) {
+      const dt = now - lastTouchTime.current;
+      if (dt > 0) {
+        const dCards = -(touchX - lastTouchX.current) / 70; // same sensitivity
+        velocityRef.current = dCards / dt;
+      }
+    }
+    lastTouchX.current = touchX;
+    lastTouchTime.current = now;
+
+    const dx = touchX - touchStartX.current;
     const sensitivity = 70; // pixels per card
     const newIndex = touchStartIndex.current - dx / sensitivity;
     const clamped = Math.max(-0.4, Math.min(newIndex, sortedHand.length - 0.6));
@@ -215,8 +257,50 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
       cancelAnimationFrame(rafId.current);
       rafId.current = null;
     }
-    setCurrentIndex(prev => Math.round(Math.max(0, Math.min(prev, sortedHand.length - 1))));
-  }, [sortedHand.length]);
+    // Start inertia animation
+    const maxIdx = sortedHand.length - 1;
+    let vel = velocityRef.current * 16; // convert per-ms to per-frame (~16ms)
+    // Cap velocity to prevent wild flings
+    vel = Math.max(-3, Math.min(3, vel));
+    const runInertia = () => {
+      vel *= FRICTION;
+      const cur = currentIndexRef.current + vel;
+      const clamped = Math.max(-0.4, Math.min(cur, sortedHand.length - 0.6));
+      currentIndexRef.current = clamped;
+      setCurrentIndex(clamped);
+      const rounded = Math.round(Math.max(0, Math.min(clamped, maxIdx)));
+      if (rounded !== lastTickIndex.current) {
+        lastTickIndex.current = rounded;
+        soundManager.play('card_tick');
+      }
+      if (Math.abs(vel) > VELOCITY_THRESHOLD) {
+        inertiaRaf.current = requestAnimationFrame(runInertia);
+      } else {
+        // Settle to nearest card
+        const snapped = Math.round(Math.max(0, Math.min(currentIndexRef.current, maxIdx)));
+        setCurrentIndex(snapped);
+        inertiaRaf.current = null;
+      }
+    };
+    if (Math.abs(vel) > VELOCITY_THRESHOLD) {
+      inertiaRaf.current = requestAnimationFrame(runInertia);
+    } else {
+      setCurrentIndex(prev => Math.round(Math.max(0, Math.min(prev, maxIdx))));
+    }
+  }, [sortedHand.length, FRICTION, VELOCITY_THRESHOLD]);
+
+  // Tap side card to scroll to it
+  const handleCardTap = useCallback((card, idx) => {
+    const centredIdx = Math.round(Math.max(0, Math.min(currentIndex, sortedHand.length - 1)));
+    if (idx !== centredIdx) {
+      // Not the centred card — scroll to it
+      stopInertia();
+      setCurrentIndex(idx);
+    } else {
+      // Already centred — normal select behaviour
+      handleMobileSelect(card);
+    }
+  }, [currentIndex, sortedHand.length, handleMobileSelect, stopInertia]);
 
   if (sortedHand.length === 0) {
     return <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>;
@@ -244,11 +328,11 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
           // Scale: centre card slightly larger, others shrink
           const scale = Math.max(0.6, 1 - Math.abs(angleDeg) / 80);
           // Opacity: gentle fade toward edges
-          const opacity = Math.max(0.3, 1 - Math.abs(angleDeg) / 55);
+          const opacity = Math.max(0.3, 1 - Math.abs(angleDeg) / 40);
           // z-index: centre card on top, decreasing outward
           const zIndex = 100 - Math.round(Math.abs(angleDeg));
           // Cull cards too far around the circle
-          if (Math.abs(angleDeg) > 55) return null;
+          if (Math.abs(angleDeg) > 40) return null;
           const isSelected = mobileSelectedCard?.uid === card.uid;
 
           return (
@@ -272,7 +356,7 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
                   card={card}
                   isSelected={isSelected}
                   variant="row"
-                  onSelect={reorderMode ? undefined : handleMobileSelect}
+                  onSelect={reorderMode ? undefined : (c) => handleCardTap(c, idx)}
                   disableTouch={reorderMode}
                 />
               </div>
@@ -344,6 +428,26 @@ export default function HandBar() {
     }
     prevHandCount.current = hand.length;
   }, [hand.length, handExpanded]);
+
+  // Draw card feedback: scroll carousel to newly drawn card
+  const [carouselScrollTo, setCarouselScrollTo] = useState(null);
+  const prevHandCountExpanded = useRef(hand.length);
+  useEffect(() => {
+    if (handExpanded && hand.length > prevHandCountExpanded.current) {
+      // New card drawn while expanded — scroll to it after React renders
+      const timer = setTimeout(() => setCarouselScrollTo(sortedHand.length - 1), 50);
+      prevHandCountExpanded.current = hand.length;
+      return () => clearTimeout(timer);
+    }
+    prevHandCountExpanded.current = hand.length;
+  }, [hand.length, handExpanded, sortedHand.length]);
+  // Clear scrollTo after it's consumed
+  useEffect(() => {
+    if (carouselScrollTo !== null) {
+      const t = setTimeout(() => setCarouselScrollTo(null), 100);
+      return () => clearTimeout(t);
+    }
+  }, [carouselScrollTo]);
 
   // Auto-collapse when hand empties
   useEffect(() => {
@@ -590,7 +694,7 @@ export default function HandBar() {
                   Buy
                 </button>
                 <button
-                  onClick={endTurn}
+                  onClick={() => { endTurn(); setHandExpanded(false); setMobileSelectedCard(null); }}
                   disabled={!isMyTurn}
                   data-tutorial="end-turn-btn"
                   className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-4 py-2 rounded text-[12px] transition"
@@ -631,6 +735,7 @@ export default function HandBar() {
                   handleReorderStart={handleReorderStart}
                   handleReorderMove={handleReorderMove}
                   handleReorderEnd={handleReorderEnd}
+                  scrollToIndex={carouselScrollTo}
                 />
               </div>
             </motion.div>
