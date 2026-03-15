@@ -42,6 +42,16 @@ export default function HandBar() {
   // Mobile: tabbed hand by card type
   const [activeTab, setActiveTab] = useState('Creature');
 
+  // Tutorial: auto-switch to the tab the tutorial wants
+  const tutorialEngine = useStore(s => s.tutorialEngine);
+  useEffect(() => {
+    if (!tutorialEngine || !isMobile) return;
+    const config = tutorialEngine.getStepConfig();
+    if (config.tabHint && config.tabHint !== activeTab) {
+      setActiveTab(config.tabHint);
+    }
+  }, [tutorialEngine, isMobile]);
+
   // Track hand counts per type for draw glow
   const prevCountsRef = useRef({});
   const [glowingTabs, setGlowingTabs] = useState({});
@@ -94,6 +104,7 @@ export default function HandBar() {
                 <button
                   key={tab.type}
                   onClick={() => setActiveTab(tab.type)}
+                  data-tutorial-tab={tab.type}
                   className={`flex-1 flex items-center justify-center gap-0.5 py-3 text-[11px] font-bold transition-colors border-b-2 ${
                     isActive ? tab.active : tab.inactive
                   } ${isGlowing ? 'animate-[pulse_0.4s_ease-in-out_3] ring-1 ring-white/40' : ''}`}

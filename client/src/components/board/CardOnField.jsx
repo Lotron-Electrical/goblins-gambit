@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useStore } from '../../store.js';
 import { motion } from 'framer-motion';
 import { ICONS, TYPE_ICON } from '../ui/icons.js';
@@ -64,6 +64,27 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
   // Calculate effective stats
   const effectiveAtk = baseAtk + (card._attackBuff || 0);
   const currentDef = Math.max(0, baseDef - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0));
+
+  // Glow when stats change from buffs
+  const [atkGlow, setAtkGlow] = useState(false);
+  const [defGlow, setDefGlow] = useState(false);
+  const prevAtkBuff = useRef(card._attackBuff || 0);
+  const prevDefBuff = useRef((card._defenceBuff || 0) + (card._tempShield || 0));
+
+  useEffect(() => {
+    const curAtkBuff = card._attackBuff || 0;
+    const curDefBuff = (card._defenceBuff || 0) + (card._tempShield || 0);
+    if (curAtkBuff > prevAtkBuff.current) {
+      setAtkGlow(true);
+      setTimeout(() => setAtkGlow(false), 1500);
+    }
+    if (curDefBuff > prevDefBuff.current) {
+      setDefGlow(true);
+      setTimeout(() => setDefGlow(false), 1500);
+    }
+    prevAtkBuff.current = curAtkBuff;
+    prevDefBuff.current = curDefBuff;
+  }, [card._attackBuff, card._defenceBuff, card._tempShield]);
   const effectiveMax = Math.max(baseDef || 1, currentDef);
   const defPct = Math.min(100, (currentDef / effectiveMax) * 100);
   const isBuffed = currentDef > (baseDef || 1);
@@ -170,8 +191,8 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       {!invisible && card.type === 'Creature' && (
         <div className="absolute bottom-0 left-0 right-0">
           <div className={`bg-black/80 grid grid-cols-3 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
-            <span className="text-red-400 font-bold text-center">{ICONS.swords}<br/>{effectiveAtk}</span>
-            <span className={`font-bold text-center ${card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>{ICONS.shield}<br/>{currentDef}</span>
+            <span className={`font-bold text-center ${atkGlow ? 'text-yellow-300 animate-pulse drop-shadow-[0_0_6px_rgba(253,224,71,0.8)]' : 'text-red-400'}`}>{ICONS.swords}<br/>{effectiveAtk}</span>
+            <span className={`font-bold text-center ${defGlow ? 'text-cyan-300 animate-pulse drop-shadow-[0_0_6px_rgba(103,232,249,0.8)]' : card._defenceDamage ? 'text-red-400' : 'text-blue-400'}`}>{ICONS.shield}<br/>{currentDef}</span>
             <span className="text-yellow-400 font-bold text-center">{ICONS.coin}<br/>{card.sp ?? 0}</span>
           </div>
           <div className="h-[3px]">

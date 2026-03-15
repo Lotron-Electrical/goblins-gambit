@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../store.js';
 import { useIsMobile } from '../hooks/useIsMobile.js';
+import { soundManager } from '../audio/SoundManager.js';
 
 export default function TutorialOverlay() {
-  const { tutorialEngine, endTutorial, gameState } = useStore();
+  const { tutorialEngine, endTutorial, gameState, selectedCard } = useStore();
   const centerY = useStore(s => s.centerZoneY);
   const isMobile = useIsMobile();
   const [spotlightRect, setSpotlightRect] = useState(null);
   const [showOpponentThinking, setShowOpponentThinking] = useState(false);
+  const [showVictory, setShowVictory] = useState(false);
   const rafRef = useRef(null);
 
   if (!tutorialEngine) return null;
@@ -15,9 +17,29 @@ export default function TutorialOverlay() {
   const config = tutorialEngine.getStepConfig();
   const isComplete = config.id === 'complete';
 
-  // Build the effective highlight selector — prefer CSS selector, fall back to card UID
-  const effectiveHighlight = config.highlight
+  // Delay victory screen to let animations finish, then play victory sound
+  useEffect(() => {
+    if (isComplete && !showVictory) {
+      const timer = setTimeout(() => {
+        soundManager.play('victory');
+        setShowVictory(true);
+      }, 3000); // Wait for attack + damage + destroy + sp_change animations
+      return () => clearTimeout(timer);
+    }
+  }, [isComplete, showVictory]);
+
+  // Build the effective highlight selector
+  // For attack steps: once the player selects their creature, shift spotlight to opponent's creature
+  let effectiveHighlight = config.highlight
     || (config.highlightCardUid ? `[data-card-uid="${config.highlightCardUid}"]` : null);
+
+  if (config.expectedAction === 'attack' && selectedCard) {
+    // Player selected their attacker — now highlight the opponent's creature
+    const opponentSwamp = gameState?.players?.['tutorial-opponent']?.swamp;
+    if (opponentSwamp?.length > 0) {
+      effectiveHighlight = `[data-card-uid="${opponentSwamp[0].uid}"]`;
+    }
+  }
 
   // Track the highlighted element position
   const updateSpotlight = useCallback(() => {
@@ -59,8 +81,8 @@ export default function TutorialOverlay() {
     endTutorial();
   };
 
-  // Victory / completion screen
-  if (isComplete) {
+  // Victory / completion screen — delayed until animations finish
+  if (isComplete && showVictory) {
     return (
       <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
         <div className={`bg-gray-900 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl text-center ${
@@ -109,8 +131,8 @@ export default function TutorialOverlay() {
     );
   }
 
-  // Hide instruction panel when TargetPicker is showing (avoids layered prompts)
-  const hideInstruction = !!gameState?.pendingTarget;
+  // Hide instruction panel when TargetPicker is showing or waiting for victory animations
+  const hideInstruction = !!gameState?.pendingTarget || (isComplete && !showVictory);
 
   // Spotlight dimming overlay + instruction panel
   const spotlightShadow = spotlightRect
@@ -139,6 +161,20 @@ export default function TutorialOverlay() {
               height: spotlightRect.height,
               borderRadius: '8px',
               boxShadow: spotlightShadow,
+            }}
+          />
+          {/* Pulsing gold ring around highlighted element */}
+          <div
+            className="animate-pulse"
+            style={{
+              position: 'absolute',
+              top: spotlightRect.top - 2,
+              left: spotlightRect.left - 2,
+              width: spotlightRect.width + 4,
+              height: spotlightRect.height + 4,
+              borderRadius: '10px',
+              border: '2px solid var(--color-gold)',
+              boxShadow: '0 0 12px rgba(212,175,55,0.6), inset 0 0 12px rgba(212,175,55,0.2)',
             }}
           />
         </div>
