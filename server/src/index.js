@@ -109,9 +109,17 @@ app.post('/api/feedback', async (req, res) => {
 
 // Serve built client in production
 const clientDist = path.join(__dirname, '../../client/dist');
-app.use(express.static(clientDist));
+// Cache-bust index.html so deploys are picked up immediately
+app.use(express.static(clientDist, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('index.html')) {
+      res.set('Cache-Control', 'no-cache, must-revalidate');
+    }
+  }
+}));
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) return next();
+  res.set('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(path.join(clientDist, 'index.html'));
 });
 

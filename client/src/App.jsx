@@ -52,6 +52,7 @@ export default function App() {
       {screen === 'room' && <RoomScreen />}
       {screen === 'game' && <GameScreen />}
       {screen === 'tutorial' && <TutorialScreen />}
+      {!['lobby', 'room', 'game', 'tutorial'].includes(screen) && <LobbyScreen />}
     </div>
   );
 }

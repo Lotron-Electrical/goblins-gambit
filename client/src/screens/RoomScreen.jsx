@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store.js';
 import { socket } from '../socket.js';
 
@@ -12,6 +12,11 @@ export default function RoomScreen() {
   const { currentRoom, leaveRoom, toggleReady, startGame, addBot, removeBot, setRoomTheme, setRoomSettings } = useStore();
   const [showSettings, setShowSettings] = useState(false);
   const roomTheme = currentRoom?.theme || 'swamp';
+
+  // If we're on the room screen but have no room data, go back to lobby
+  useEffect(() => {
+    if (!currentRoom) leaveRoom();
+  }, [currentRoom, leaveRoom]);
 
   if (!currentRoom) return null;
 
