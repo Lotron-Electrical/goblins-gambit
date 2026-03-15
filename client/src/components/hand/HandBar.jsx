@@ -197,23 +197,21 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
     return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
   }, [cardRowRef, checkScroll, sortedHand.length]);
 
-  // Compute arc transforms per card — fan around a shared distant origin
+  // Compute arc transforms per card — fan spreads wider with more cards
   const arcTransforms = useMemo(() => {
     if (!handArc || sortedHand.length <= 1) return null;
     const n = sortedHand.length;
-    // Find the index of the selected card, or use the middle
-    const selectedIdx = mobileSelectedCard
-      ? sortedHand.findIndex(c => c.uid === mobileSelectedCard.uid)
-      : -1;
-    const pivot = selectedIdx >= 0 ? selectedIdx : (n - 1) / 2;
-    const maxAngle = 8; // degrees between adjacent cards
     const intensity = handArc / 100;
+    // Total arc grows with card count, capped at 50 degrees
+    const totalArc = Math.min(n * 5, 50) * intensity;
+    const mid = (n - 1) / 2;
     return sortedHand.map((_, i) => {
-      const offset = i - pivot;
-      const rotation = offset * intensity * maxAngle;
-      return { rotation };
+      const t = n > 1 ? (i - mid) / ((n - 1) / 2) : 0; // -1 to 1
+      const rotation = t * (totalArc / 2);
+      const lift = -Math.abs(t) * 6 * intensity; // centre cards higher
+      return { rotation, lift };
     });
-  }, [handArc, sortedHand.length, mobileSelectedCard]);
+  }, [handArc, sortedHand.length]);
 
   return (
     <div className="relative">
@@ -251,8 +249,8 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
               key={card.uid}
               data-reorder-idx={idx}
               style={{
-                marginRight: reorderMode ? '-10px' : '2px',
-                ...(arc ? { transform: `rotate(${arc.rotation}deg)`, transformOrigin: 'center 400px' } : {}),
+                marginRight: reorderMode ? '-10px' : '-8px',
+                ...(arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.lift}px)`, transformOrigin: 'center 400px' } : {}),
               }}
               className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''} ${isSelected ? 'z-10' : ''}`}
             >
@@ -262,6 +260,7 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
                   isSelected={isSelected}
                   variant="row"
                   onSelect={reorderMode ? undefined : handleMobileSelect}
+                  disableTouch={reorderMode}
                 />
               </div>
             </div>
@@ -633,17 +632,19 @@ export default function HandBar() {
     );
   }
 
-  // Desktop layout — fan arc around a shared distant origin
+  // Desktop layout — fan arc that spreads wider with more cards
   const desktopArcTransforms = useMemo(() => {
     if (!handArc || hand.length <= 1) return null;
     const n = hand.length;
     const mid = (n - 1) / 2;
-    const maxAngle = 6;
     const intensity = handArc / 100;
+    // Total arc grows with card count, capped at 45 degrees
+    const totalArc = Math.min(n * 4, 45) * intensity;
     return hand.map((_, i) => {
-      const offset = i - mid;
-      const rotation = offset * intensity * maxAngle;
-      return { rotation };
+      const t = n > 1 ? (i - mid) / ((n - 1) / 2) : 0; // -1 to 1
+      const rotation = t * (totalArc / 2);
+      const lift = -Math.abs(t) * 8 * intensity; // centre cards higher
+      return { rotation, lift };
     });
   }, [handArc, hand.length]);
 
@@ -661,13 +662,16 @@ export default function HandBar() {
           <ActivityLog />
         </div>
         {/* Cards */}
-        <div className="flex gap-1 justify-center items-end overflow-x-auto overflow-y-visible pb-1 flex-1 pr-40">
+        <div className="flex justify-center items-end overflow-x-auto overflow-y-visible pb-1 flex-1 pr-40">
           {hand.map((card, idx) => {
             const arc = desktopArcTransforms?.[idx];
             return (
               <div
                 key={card.uid}
-                style={arc ? { transform: `rotate(${arc.rotation}deg)`, transformOrigin: 'center 500px' } : undefined}
+                style={{
+                  marginRight: '-6px',
+                  ...(arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.lift}px)`, transformOrigin: 'center 500px' } : {}),
+                }}
               >
                 <CardInHand
                   card={card}

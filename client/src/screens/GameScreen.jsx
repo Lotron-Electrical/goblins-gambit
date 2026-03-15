@@ -217,28 +217,6 @@ export default function GameScreen() {
     update();
   });
 
-  // Drag preview state (mobile touch position)
-  const dragTouchPos = useRef({ x: 0, y: 0 });
-  const [dragPos, setDragPos] = useState(null);
-  const draggingCard = useStore(s => s.draggingCard);
-
-  // Track touch position globally for drag preview
-  useEffect(() => {
-    if (!draggingCard) {
-      setDragPos(null);
-      return;
-    }
-    const onTouchMove = (e) => {
-      const touch = e.touches[0];
-      if (touch) {
-        dragTouchPos.current = { x: touch.clientX, y: touch.clientY };
-        setDragPos({ x: touch.clientX, y: touch.clientY });
-      }
-    };
-    document.addEventListener('touchmove', onTouchMove, { passive: true });
-    return () => document.removeEventListener('touchmove', onTouchMove);
-  }, [draggingCard]);
-
   const { setAttackAnimation, clearAttackAnimation } = useStore();
 
   // Wire damage numbers to animation events
@@ -518,29 +496,6 @@ export default function GameScreen() {
           onComplete={handleDiceComplete}
           mobileCenterY={isMobile ? centerZoneY : null}
         />
-      )}
-
-      {/* Drag preview ghost (mobile only) */}
-      {draggingCard && dragPos && draggingCard.image && (
-        <div
-          style={{
-            position: 'fixed',
-            left: dragPos.x - 30,
-            top: dragPos.y - 42,
-            width: 60,
-            height: 84,
-            pointerEvents: 'none',
-            zIndex: 9999,
-            opacity: 0.8,
-          }}
-        >
-          <img
-            src={`/cards/${draggingCard.image}`}
-            alt={draggingCard.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', borderRadius: 6, border: '2px solid #ef4444' }}
-            draggable={false}
-          />
-        </div>
       )}
 
       {/* Attack line SVG overlay */}

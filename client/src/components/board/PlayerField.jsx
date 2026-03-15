@@ -19,7 +19,7 @@ const CARD_TYPE_COLOR = {
 };
 
 export default function PlayerField({ player, playerId, isOpponent, isCurrentTurn, compact }) {
-  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard, theme, attackingCardUid, defendingCardUid, draggingCard, clearDraggingCard, tutorialMode } = useStore();
+  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard, theme, attackingCardUid, defendingCardUid, tutorialMode } = useStore();
   const isMobile = useIsMobile();
   const isCompact = compact || isMobile;
 
@@ -207,19 +207,13 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
               const canPlace = !isOpponent && isMyTurn && !creature
                 && selectedCard && selectedCard._zone !== 'swamp'
                 && selectedCard.type === 'Creature';
-              const canDrop = !isOpponent && isMyTurn && !creature
-                && draggingCard && draggingCard.type === 'Creature';
-
               return (
                 <div
                   key={slotIdx}
-                  data-drop-slot={!creature && !isOpponent ? slotIdx : undefined}
                   className={`relative flex-1 min-w-0 rounded border overflow-hidden ${
                     creature
                       ? 'border-transparent'
-                      : canDrop
-                        ? 'border-dashed border-green-400 bg-green-900/20 animate-pulse cursor-pointer'
-                        : canPlace
+                      : canPlace
                           ? 'border-dashed border-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15'
                           : 'border-dashed border-gray-700/50 bg-gray-900/20'
                   } ${isMobile ? 'min-h-[56px]' : 'min-h-[90px]'} flex items-center justify-center transition`}
@@ -228,14 +222,6 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                       playCard(selectedCard.uid, { slotIndex: slotIdx });
                     }
                   }}
-                  onDragOver={!isOpponent && !creature ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } : undefined}
-                  onDrop={!isOpponent && !creature ? (e) => {
-                    e.preventDefault();
-                    if (draggingCard && draggingCard.type === 'Creature') {
-                      playCard(draggingCard.uid, { slotIndex: slotIdx });
-                      clearDraggingCard();
-                    }
-                  } : undefined}
                 >
                   {creature ? (
                     <div className="relative min-w-0 w-full">
