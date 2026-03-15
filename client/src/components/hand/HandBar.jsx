@@ -197,7 +197,7 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
     return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
   }, [cardRowRef, checkScroll, sortedHand.length]);
 
-  // Compute arc transforms per card — fan spreads wider with more cards
+  // Compute arc transforms per card — rotation around distant origin creates natural arc
   const arcTransforms = useMemo(() => {
     if (!handArc || sortedHand.length <= 1) return null;
     const n = sortedHand.length;
@@ -208,8 +208,7 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
     return sortedHand.map((_, i) => {
       const t = n > 1 ? (i - mid) / ((n - 1) / 2) : 0; // -1 to 1
       const rotation = t * (totalArc / 2);
-      const lift = -Math.abs(t) * 6 * intensity; // centre cards higher
-      return { rotation, lift };
+      return { rotation };
     });
   }, [handArc, sortedHand.length]);
 
@@ -250,7 +249,7 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
               data-reorder-idx={idx}
               style={{
                 marginRight: reorderMode ? '-10px' : '-8px',
-                ...(arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.lift}px)`, transformOrigin: 'center 400px' } : {}),
+                ...(arc ? { transform: `rotate(${arc.rotation}deg)`, transformOrigin: 'center 400px' } : {}),
               }}
               className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''} ${isSelected ? 'z-10' : ''}`}
             >
@@ -632,7 +631,7 @@ export default function HandBar() {
     );
   }
 
-  // Desktop layout — fan arc that spreads wider with more cards
+  // Desktop layout — rotation around distant origin creates natural arc
   const desktopArcTransforms = useMemo(() => {
     if (!handArc || hand.length <= 1) return null;
     const n = hand.length;
@@ -643,8 +642,7 @@ export default function HandBar() {
     return hand.map((_, i) => {
       const t = n > 1 ? (i - mid) / ((n - 1) / 2) : 0; // -1 to 1
       const rotation = t * (totalArc / 2);
-      const lift = -Math.abs(t) * 8 * intensity; // centre cards higher
-      return { rotation, lift };
+      return { rotation };
     });
   }, [handArc, hand.length]);
 
@@ -669,8 +667,9 @@ export default function HandBar() {
               <div
                 key={card.uid}
                 style={{
-                  marginRight: '-6px',
-                  ...(arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.lift}px)`, transformOrigin: 'center 500px' } : {}),
+                  marginLeft: idx === 0 ? '0' : '-20px',
+                  zIndex: idx,
+                  ...(arc ? { transform: `rotate(${arc.rotation}deg)`, transformOrigin: 'center 500px' } : {}),
                 }}
               >
                 <CardInHand
