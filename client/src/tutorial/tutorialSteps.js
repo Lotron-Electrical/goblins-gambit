@@ -123,6 +123,7 @@ export const TUTORIAL_STEPS = [
     tabHint: 'Tricks',
     expectedAction: 'play_card',
     expectedPayload: { cardUid: 'tut-kickflip' },
+    delayAfter: 2000, // Let SP animation + sound finish before next step
     setupState: null, // Uses onComplete from previous step
     onComplete: (prevState) => {
       const state = JSON.parse(JSON.stringify(prevState));

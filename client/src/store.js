@@ -313,6 +313,8 @@ export const useStore = create((set, get) => ({
     const engine = get().tutorialEngine;
     if (!engine) return;
 
+    const prevStep = engine.steps[engine.currentStepIndex];
+    const delayAfter = prevStep?.delayAfter || 0;
     const { advanced, finished } = engine.handleAction(actionType, payload);
     if (advanced) {
       const newState = engine.getState();
@@ -321,16 +323,15 @@ export const useStore = create((set, get) => ({
       if (newState.animations?.length) {
         engine.gameState = { ...engine.gameState, animations: [] };
       }
-      // Auto-select the highlighted card for the next step
+      // Auto-select the highlighted card for the next step (after optional delay)
       const nextConfig = engine.getStepConfig();
       if (nextConfig.highlightCardUid) {
         const hand = newState.players?.['tutorial-player']?.hand;
         const targetCard = hand?.find(c => c.uid === nextConfig.highlightCardUid);
         if (targetCard) {
-          // Slight delay to let the UI update first
           setTimeout(() => {
             set({ selectedCard: { ...targetCard, _zone: 'hand' } });
-          }, 100);
+          }, delayAfter + 100);
         }
       }
     }
