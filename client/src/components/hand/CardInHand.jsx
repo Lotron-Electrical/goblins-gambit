@@ -151,6 +151,7 @@ export default function CardInHand({ card, isSelected }) {
         isSelected ? 'ring-2 ring-[var(--color-gold)] z-10' : ''
       } ${!canAfford ? 'opacity-50' : ''} ${isBeingDragged ? 'opacity-50' : ''}`}
       data-card-hover
+      data-card-uid={card.uid}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onTouchStart={isMobile ? handleTouchStart : undefined}

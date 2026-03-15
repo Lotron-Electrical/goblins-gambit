@@ -3,7 +3,7 @@ import { useStore } from '../store.js';
 import { useIsMobile } from '../hooks/useIsMobile.js';
 
 export default function TutorialOverlay() {
-  const { tutorialEngine, endTutorial } = useStore();
+  const { tutorialEngine, endTutorial, gameState } = useStore();
   const centerY = useStore(s => s.centerZoneY);
   const isMobile = useIsMobile();
   const [spotlightRect, setSpotlightRect] = useState(null);
@@ -15,13 +15,17 @@ export default function TutorialOverlay() {
   const config = tutorialEngine.getStepConfig();
   const isComplete = config.id === 'complete';
 
+  // Build the effective highlight selector — prefer CSS selector, fall back to card UID
+  const effectiveHighlight = config.highlight
+    || (config.highlightCardUid ? `[data-card-uid="${config.highlightCardUid}"]` : null);
+
   // Track the highlighted element position
   const updateSpotlight = useCallback(() => {
-    if (!config.highlight) {
+    if (!effectiveHighlight) {
       setSpotlightRect(null);
       return;
     }
-    const el = document.querySelector(config.highlight);
+    const el = document.querySelector(effectiveHighlight);
     if (el) {
       const rect = el.getBoundingClientRect();
       setSpotlightRect({
@@ -33,7 +37,7 @@ export default function TutorialOverlay() {
     } else {
       setSpotlightRect(null);
     }
-  }, [config.highlight]);
+  }, [effectiveHighlight]);
 
   useEffect(() => {
     updateSpotlight();
@@ -105,10 +109,16 @@ export default function TutorialOverlay() {
     );
   }
 
+  // Hide instruction panel when TargetPicker is showing (avoids layered prompts)
+  const hideInstruction = !!gameState?.pendingTarget;
+
   // Spotlight dimming overlay + instruction panel
   const spotlightShadow = spotlightRect
     ? `0 0 0 9999px rgba(0,0,0,0.6)`
     : 'none';
+
+  // Position prompt above center zone so it doesn't cover player UI
+  const promptTop = centerY ? `${centerY - 40}px` : '35%';
 
   return (
     <>
@@ -134,12 +144,12 @@ export default function TutorialOverlay() {
         </div>
       )}
 
-      {/* Instruction panel — positioned at center zone */}
-      {config.instruction && (
+      {/* Instruction panel — positioned above center zone */}
+      {config.instruction && !hideInstruction && (
         <div className={`fixed z-50 pointer-events-auto left-1/2 -translate-x-1/2 -translate-y-1/2 ${
           isMobile ? 'w-[calc(100%-16px)]' : 'max-w-md w-full'
         }`}
-          style={{ top: centerY ? `${centerY}px` : '40%' }}
+          style={{ top: promptTop }}
         >
           <div className={`bg-gray-900/95 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl ${
             isMobile ? 'px-4 py-3' : 'px-6 py-4'
