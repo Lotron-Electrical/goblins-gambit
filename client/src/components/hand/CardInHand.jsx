@@ -86,18 +86,21 @@ export default function CardInHand({ card, isSelected, variant, onSelect }) {
   };
 
   // Long-press to zoom on mobile, with drag detection
+  // Row variant skips long-press zoom (centred card auto-selects instead)
   const handleTouchStart = useCallback((e) => {
     const touch = e.touches[0];
     touchStart.current = { x: touch.clientX, y: touch.clientY };
     isDragging.current = false;
 
-    longPressTimer.current = setTimeout(() => {
-      if (!isDragging.current) {
-        setZoomedCard(card);
-      }
-      longPressTimer.current = null;
-    }, 400);
-  }, [card, setZoomedCard]);
+    if (variant !== 'row') {
+      longPressTimer.current = setTimeout(() => {
+        if (!isDragging.current) {
+          setZoomedCard(card);
+        }
+        longPressTimer.current = null;
+      }, 400);
+    }
+  }, [card, setZoomedCard, variant]);
 
   const handleTouchMove = useCallback((e) => {
     if (!touchStart.current) return;

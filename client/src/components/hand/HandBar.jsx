@@ -14,12 +14,36 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
+  // Auto-select centred card on scroll
+  const detectCentredCard = useCallback(() => {
+    const el = cardRowRef.current;
+    if (!el) return;
+    const centreLine = el.getBoundingClientRect().left + el.clientWidth / 2;
+    const cards = el.querySelectorAll('[data-card-uid]');
+    let closest = null;
+    let closestDist = Infinity;
+    for (const cardEl of cards) {
+      const rect = cardEl.getBoundingClientRect();
+      const cardCentre = rect.left + rect.width / 2;
+      const dist = Math.abs(cardCentre - centreLine);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = cardEl.getAttribute('data-card-uid');
+      }
+    }
+    if (closest) {
+      const centredCard = sortedHand.find(c => c.uid === closest);
+      if (centredCard) handleMobileSelect(centredCard, true);
+    }
+  }, [cardRowRef, sortedHand, handleMobileSelect]);
+
   const checkScroll = useCallback(() => {
     const el = cardRowRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 5);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
-  }, [cardRowRef]);
+    detectCentredCard();
+  }, [cardRowRef, detectCentredCard]);
 
   useEffect(() => {
     const el = cardRowRef.current;
@@ -33,6 +57,8 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
 
   return (
     <div className="relative">
+      {/* Centre indicator line */}
+      <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[var(--color-gold)]/30 z-10 pointer-events-none -translate-x-px" />
       {/* Left scroll indicator */}
       {canScrollLeft && (
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-950/90 to-transparent z-10 flex items-center justify-start pl-0.5 pointer-events-none">
@@ -53,21 +79,18 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
         onTouchEnd={handleReorderEnd}
         onTouchCancel={handleReorderEnd}
       >
+        {/* Left spacer to allow first card to reach centre */}
+        {sortedHand.length > 0 && <div className="shrink-0 w-[calc(50vw-60px)]" />}
         {sortedHand.length > 0 ? sortedHand.map((card, idx) => (
           <div
             key={card.uid}
             data-reorder-idx={idx}
             style={{ marginRight: '-15px' }}
             className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''}`}
-            onTouchStart={(e) => {
-              // Long-press to initiate reorder (separate from card long-press zoom)
-              // We use a data attribute so the card's own touch handlers work normally
-            }}
           >
             <div
               onTouchStart={(e) => {
                 if (!sortMode) {
-                  // Start a reorder timer — if held without moving for 500ms
                   const timer = setTimeout(() => handleReorderStart(idx, e), 500);
                   e.currentTarget._reorderTimer = timer;
                 }
@@ -96,7 +119,8 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
         )) : (
           <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>
         )}
-        {sortedHand.length > 0 && <div className="shrink-0 w-4" />}
+        {/* Right spacer to allow last card to reach centre */}
+        {sortedHand.length > 0 && <div className="shrink-0 w-[calc(50vw-60px)]" />}
       </div>
     </div>
   );
@@ -174,8 +198,13 @@ export default function HandBar() {
     }
   }, [hand, mobileSelectedCard]);
 
-  const handleMobileSelect = useCallback((card) => {
-    setMobileSelectedCard(prev => prev?.uid === card.uid ? null : card);
+  const handleMobileSelect = useCallback((card, fromScroll) => {
+    if (fromScroll) {
+      // Scroll-based auto-select: always set, never toggle off
+      setMobileSelectedCard(prev => prev?.uid === card.uid ? prev : card);
+    } else {
+      setMobileSelectedCard(prev => prev?.uid === card.uid ? null : card);
+    }
   }, []);
 
   // Sorting: null = custom/default order, 'type' = by category, 'cost' = by AP cost
