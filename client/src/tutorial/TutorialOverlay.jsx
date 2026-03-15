@@ -4,7 +4,7 @@ import { useIsMobile } from '../hooks/useIsMobile.js';
 import { soundManager } from '../audio/SoundManager.js';
 
 export default function TutorialOverlay() {
-  const { tutorialEngine, endTutorial, gameState, selectedCard } = useStore();
+  const { tutorialEngine, endTutorial, gameState, selectedCard, tutorialPaused } = useStore();
   const centerY = useStore(s => s.centerZoneY);
   const isMobile = useIsMobile();
   const [spotlightRect, setSpotlightRect] = useState(null);
@@ -158,7 +158,7 @@ export default function TutorialOverlay() {
   }
 
   // Hide instruction panel when TargetPicker is showing or waiting for victory animations
-  const hideInstruction = !!gameState?.pendingTarget || (isComplete && !showVictory);
+  const hideInstruction = !!gameState?.pendingTarget || (isComplete && !showVictory) || tutorialPaused;
 
   // Spotlight dimming overlay + instruction panel
   const spotlightShadow = spotlightRect

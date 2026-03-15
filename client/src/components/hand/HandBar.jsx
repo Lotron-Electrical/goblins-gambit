@@ -469,6 +469,7 @@ export default function HandBar() {
 
   // Tutorial store values (useEffect that depends on sortedHand is below, after sortedHand declaration)
   const tutorialEngine = useStore(s => s.tutorialEngine);
+  const tutorialPaused = useStore(s => s.tutorialPaused);
   const tutorialHighlightUid = tutorialEngine ? tutorialEngine.getStepConfig()?.highlightCardUid : null;
   const tutorialTabHint = tutorialEngine ? tutorialEngine.getStepConfig()?.tabHint : null;
 
@@ -552,7 +553,7 @@ export default function HandBar() {
   // Tutorial: auto-expand and scroll fan to highlighted card
   // (must be after sortedHand + carouselScrollTo declarations to avoid TDZ)
   useEffect(() => {
-    if (!isMobile || !tutorialEngine) return;
+    if (!isMobile || !tutorialEngine || tutorialPaused) return;
     const config = tutorialEngine.getStepConfig();
     if (config.highlightCardUid || config.tabHint) {
       setHandExpanded(true);
@@ -564,7 +565,7 @@ export default function HandBar() {
         }, 300);
       }
     }
-  }, [tutorialEngine, isMobile, tutorialHighlightUid, tutorialTabHint, sortedHand]);
+  }, [tutorialEngine, isMobile, tutorialHighlightUid, tutorialTabHint, tutorialPaused, sortedHand]);
 
   // Auto-collapse when hand empties
   useEffect(() => {

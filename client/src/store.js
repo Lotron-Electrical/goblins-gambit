@@ -50,6 +50,7 @@ export const useStore = create((set, get) => ({
   // Tutorial
   tutorialMode: false,
   tutorialEngine: null,
+  tutorialPaused: false,
 
   // Layout
   centerZoneY: null,
@@ -318,7 +319,15 @@ export const useStore = create((set, get) => ({
     const { advanced, finished } = engine.handleAction(actionType, payload);
     if (advanced) {
       const newState = engine.getState();
-      set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
+      if (delayAfter > 0) {
+        // Pause tutorial UI — update game state but suppress next step's highlights
+        set({ gameState: { ...newState }, selectedCard: null, targetMode: false, tutorialPaused: true });
+        setTimeout(() => {
+          set({ tutorialPaused: false });
+        }, delayAfter);
+      } else {
+        set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
+      }
       // Clear animations from engine state after they've been set so they don't replay
       if (newState.animations?.length) {
         engine.gameState = { ...engine.gameState, animations: [] };
