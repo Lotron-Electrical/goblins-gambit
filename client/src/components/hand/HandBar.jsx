@@ -4,12 +4,146 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CardInHand from './CardInHand.jsx';
 import ActivityLog from '../ui/ActivityLog.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
-import { TYPE_ICON } from '../ui/icons.js';
+import { ICONS, TYPE_ICON } from '../ui/icons.js';
 import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 import { soundManager } from '../../audio/SoundManager.js';
+import { hasActivatedAbility } from '../ui/abilityInfo.js';
 
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 const TYPE_ORDER = { Creature: 0, Magic: 1, Armour: 2, Tricks: 3 };
+
+function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
+  const { playCard, discardCard, gameState } = useStore();
+  const [confirmAction, setConfirmAction] = useState(null);
+
+  const myId = gameState?.myId;
+  const myPlayer = myId ? gameState.players[myId] : null;
+  const isMyTurn = gameState?.currentPlayerId === myId;
+  const isInMyHand = myPlayer?.hand?.some(c => c.uid === card.uid);
+  const canPlay = isInMyHand && isMyTurn;
+  const canDiscard = isInMyHand && isMyTurn;
+
+  const themeEffects = THEME_EFFECTS[gameState?.theme] || THEME_EFFECTS.swamp;
+  const effectiveCost = card.type === 'Magic' && card.cost !== undefined && themeEffects.spellCostMultiplier !== undefined
+    ? Math.floor(card.cost * themeEffects.spellCostMultiplier)
+    : card.cost;
+  const costModified = effectiveCost !== card.cost;
+  const canAfford = effectiveCost === 0 || (myPlayer?.ap >= effectiveCost);
+
+  return (
+    <motion.div
+      key={card.uid}
+      className="mx-3 mb-2 bg-gray-950/95 rounded-xl border border-gray-700 overflow-hidden shadow-2xl"
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.95, opacity: 0 }}
+      transition={{ duration: 0.1, ease: 'easeOut' }}
+    >
+      <div className="flex gap-2 p-2">
+        {/* Card image thumbnail */}
+        {card.image && (
+          <div className="w-[80px] h-[112px] rounded-lg overflow-hidden shrink-0 border border-gray-700">
+            <img src={`/cards/${card.image}`} alt={card.name} className="w-full h-[155%] object-cover object-top" draggable={false} />
+          </div>
+        )}
+
+        {/* Card info */}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div>
+            <h3 className="font-display text-[14px] text-white leading-tight truncate">{card.name}</h3>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[11px]">{TYPE_ICON[card.type]}</span>
+              <span className="text-[11px] text-gray-400">{card.type}</span>
+              {card.cost !== undefined && (
+                <span className={`text-[11px] ml-auto font-bold ${effectiveCost === 0 ? 'text-green-400' : costModified ? 'text-red-400' : 'text-blue-300'}`}>
+                  {effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Creature stats */}
+          {card.type === 'Creature' && (
+            <div className="flex gap-2 text-[11px]">
+              <span className="text-red-400 font-bold">{ICONS.swords} {card.attack}</span>
+              <span className="text-blue-400 font-bold">{ICONS.shield} {card.defence}</span>
+              <span className="text-yellow-400 font-bold">{ICONS.coin} {card.sp}</span>
+            </div>
+          )}
+
+          {/* Armour info */}
+          {card.type === 'Armour' && (
+            <div className="text-[11px] text-gray-300 space-y-0.5">
+              <div>Slot: <span className="text-white capitalize">{card.slot}</span> | Set: <span className="text-purple-300 capitalize">{card.set}</span></div>
+              {card.shieldAmount && <div>Shield: <span className="text-green-400">+{card.shieldAmount}</span></div>}
+              {card.incomeAmount && <div>Income: <span className="text-yellow-400">+{card.incomeAmount} SP/turn</span></div>}
+              {card.discountAmount && <div>Discount: <span className="text-blue-400">-{card.discountAmount} SP</span></div>}
+              {card.blockedType && <div>Blocks: <span className="text-red-400">{card.blockedType}</span></div>}
+            </div>
+          )}
+
+          {/* Ability indicator */}
+          {card.abilityId && (
+            <div className="text-[10px] text-yellow-400 flex items-center gap-1">
+              <span>{ICONS.lightning}</span>
+              {hasActivatedAbility(card.abilityId) ? 'Activated ability' : 'Special ability'}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Effect text */}
+      {card.effect && (
+        <div className="text-[11px] text-gray-300 leading-relaxed px-2 pb-1.5 border-t border-gray-800 pt-1.5 mx-1">
+          {card.effect}
+        </div>
+      )}
+
+      {/* Action buttons */}
+      {canPlay && (
+        <div className="px-2 pb-2 pt-1">
+          {confirmAction === 'discard' ? (
+            <div className="bg-red-950 border border-red-700 rounded-lg p-2 space-y-1.5">
+              <p className="text-[11px] text-red-200 text-center">Discard {card.name}? Cannot be undone.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmAction(null)} className="flex-1 bg-gray-700 text-white font-bold py-1.5 rounded text-[11px]">Cancel</button>
+                <button onClick={() => discardCard(card.uid)} className="flex-1 bg-red-700 text-white font-bold py-1.5 rounded text-[11px]">Confirm</button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-1.5">
+              {card.type === 'Creature' ? (
+                <button
+                  onClick={onPlaceCreature}
+                  disabled={!canAfford}
+                  className="flex-1 bg-green-800 disabled:bg-gray-800 disabled:text-gray-600 border border-green-600 disabled:border-gray-700 text-white font-bold py-2 rounded-lg text-[12px] transition"
+                >
+                  Place on Field
+                </button>
+              ) : (
+                <button
+                  onClick={() => playCard(card.uid)}
+                  disabled={!canAfford}
+                  className="flex-1 bg-green-800 disabled:bg-gray-800 disabled:text-gray-600 border border-green-600 disabled:border-gray-700 text-white font-bold py-2 rounded-lg text-[12px] transition"
+                >
+                  Play
+                </button>
+              )}
+              {canDiscard && (
+                <button
+                  onClick={() => setConfirmAction('discard')}
+                  className="bg-red-900/80 border border-red-700 text-red-200 font-bold px-3 py-2 rounded-lg text-[12px] transition"
+                >
+                  Discard
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
 
 function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, handArc }) {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -63,21 +197,23 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
     return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
   }, [cardRowRef, checkScroll, sortedHand.length]);
 
-  // Compute arc transforms per card
+  // Compute arc transforms per card — fan around a shared distant origin
   const arcTransforms = useMemo(() => {
     if (!handArc || sortedHand.length <= 1) return null;
     const n = sortedHand.length;
-    const mid = (n - 1) / 2;
-    const maxAngle = 15; // max rotation degrees at full arc
-    const maxDrop = 20; // max vertical drop in px at full arc
+    // Find the index of the selected card, or use the middle
+    const selectedIdx = mobileSelectedCard
+      ? sortedHand.findIndex(c => c.uid === mobileSelectedCard.uid)
+      : -1;
+    const pivot = selectedIdx >= 0 ? selectedIdx : (n - 1) / 2;
+    const maxAngle = 8; // degrees between adjacent cards
     const intensity = handArc / 100;
     return sortedHand.map((_, i) => {
-      const offset = i - mid;
-      const rotation = offset * intensity * maxAngle / (n > 5 ? n / 4 : 1);
-      const drop = Math.abs(offset) * Math.abs(offset) * intensity * maxDrop / ((n / 2) * (n / 2) || 1);
-      return { rotation, drop };
+      const offset = i - pivot;
+      const rotation = offset * intensity * maxAngle;
+      return { rotation };
     });
-  }, [handArc, sortedHand.length]);
+  }, [handArc, sortedHand.length, mobileSelectedCard]);
 
   return (
     <div className="relative">
@@ -109,20 +245,21 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
         {sortedHand.length > 0 && !reorderMode && <div className="shrink-0 w-[calc(50vw-60px)]" />}
         {sortedHand.length > 0 ? sortedHand.map((card, idx) => {
           const arc = arcTransforms?.[idx];
+          const isSelected = mobileSelectedCard?.uid === card.uid;
           return (
             <div
               key={card.uid}
               data-reorder-idx={idx}
               style={{
-                marginRight: reorderMode ? '-10px' : '-15px',
-                ...(arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.drop}px)`, transformOrigin: 'bottom center' } : {}),
+                marginRight: reorderMode ? '-10px' : '2px',
+                ...(arc ? { transform: `rotate(${arc.rotation}deg)`, transformOrigin: 'center 400px' } : {}),
               }}
-              className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''}`}
+              className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''} ${isSelected ? 'z-10' : ''}`}
             >
               <div onTouchStart={reorderMode ? () => handleReorderStart(idx) : undefined}>
                 <CardInHand
                   card={card}
-                  isSelected={mobileSelectedCard?.uid === card.uid}
+                  isSelected={isSelected}
                   variant="row"
                   onSelect={reorderMode ? undefined : handleMobileSelect}
                 />
@@ -140,7 +277,7 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
 }
 
 export default function HandBar() {
-  const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
+  const { gameState, selectedCard, selectCard, drawCard, endTurn, buyAP } = useStore();
   const handArc = useStore(s => s.handArc);
   const isMobile = useIsMobile();
 
@@ -349,7 +486,7 @@ export default function HandBar() {
             className={`bg-gray-950/90 border-t border-gray-800 px-2 py-1 ${
               stripFlash ? 'ring-2 ring-[var(--color-gold)] animate-[pulse_0.3s_ease-in-out_2]' : ''
             }`}
-            onClick={() => hand.length > 0 && setHandExpanded(true)}
+            onClick={() => { if (hand.length > 0) { setHandExpanded(true); selectCard(null); } }}
           >
             {/* Action buttons row — right-aligned above strip */}
             <div className="flex items-center justify-between mb-1">
@@ -410,23 +547,19 @@ export default function HandBar() {
                 <div className="w-10 h-1 bg-gray-500/60 rounded-full" />
               </div>
 
-              {/* Selected card popup — snappy transition */}
+              {/* Selected card info panel */}
               <AnimatePresence mode="wait">
                 {mobileSelectedCard && hand.some(c => c.uid === mobileSelectedCard.uid) && (
-                  <motion.div
+                  <MobileCardInfoPanel
                     key={mobileSelectedCard.uid}
-                    className="flex justify-center pb-2"
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    transition={{ duration: 0.1, ease: 'easeOut' }}
-                  >
-                    <CardInHand
-                      card={mobileSelectedCard}
-                      isSelected={true}
-                      variant="popup"
-                    />
-                  </motion.div>
+                    card={mobileSelectedCard}
+                    onClose={() => setMobileSelectedCard(null)}
+                    onPlaceCreature={() => {
+                      selectCard(mobileSelectedCard);
+                      setMobileSelectedCard(null);
+                      setHandExpanded(false);
+                    }}
+                  />
                 )}
               </AnimatePresence>
 
@@ -500,19 +633,17 @@ export default function HandBar() {
     );
   }
 
-  // Desktop layout — apply arc transforms
+  // Desktop layout — fan arc around a shared distant origin
   const desktopArcTransforms = useMemo(() => {
     if (!handArc || hand.length <= 1) return null;
     const n = hand.length;
     const mid = (n - 1) / 2;
-    const maxAngle = 12;
-    const maxDrop = 16;
+    const maxAngle = 6;
     const intensity = handArc / 100;
     return hand.map((_, i) => {
       const offset = i - mid;
-      const rotation = offset * intensity * maxAngle / (n > 5 ? n / 4 : 1);
-      const drop = Math.abs(offset) * Math.abs(offset) * intensity * maxDrop / ((n / 2) * (n / 2) || 1);
-      return { rotation, drop };
+      const rotation = offset * intensity * maxAngle;
+      return { rotation };
     });
   }, [handArc, hand.length]);
 
@@ -536,7 +667,7 @@ export default function HandBar() {
             return (
               <div
                 key={card.uid}
-                style={arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.drop}px)`, transformOrigin: 'bottom center' } : undefined}
+                style={arc ? { transform: `rotate(${arc.rotation}deg)`, transformOrigin: 'center 500px' } : undefined}
               >
                 <CardInHand
                   card={card}
