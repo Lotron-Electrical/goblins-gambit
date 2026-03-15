@@ -103,9 +103,10 @@ export default function TutorialOverlay() {
             <p><span className="text-green-400 font-bold">Tricks</span> are free and give instant SP</p>
             <p><span className="text-red-400 font-bold">Creatures</span> go to your Swamp — attack enemies to earn SP</p>
             <p><span className="text-blue-300 font-bold">Magic</span> cards buff, debuff, and destroy</p>
+            <p><span className="text-gray-300 font-bold">Armour</span> equips to head, body, feet — complete a set for a bonus!</p>
           </div>
           <p className={`text-gray-500 italic mb-6 ${isMobile ? 'text-[11px]' : 'text-[13px]'}`}>
-            In real games you'll also discover Armour sets, creature abilities, and chaotic events like Dragons and Volcanos!
+            In real games you'll also discover creature abilities, and chaotic events like Dragons and Volcanos!
           </p>
           <button
             onClick={handleFinish}

@@ -82,6 +82,9 @@ const kickflip = () => tutCard('kickflip', 'kickflip');
 const programmer = () => tutCard('programmer', 'programmer');
 const ooft = () => tutCard('ooft', 'ooft');
 const stoner = () => tutCard('stoner', 'stoner');
+const luckyHeadband = () => tutCard('lucky_headband', 'lucky-headband');
+const luckyChestplate = () => tutCard('lucky_chestplate', 'lucky-chestplate');
+const luckySocks = () => tutCard('lucky_socks', 'lucky-socks');
 
 export const TUTORIAL_STEPS = [
   // Step 1: Draw a Card
@@ -214,11 +217,100 @@ export const TUTORIAL_STEPS = [
     },
   },
 
-  // Step 6: Play Ooft magic card (triggers targeting)
+  // Step 6: Equip Lucky Headband (head)
+  {
+    id: 'equip-armour-1',
+    title: 'Gear Up!',
+    instruction: 'Nice kill! Armour has 3 slots — head, body, feet. Collect a full set for a bonus! Tap Lucky Headband.',
+    highlight: null,
+    highlightCardUid: 'tut-lucky-headband',
+    tabHint: 'Armour',
+    expectedAction: 'play_card',
+    expectedPayload: { cardUid: 'tut-lucky-headband' },
+    setupState: () => {
+      // Rebuild state after attack — add Lucky armour to hand, give extra AP
+      const state = baseState();
+      const hh = happyHippy();
+      hh.turnsOnField = 1;
+      hh.hasAttacked = true;
+      hh._slot = 0;
+      state.players['tutorial-player'].swamp = [hh];
+      state.players['tutorial-player'].sp = 920;
+      state.players['tutorial-player'].ap = 5; // Extra AP for tutorial armour + magic
+      state.players['tutorial-player'].hand = [ooft(), programmer(), luckyHeadband(), luckyChestplate(), luckySocks()];
+      state.players['tutorial-player'].handCount = 5;
+      state.turnNumber = 2;
+      state.deckCount = 39;
+      state.graveyardCount = 1;
+      return state;
+    },
+    onComplete: (prevState) => {
+      const state = JSON.parse(JSON.stringify(prevState));
+      const card = state.players['tutorial-player'].hand.find(c => c.uid === 'tut-lucky-headband');
+      state.players['tutorial-player'].hand = state.players['tutorial-player'].hand.filter(c => c.uid !== 'tut-lucky-headband');
+      state.players['tutorial-player'].handCount = 4;
+      state.players['tutorial-player'].gear.head = { ...card, _turnsRemaining: 3 };
+      state.players['tutorial-player'].playerShield = 150;
+      state.players['tutorial-player'].ap = 4;
+      return state;
+    },
+  },
+
+  // Step 7: Equip Lucky Chestplate (body)
+  {
+    id: 'equip-armour-2',
+    title: 'Body Armour',
+    instruction: 'Now equip Lucky Chestplate to your body slot.',
+    highlight: null,
+    highlightCardUid: 'tut-lucky-chestplate',
+    tabHint: 'Armour',
+    expectedAction: 'play_card',
+    expectedPayload: { cardUid: 'tut-lucky-chestplate' },
+    setupState: null,
+    onComplete: (prevState) => {
+      const state = JSON.parse(JSON.stringify(prevState));
+      const card = state.players['tutorial-player'].hand.find(c => c.uid === 'tut-lucky-chestplate');
+      state.players['tutorial-player'].hand = state.players['tutorial-player'].hand.filter(c => c.uid !== 'tut-lucky-chestplate');
+      state.players['tutorial-player'].handCount = 3;
+      state.players['tutorial-player'].gear.body = { ...card, _turnsRemaining: 3 };
+      state.players['tutorial-player'].playerShield = 400; // 150 + 250
+      state.players['tutorial-player'].ap = 3;
+      return state;
+    },
+  },
+
+  // Step 8: Equip Lucky Socks (feet) — set bonus!
+  {
+    id: 'equip-armour-3',
+    title: 'Set Bonus!',
+    instruction: 'Last piece! Equip Lucky Socks to complete the set and earn +500 SP shield!',
+    highlight: null,
+    highlightCardUid: 'tut-lucky-socks',
+    tabHint: 'Armour',
+    expectedAction: 'play_card',
+    expectedPayload: { cardUid: 'tut-lucky-socks' },
+    setupState: null,
+    onComplete: (prevState) => {
+      const state = JSON.parse(JSON.stringify(prevState));
+      const card = state.players['tutorial-player'].hand.find(c => c.uid === 'tut-lucky-socks');
+      state.players['tutorial-player'].hand = state.players['tutorial-player'].hand.filter(c => c.uid !== 'tut-lucky-socks');
+      state.players['tutorial-player'].handCount = 2;
+      state.players['tutorial-player'].gear.feet = { ...card, _turnsRemaining: 3 };
+      // 150 + 250 + 100 (pieces) + 500 (set bonus) = 1000 total shield
+      state.players['tutorial-player'].playerShield = 1000;
+      state.players['tutorial-player'].ap = 2;
+      state.animations = [
+        { type: 'sp_change', playerId: 'tutorial-player', amount: 500, label: 'Set Bonus!' },
+      ];
+      return state;
+    },
+  },
+
+  // Step 9: Play Ooft magic card (triggers targeting)
   {
     id: 'play-magic',
     title: 'Use Magic',
-    instruction: 'Magic cards have powerful effects! Tap Ooft to select it, then tap again to play.',
+    instruction: 'You have 1,000 SP shield protecting your score! Now tap Ooft to buff your creature.',
     highlight: null,
     highlightCardUid: 'tut-ooft',
     tabHint: 'Magic',
@@ -243,7 +335,7 @@ export const TUTORIAL_STEPS = [
     },
   },
 
-  // Step 7: Select target for buff
+  // Step 10: Select target for buff
   {
     id: 'select-target',
     title: 'Choose Target',
@@ -265,7 +357,7 @@ export const TUTORIAL_STEPS = [
     },
   },
 
-  // Step 8: End turn — opponent plays another creature
+  // Step 11: End turn — opponent plays another creature
   {
     id: 'end-turn-2',
     title: 'End Your Turn',
@@ -296,7 +388,7 @@ export const TUTORIAL_STEPS = [
     },
   },
 
-  // Step 9: Final attack — win the game!
+  // Step 12: Final attack — win the game!
   {
     id: 'final-attack',
     title: 'Finish Him!',
@@ -327,7 +419,7 @@ export const TUTORIAL_STEPS = [
     },
   },
 
-  // Step 10: Victory! (completion screen)
+  // Step 13: Victory! (completion screen)
   {
     id: 'complete',
     title: 'Victory!',
