@@ -443,24 +443,10 @@ export default function HandBar() {
   const [mobileSelectedCard, setMobileSelectedCard] = useState(null);
   const cardRowRef = useRef(null);
 
-  // Tutorial: auto-expand and scroll fan to highlighted card
+  // Tutorial store values (useEffect that depends on sortedHand is below, after sortedHand declaration)
   const tutorialEngine = useStore(s => s.tutorialEngine);
   const tutorialHighlightUid = tutorialEngine ? tutorialEngine.getStepConfig()?.highlightCardUid : null;
   const tutorialTabHint = tutorialEngine ? tutorialEngine.getStepConfig()?.tabHint : null;
-  useEffect(() => {
-    if (!isMobile || !tutorialEngine) return;
-    const config = tutorialEngine.getStepConfig();
-    if (config.highlightCardUid || config.tabHint) {
-      setHandExpanded(true);
-      // Scroll fan to highlighted card after expansion
-      if (config.highlightCardUid) {
-        setTimeout(() => {
-          const idx = sortedHand.findIndex(c => c.uid === config.highlightCardUid);
-          if (idx >= 0) setCarouselScrollTo(idx);
-        }, 300);
-      }
-    }
-  }, [tutorialEngine, isMobile, tutorialHighlightUid, tutorialTabHint, sortedHand]);
 
   // Track hand count for draw flash on collapsed strip
   const prevHandCount = useRef(hand.length);
@@ -538,6 +524,23 @@ export default function HandBar() {
       return () => clearTimeout(t);
     }
   }, [carouselScrollTo]);
+
+  // Tutorial: auto-expand and scroll fan to highlighted card
+  // (must be after sortedHand + carouselScrollTo declarations to avoid TDZ)
+  useEffect(() => {
+    if (!isMobile || !tutorialEngine) return;
+    const config = tutorialEngine.getStepConfig();
+    if (config.highlightCardUid || config.tabHint) {
+      setHandExpanded(true);
+      // Scroll fan to highlighted card after expansion
+      if (config.highlightCardUid) {
+        setTimeout(() => {
+          const idx = sortedHand.findIndex(c => c.uid === config.highlightCardUid);
+          if (idx >= 0) setCarouselScrollTo(idx);
+        }, 300);
+      }
+    }
+  }, [tutorialEngine, isMobile, tutorialHighlightUid, tutorialTabHint, sortedHand]);
 
   // Auto-collapse when hand empties
   useEffect(() => {
