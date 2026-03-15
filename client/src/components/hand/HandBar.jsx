@@ -145,113 +145,107 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
   );
 }
 
-function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, handArc }) {
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const lastCentredUid = useRef(null);
+function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef(null);
+  const touchStartIndex = useRef(0);
+  const lastTickIndex = useRef(0);
+  const isDragging = useRef(false);
+  const RADIUS = 450; // Circle radius — controls arc curvature
+  const ANGLE_STEP = 12; // Degrees between cards — tighter = closer together
+  const CARD_WIDTH = 90; // Match CardInHand row variant width
 
-  // Auto-select centred card on scroll (not in reorder mode)
-  const detectCentredCard = useCallback(() => {
-    if (reorderMode) return;
-    const el = cardRowRef.current;
-    if (!el) return;
-    const centreLine = el.getBoundingClientRect().left + el.clientWidth / 2;
-    const cards = el.querySelectorAll('[data-card-uid]');
-    let closest = null;
-    let closestDist = Infinity;
-    for (const cardEl of cards) {
-      const rect = cardEl.getBoundingClientRect();
-      const cardCentre = rect.left + rect.width / 2;
-      const dist = Math.abs(cardCentre - centreLine);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closest = cardEl.getAttribute('data-card-uid');
-      }
-    }
-    if (closest) {
-      // Play tick sound when centred card changes
-      if (closest !== lastCentredUid.current) {
-        lastCentredUid.current = closest;
-        soundManager.play('card_tick');
-      }
-      const centredCard = sortedHand.find(c => c.uid === closest);
-      if (centredCard) handleMobileSelect(centredCard, true);
-    }
-  }, [cardRowRef, sortedHand, handleMobileSelect, reorderMode]);
-
-  const checkScroll = useCallback(() => {
-    const el = cardRowRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 5);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
-    detectCentredCard();
-  }, [cardRowRef, detectCentredCard]);
-
+  // Clamp currentIndex when hand size changes
   useEffect(() => {
-    const el = cardRowRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener('scroll', checkScroll, { passive: true });
-    const ro = new ResizeObserver(checkScroll);
-    ro.observe(el);
-    return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
-  }, [cardRowRef, checkScroll, sortedHand.length]);
+    if (sortedHand.length > 0 && currentIndex >= sortedHand.length) {
+      setCurrentIndex(sortedHand.length - 1);
+    }
+  }, [sortedHand.length, currentIndex]);
 
-  // Compute arc transforms per card — rotation around distant origin creates natural arc
-  const arcTransforms = useMemo(() => {
-    if (!handArc || sortedHand.length <= 1) return null;
-    const n = sortedHand.length;
-    const intensity = handArc / 100;
-    // Total arc grows with card count, capped at 50 degrees
-    const totalArc = Math.min(n * 5, 50) * intensity;
-    const mid = (n - 1) / 2;
-    return sortedHand.map((_, i) => {
-      const t = n > 1 ? (i - mid) / ((n - 1) / 2) : 0; // -1 to 1
-      const rotation = t * (totalArc / 2);
-      return { rotation };
-    });
-  }, [handArc, sortedHand.length]);
+  // Auto-select the centred card
+  useEffect(() => {
+    if (reorderMode || sortedHand.length === 0) return;
+    const idx = Math.round(Math.max(0, Math.min(currentIndex, sortedHand.length - 1)));
+    const card = sortedHand[idx];
+    if (card) handleMobileSelect(card, true);
+  }, [currentIndex, sortedHand, handleMobileSelect, reorderMode]);
+
+  const handleTouchStart = useCallback((e) => {
+    if (reorderMode) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartIndex.current = currentIndex;
+    lastTickIndex.current = Math.round(currentIndex);
+    isDragging.current = true;
+  }, [currentIndex, reorderMode]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (reorderMode || touchStartX.current === null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const sensitivity = 70; // pixels per card
+    const newIndex = touchStartIndex.current - dx / sensitivity;
+    const clamped = Math.max(-0.4, Math.min(newIndex, sortedHand.length - 0.6));
+    setCurrentIndex(clamped);
+    const rounded = Math.round(Math.max(0, Math.min(clamped, sortedHand.length - 1)));
+    if (rounded !== lastTickIndex.current) {
+      lastTickIndex.current = rounded;
+      soundManager.play('card_tick');
+    }
+  }, [reorderMode, sortedHand.length]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchStartX.current === null) return;
+    touchStartX.current = null;
+    isDragging.current = false;
+    setCurrentIndex(prev => Math.round(Math.max(0, Math.min(prev, sortedHand.length - 1))));
+  }, [sortedHand.length]);
+
+  if (sortedHand.length === 0) {
+    return <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>;
+  }
+
+  const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+  const centreX = containerWidth / 2 - CARD_WIDTH / 2;
 
   return (
-    <div className="relative">
-      {/* Centre indicator line (hidden in reorder mode) */}
-      {!reorderMode && (
-        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[var(--color-gold)]/30 z-10 pointer-events-none -translate-x-px" />
-      )}
-      {/* Left scroll indicator */}
-      {canScrollLeft && !reorderMode && (
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/60 to-transparent z-10 flex items-center justify-start pl-0.5 pointer-events-none">
-          <span className="text-gray-400 text-[16px] animate-pulse">&lsaquo;</span>
-        </div>
-      )}
-      {/* Right scroll indicator */}
-      {canScrollRight && !reorderMode && (
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/60 to-transparent z-10 flex items-center justify-end pr-0.5 pointer-events-none">
-          <span className="text-gray-400 text-[16px] animate-pulse">&rsaquo;</span>
-        </div>
-      )}
+    <div className="relative" style={{ height: '150px', overflow: 'hidden' }}>
       <div
         ref={cardRowRef}
-        className={`flex items-end px-3 pb-3 pt-1 ${reorderMode ? 'overflow-x-hidden' : 'overflow-x-auto'}`}
-        style={{ WebkitOverflowScrolling: reorderMode ? undefined : 'touch' }}
-        onTouchMove={reorderMode ? handleReorderMove : undefined}
-        onTouchEnd={reorderMode ? handleReorderEnd : undefined}
-        onTouchCancel={reorderMode ? handleReorderEnd : undefined}
+        className="relative w-full h-full"
+        onTouchStart={reorderMode ? undefined : handleTouchStart}
+        onTouchMove={reorderMode ? handleReorderMove || handleTouchMove : handleTouchMove}
+        onTouchEnd={reorderMode ? handleReorderEnd || handleTouchEnd : handleTouchEnd}
+        onTouchCancel={reorderMode ? handleReorderEnd : handleTouchEnd}
       >
-        {/* Left spacer to allow first card to reach centre (not in reorder mode) */}
-        {sortedHand.length > 0 && !reorderMode && <div className="shrink-0 w-[calc(50vw-60px)]" />}
-        {sortedHand.length > 0 ? sortedHand.map((card, idx) => {
-          const arc = arcTransforms?.[idx];
+        {sortedHand.map((card, idx) => {
+          const angleDeg = (idx - currentIndex) * ANGLE_STEP;
+          const angleRad = (angleDeg * Math.PI) / 180;
+          // Position on circle rim
+          const x = centreX + RADIUS * Math.sin(angleRad);
+          const y = RADIUS - RADIUS * Math.cos(angleRad);
+          // Scale: centre card slightly larger, others shrink
+          const scale = Math.max(0.6, 1 - Math.abs(angleDeg) / 80);
+          // Opacity: gentle fade toward edges
+          const opacity = Math.max(0.3, 1 - Math.abs(angleDeg) / 55);
+          // z-index: centre card on top, decreasing outward
+          const zIndex = 100 - Math.round(Math.abs(angleDeg));
+          // Cull cards too far around the circle
+          if (Math.abs(angleDeg) > 55) return null;
           const isSelected = mobileSelectedCard?.uid === card.uid;
+
           return (
             <div
               key={card.uid}
               data-reorder-idx={idx}
+              className="absolute"
               style={{
-                marginRight: reorderMode ? '-10px' : '-8px',
-                ...(arc ? { transform: `rotate(${arc.rotation}deg)`, transformOrigin: 'center 400px' } : {}),
+                left: `${x}px`,
+                top: `${y}px`,
+                transform: `rotate(${angleDeg}deg) scale(${scale})`,
+                transformOrigin: 'center bottom',
+                opacity,
+                zIndex,
+                transition: isDragging.current ? 'none' : 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
               }}
-              className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''} ${isSelected ? 'z-10' : ''}`}
             >
               <div onTouchStart={reorderMode ? () => handleReorderStart(idx) : undefined}>
                 <CardInHand
@@ -264,11 +258,7 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
               </div>
             </div>
           );
-        }) : (
-          <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>
-        )}
-        {/* Right spacer to allow last card to reach centre (not in reorder mode) */}
-        {sortedHand.length > 0 && !reorderMode && <div className="shrink-0 w-[calc(50vw-60px)]" />}
+        })}
       </div>
     </div>
   );
@@ -611,7 +601,7 @@ export default function HandBar() {
                 {reorderMode && (
                   <div className="text-center text-[10px] text-gray-400 pt-1">Drag cards to reorder</div>
                 )}
-                <ScrollableCardRow
+                <CircularCardRow
                   cardRowRef={cardRowRef}
                   sortedHand={sortedHand}
                   mobileSelectedCard={mobileSelectedCard}
@@ -621,7 +611,6 @@ export default function HandBar() {
                   handleReorderStart={handleReorderStart}
                   handleReorderMove={handleReorderMove}
                   handleReorderEnd={handleReorderEnd}
-                  handArc={handArc}
                 />
               </div>
             </motion.div>
