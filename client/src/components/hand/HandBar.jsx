@@ -1,12 +1,106 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useStore } from '../../store.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardInHand from './CardInHand.jsx';
 import ActivityLog from '../ui/ActivityLog.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { TYPE_ICON } from '../ui/icons.js';
+import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
 
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
+const TYPE_ORDER = { Creature: 0, Magic: 1, Armour: 2, Tricks: 3 };
+
+function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, sortMode }) {
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = cardRowRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 5);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
+  }, [cardRowRef]);
+
+  useEffect(() => {
+    const el = cardRowRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
+  }, [cardRowRef, checkScroll, sortedHand.length]);
+
+  return (
+    <div className="relative">
+      {/* Left scroll indicator */}
+      {canScrollLeft && (
+        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-950/90 to-transparent z-10 flex items-center justify-start pl-0.5 pointer-events-none">
+          <span className="text-gray-400 text-[16px] animate-pulse">&lsaquo;</span>
+        </div>
+      )}
+      {/* Right scroll indicator */}
+      {canScrollRight && (
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-950/90 to-transparent z-10 flex items-center justify-end pr-0.5 pointer-events-none">
+          <span className="text-gray-400 text-[16px] animate-pulse">&rsaquo;</span>
+        </div>
+      )}
+      <div
+        ref={cardRowRef}
+        className="flex items-end overflow-x-auto px-3 pb-3 pt-1"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+        onTouchMove={handleReorderMove}
+        onTouchEnd={handleReorderEnd}
+        onTouchCancel={handleReorderEnd}
+      >
+        {sortedHand.length > 0 ? sortedHand.map((card, idx) => (
+          <div
+            key={card.uid}
+            data-reorder-idx={idx}
+            style={{ marginRight: '-15px' }}
+            className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''}`}
+            onTouchStart={(e) => {
+              // Long-press to initiate reorder (separate from card long-press zoom)
+              // We use a data attribute so the card's own touch handlers work normally
+            }}
+          >
+            <div
+              onTouchStart={(e) => {
+                if (!sortMode) {
+                  // Start a reorder timer — if held without moving for 500ms
+                  const timer = setTimeout(() => handleReorderStart(idx, e), 500);
+                  e.currentTarget._reorderTimer = timer;
+                }
+              }}
+              onTouchEnd={(e) => {
+                if (e.currentTarget._reorderTimer) {
+                  clearTimeout(e.currentTarget._reorderTimer);
+                  e.currentTarget._reorderTimer = null;
+                }
+              }}
+              onTouchMove={(e) => {
+                if (e.currentTarget._reorderTimer) {
+                  clearTimeout(e.currentTarget._reorderTimer);
+                  e.currentTarget._reorderTimer = null;
+                }
+              }}
+            >
+              <CardInHand
+                card={card}
+                isSelected={mobileSelectedCard?.uid === card.uid}
+                variant="row"
+                onSelect={handleMobileSelect}
+              />
+            </div>
+          </div>
+        )) : (
+          <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>
+        )}
+        {sortedHand.length > 0 && <div className="shrink-0 w-4" />}
+      </div>
+    </div>
+  );
+}
 
 export default function HandBar() {
   const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
@@ -84,6 +178,98 @@ export default function HandBar() {
     setMobileSelectedCard(prev => prev?.uid === card.uid ? null : card);
   }, []);
 
+  // Sorting: null = custom/default order, 'type' = by category, 'cost' = by AP cost
+  const [sortMode, setSortMode] = useState(null);
+  // Custom order: array of uids representing manual arrangement
+  const [customOrder, setCustomOrder] = useState(null);
+
+  // When new cards appear, append them to custom order
+  useEffect(() => {
+    const handUids = hand.map(c => c.uid);
+    setCustomOrder(prev => {
+      if (!prev) return handUids;
+      // Keep existing order, remove gone cards, append new ones
+      const kept = prev.filter(uid => handUids.includes(uid));
+      const newUids = handUids.filter(uid => !prev.includes(uid));
+      return [...kept, ...newUids];
+    });
+  }, [hand]);
+
+  // Compute effective cost for sorting (theme-aware)
+  const themeEffects = THEME_EFFECTS[gameState?.theme] || THEME_EFFECTS.swamp;
+  const getEffectiveCost = useCallback((card) => {
+    if (card.type === 'Magic' && themeEffects.spellCostMultiplier !== undefined) {
+      return Math.floor(card.cost * themeEffects.spellCostMultiplier);
+    }
+    return card.cost;
+  }, [themeEffects]);
+
+  const sortedHand = useMemo(() => {
+    if (sortMode === 'type') {
+      return [...hand].sort((a, b) => (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9) || getEffectiveCost(a) - getEffectiveCost(b));
+    }
+    if (sortMode === 'cost') {
+      return [...hand].sort((a, b) => getEffectiveCost(a) - getEffectiveCost(b));
+    }
+    // Custom/default order
+    if (customOrder) {
+      const orderMap = {};
+      customOrder.forEach((uid, i) => orderMap[uid] = i);
+      return [...hand].sort((a, b) => (orderMap[a.uid] ?? 999) - (orderMap[b.uid] ?? 999));
+    }
+    return hand;
+  }, [hand, sortMode, customOrder, getEffectiveCost]);
+
+  // Drag reorder state
+  const dragIdx = useRef(null);
+  const dragOverIdx = useRef(null);
+  const [reorderDragIdx, setReorderDragIdx] = useState(null);
+
+  const handleReorderStart = useCallback((idx, e) => {
+    if (sortMode) return; // Only allow manual reorder in custom mode
+    dragIdx.current = idx;
+    setReorderDragIdx(idx);
+    // Haptic feedback if available
+    if (navigator.vibrate) navigator.vibrate(30);
+  }, [sortMode]);
+
+  const handleReorderMove = useCallback((e) => {
+    if (dragIdx.current === null || !cardRowRef.current) return;
+    const touch = e.touches[0];
+    const cards = cardRowRef.current.querySelectorAll('[data-reorder-idx]');
+    for (const el of cards) {
+      const rect = el.getBoundingClientRect();
+      if (touch.clientX >= rect.left && touch.clientX <= rect.right) {
+        const overIdx = parseInt(el.getAttribute('data-reorder-idx'), 10);
+        if (overIdx !== dragOverIdx.current && overIdx !== dragIdx.current) {
+          dragOverIdx.current = overIdx;
+        }
+        break;
+      }
+    }
+  }, []);
+
+  const handleReorderEnd = useCallback(() => {
+    if (dragIdx.current !== null && dragOverIdx.current !== null && dragIdx.current !== dragOverIdx.current) {
+      setCustomOrder(prev => {
+        if (!prev) return prev;
+        const sorted = sortMode ? sortedHand.map(c => c.uid) : prev;
+        const newOrder = [...sorted];
+        const [moved] = newOrder.splice(dragIdx.current, 1);
+        newOrder.splice(dragOverIdx.current, 0, moved);
+        return newOrder;
+      });
+      setSortMode(null); // Switch to custom mode after manual reorder
+    }
+    dragIdx.current = null;
+    dragOverIdx.current = null;
+    setReorderDragIdx(null);
+  }, [sortMode, sortedHand]);
+
+  const cycleSortMode = useCallback(() => {
+    setSortMode(prev => prev === null ? 'type' : prev === 'type' ? 'cost' : null);
+  }, []);
+
   if (isMobile) {
     return (
       <div className="relative shrink-0 z-30">
@@ -148,7 +334,7 @@ export default function HandBar() {
             </div>
             {/* Overlapping card tops */}
             <div className="flex items-center pl-1 h-[34px]">
-              {hand.length > 0 ? hand.map(card => (
+              {hand.length > 0 ? sortedHand.map(card => (
                 <CardInHand key={card.uid} card={card} variant="collapsed" />
               )) : (
                 <span className="text-gray-600 text-[10px]">No cards</span>
@@ -195,8 +381,8 @@ export default function HandBar() {
                 )}
               </AnimatePresence>
 
-              {/* Action buttons row */}
-              <div className="flex justify-center gap-1.5 px-2 pb-2">
+              {/* Action buttons + sort row */}
+              <div className="flex justify-center items-center gap-1.5 px-2 pb-2">
                 <button
                   onClick={drawCard}
                   disabled={!isMyTurn || myPlayer.ap < 1}
@@ -221,29 +407,29 @@ export default function HandBar() {
                 >
                   End
                 </button>
+                <div className="w-px h-6 bg-gray-700 mx-0.5" />
+                <button
+                  onClick={cycleSortMode}
+                  className={`px-3 py-2 rounded text-[11px] font-bold transition ${
+                    sortMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400'
+                  }`}
+                >
+                  {sortMode === 'type' ? 'Type' : sortMode === 'cost' ? 'Cost' : 'Sort'}
+                </button>
               </div>
 
-              {/* Horizontal scrollable card row */}
-              <div
-                ref={cardRowRef}
-                className="flex items-end overflow-x-auto px-3 pb-3 pt-1 gap-[-15px]"
-                style={{ WebkitOverflowScrolling: 'touch' }}
-              >
-                {hand.length > 0 ? hand.map(card => (
-                  <div key={card.uid} style={{ marginRight: '-15px' }} className="shrink-0">
-                    <CardInHand
-                      card={card}
-                      isSelected={mobileSelectedCard?.uid === card.uid}
-                      variant="row"
-                      onSelect={handleMobileSelect}
-                    />
-                  </div>
-                )) : (
-                  <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>
-                )}
-                {/* Spacer so last card isn't cut off */}
-                {hand.length > 0 && <div className="shrink-0 w-4" />}
-              </div>
+              {/* Horizontal scrollable card row with scroll indicators */}
+              <ScrollableCardRow
+                cardRowRef={cardRowRef}
+                sortedHand={sortedHand}
+                mobileSelectedCard={mobileSelectedCard}
+                handleMobileSelect={handleMobileSelect}
+                reorderDragIdx={reorderDragIdx}
+                handleReorderStart={handleReorderStart}
+                handleReorderMove={handleReorderMove}
+                handleReorderEnd={handleReorderEnd}
+                sortMode={sortMode}
+              />
             </motion.div>
           )}
         </AnimatePresence>

@@ -106,12 +106,13 @@ export default function CardInHand({ card, isSelected, variant, onSelect }) {
     const dy = touch.clientY - touchStart.current.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
+    // Cancel long-press on any significant movement (scrolling, swiping)
+    if (dist > DRAG_THRESHOLD && longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
     if (!isDragging.current && dist > DRAG_THRESHOLD && canDrag) {
-      // Cancel long-press and start drag
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
       isDragging.current = true;
       setDraggingCard(card);
     }
