@@ -95,13 +95,13 @@ export const TUTORIAL_STEPS = [
     setupState: () => {
       const state = baseState();
       state.players['tutorial-player'].ap = 2;
-      state.players['tutorial-player'].hand = [happyHippy(), kickflip(), programmer()];
+      state.players['tutorial-player'].hand = [happyHippy(), ooft(), programmer()];
       state.players['tutorial-player'].handCount = 3;
       return state;
     },
     onComplete: (prevState) => {
       const state = JSON.parse(JSON.stringify(prevState));
-      const card = ooft();
+      const card = kickflip();
       state.players['tutorial-player'].hand.push(card);
       state.players['tutorial-player'].handCount = 4;
       state.players['tutorial-player'].ap = 1;
@@ -114,7 +114,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'play-trick',
     title: 'Play a Trick',
-    instruction: 'Nice draw! Tricks are free and give instant SP. Tap Kickflip to select it, then tap again to play.',
+    instruction: 'You drew a Trick card! Tricks are free and give instant SP. Tap Kickflip to play it.',
     highlight: null, // Will highlight the card in hand
     highlightCardUid: 'tut-kickflip',
     tabHint: 'Tricks',
@@ -203,6 +203,13 @@ export const TUTORIAL_STEPS = [
       // Happy Hippy has attacked
       state.players['tutorial-player'].swamp[0].hasAttacked = true;
       state.graveyardCount = 1;
+      // Attack animations
+      state.animations = [
+        { type: 'attack', attacker: 'tut-happy-hippy', defender: 'tut-stoner', killshot: true },
+        { type: 'damage', targetUid: 'tut-stoner', amount: 400 },
+        { type: 'destroy', cardUid: 'tut-stoner' },
+        { type: 'sp_change', playerId: 'tutorial-player', amount: 420 },
+      ];
       return state;
     },
   },
@@ -250,8 +257,9 @@ export const TUTORIAL_STEPS = [
       const state = JSON.parse(JSON.stringify(prevState));
       // Clear pending target
       state.pendingTarget = null;
-      // Buff Happy Hippy ATK
+      // Buff Happy Hippy ATK (+200 via _attackBuff so CardOnField displays it)
       state.players['tutorial-player'].swamp[0].currentAttack = 600;
+      state.players['tutorial-player'].swamp[0]._attackBuff = 200;
       state.graveyardCount = 2;
       return state;
     },
@@ -269,11 +277,12 @@ export const TUTORIAL_STEPS = [
     setupState: null,
     onComplete: (prevState) => {
       const state = JSON.parse(JSON.stringify(prevState));
-      // Opponent plays another Stoner
+      // Opponent plays another Stoner (SP boosted so final kill reaches 2000)
       const opponentStoner2 = stoner();
       opponentStoner2.uid = 'tut-stoner-2';
       opponentStoner2.currentAttack = 300;
       opponentStoner2.currentDefence = 200;
+      opponentStoner2.sp = 1080;
       opponentStoner2._slot = 0;
       state.players['tutorial-opponent'].swamp = [opponentStoner2];
       state.players['tutorial-opponent'].handCount = 3;
@@ -291,7 +300,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'final-attack',
     title: 'Finish Him!',
-    instruction: 'Your 600 ATK vs 200 DEF — crush Gnarl\'s creature and claim victory!',
+    instruction: 'Your 600 ATK vs 200 DEF — this kill earns 1,080 SP, hitting 2,000 for the win!',
     highlight: null,
     tabHint: null,
     expectedAction: 'attack',
@@ -301,10 +310,17 @@ export const TUTORIAL_STEPS = [
       const state = JSON.parse(JSON.stringify(prevState));
       // Kill opponent creature
       state.players['tutorial-opponent'].swamp = [];
-      // Player reaches win SP
+      // Player reaches win SP (920 + 1080 = 2000)
       state.players['tutorial-player'].sp = 2000;
       state.players['tutorial-player'].swamp[0].hasAttacked = true;
       state.graveyardCount = 3;
+      // Attack animations
+      state.animations = [
+        { type: 'attack', attacker: 'tut-happy-hippy', defender: 'tut-stoner-2', killshot: true },
+        { type: 'damage', targetUid: 'tut-stoner-2', amount: 600 },
+        { type: 'destroy', cardUid: 'tut-stoner-2' },
+        { type: 'sp_change', playerId: 'tutorial-player', amount: 1080 },
+      ];
       // Victory!
       state.winner = 'tutorial-player';
       return state;

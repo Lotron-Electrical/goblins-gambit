@@ -4,6 +4,7 @@ import { useIsMobile } from '../hooks/useIsMobile.js';
 
 export default function TutorialOverlay() {
   const { tutorialEngine, endTutorial } = useStore();
+  const centerY = useStore(s => s.centerZoneY);
   const isMobile = useIsMobile();
   const [spotlightRect, setSpotlightRect] = useState(null);
   const [showOpponentThinking, setShowOpponentThinking] = useState(false);
@@ -133,13 +134,13 @@ export default function TutorialOverlay() {
         </div>
       )}
 
-      {/* Instruction panel */}
+      {/* Instruction panel — positioned at center zone */}
       {config.instruction && (
-        <div className={`fixed z-50 pointer-events-auto ${
-          isMobile
-            ? 'top-12 left-2 right-2'
-            : 'top-14 left-1/2 -translate-x-1/2 max-w-md w-full'
-        }`}>
+        <div className={`fixed z-50 pointer-events-auto left-1/2 -translate-x-1/2 -translate-y-1/2 ${
+          isMobile ? 'w-[calc(100%-16px)]' : 'max-w-md w-full'
+        }`}
+          style={{ top: centerY ? `${centerY}px` : '40%' }}
+        >
           <div className={`bg-gray-900/95 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl ${
             isMobile ? 'px-4 py-3' : 'px-6 py-4'
           }`}>

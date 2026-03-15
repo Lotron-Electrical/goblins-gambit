@@ -50,6 +50,10 @@ export const useStore = create((set, get) => ({
   tutorialMode: false,
   tutorialEngine: null,
 
+  // Layout
+  centerZoneY: null,
+  setCenterZoneY: (y) => set({ centerZoneY: y }),
+
   // Chat
   chatMessages: [],
   chatUnread: 0,
@@ -295,13 +299,10 @@ export const useStore = create((set, get) => ({
     const { advanced, finished } = engine.handleAction(actionType, payload);
     if (advanced) {
       const newState = engine.getState();
-      // Check if this step has opponent delay
-      const config = engine.getStepConfig();
-      if (config.opponentDelay) {
-        // Show intermediate state, then after delay show final
-        set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
-      } else {
-        set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
+      set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
+      // Clear animations from engine state after they've been set so they don't replay
+      if (newState.animations?.length) {
+        engine.gameState = { ...engine.gameState, animations: [] };
       }
     }
     if (finished) {

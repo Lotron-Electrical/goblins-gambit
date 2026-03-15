@@ -28,13 +28,14 @@ const MAJOR_EVENTS = ['Event'];
 
 export default function CardAnnouncement({ announcement, mobileCenterY }) {
   const animationsOff = useStore(s => s.animationsOff);
+  const centerZoneY = useStore(s => s.centerZoneY);
   const isMobile = useIsMobile();
   const dur = animationsOff ? 0 : 0.25;
 
   const isMajor = announcement && MAJOR_EVENTS.includes(announcement.type);
 
-  // On mobile, position at the center zone midpoint; fall back to 30%
-  const mobileTop = mobileCenterY ? `${mobileCenterY}px` : '30%';
+  // Position at the center zone midpoint; fall back to 30%/35%
+  const centerTop = (mobileCenterY || centerZoneY) ? `${mobileCenterY || centerZoneY}px` : (isMobile ? '30%' : '35%');
 
   return (
     <AnimatePresence>
@@ -44,7 +45,7 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
           className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2 ${
             isMobile ? '' : 'inset-0 !left-auto !top-auto !translate-x-0 !translate-y-0 flex items-center justify-center'
           }`}
-          style={isMobile ? { top: mobileTop } : undefined}
+          style={isMobile ? { top: centerTop } : undefined}
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.2 }}
@@ -65,8 +66,8 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
       {announcement && !isMajor && (
         <motion.div
           key="toast"
-          className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2 ${isMobile ? '' : 'top-[35%]'}`}
-          style={isMobile ? { top: mobileTop } : undefined}
+          className="fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ top: centerTop }}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}

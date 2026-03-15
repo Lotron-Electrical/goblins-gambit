@@ -52,11 +52,11 @@ function OpponentBar({ player, playerId, isCurrentTurn, isExpanded, onTap, gameS
 }
 
 export default function GameScreen() {
-  const { gameState, musicMuted, theme, tutorialMode } = useStore();
+  const { gameState, musicMuted, theme, tutorialMode, setCenterZoneY } = useStore();
   const boardRef = useRef(null);
   const midZoneRef = useRef(null);
   const isMobile = useIsMobile();
-  const [mobileCenterY, setMobileCenterY] = useState(null);
+  const centerZoneY = useStore(s => s.centerZoneY);
 
   // Lock body scroll on mobile while game is active
   useEffect(() => {
@@ -64,19 +64,19 @@ export default function GameScreen() {
     return () => document.documentElement.classList.remove('game-active');
   }, []);
 
-  // Track vertical center of the mid-zone (between opponents and my field) on mobile
+  // Track vertical center of the mid-zone (between opponents and my field)
   useEffect(() => {
-    if (!isMobile || !midZoneRef.current) return;
+    if (!midZoneRef.current) return;
     const update = () => {
       const rect = midZoneRef.current?.getBoundingClientRect();
-      if (rect) setMobileCenterY(Math.round(rect.top + rect.height / 2));
+      if (rect) setCenterZoneY(Math.round(rect.top + rect.height / 2));
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(midZoneRef.current);
     window.addEventListener('resize', update);
     return () => { ro.disconnect(); window.removeEventListener('resize', update); };
-  }, [isMobile]);
+  }, []);
 
   // Apply saved theme on mount + sync to sound manager
   useEffect(() => {
@@ -479,10 +479,10 @@ export default function GameScreen() {
       <GameMenu />
 
       {/* Target picker overlay */}
-      {gameState.pendingTarget && <TargetPicker mobileCenterY={isMobile ? mobileCenterY : null} />}
+      {gameState.pendingTarget && <TargetPicker mobileCenterY={isMobile ? centerZoneY : null} />}
 
       {/* Card choice modal (Dead Meme, Woke) */}
-      {gameState.pendingChoice && <CardChoiceModal mobileCenterY={isMobile ? mobileCenterY : null} />}
+      {gameState.pendingChoice && <CardChoiceModal mobileCenterY={isMobile ? centerZoneY : null} />}
 
       {/* Game over (not during tutorial — TutorialOverlay handles victory) */}
       {gameState.winner && !tutorialMode && <GameOverModal />}
@@ -506,7 +506,7 @@ export default function GameScreen() {
       <ChatPanel expanded={chatOpen} onClose={() => handleSetChatOpen(false)} />
 
       {/* Card play announcement */}
-      <CardAnnouncement announcement={announcement} mobileCenterY={isMobile ? mobileCenterY : null} />
+      <CardAnnouncement announcement={announcement} mobileCenterY={isMobile ? centerZoneY : null} />
 
       {/* VFX overlays */}
       <DamageNumber damages={activeDamages} />
@@ -516,7 +516,7 @@ export default function GameScreen() {
           dice={diceData.dice}
           result={diceData.result}
           onComplete={handleDiceComplete}
-          mobileCenterY={isMobile ? mobileCenterY : null}
+          mobileCenterY={isMobile ? centerZoneY : null}
         />
       )}
 

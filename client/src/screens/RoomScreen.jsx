@@ -42,7 +42,35 @@ export default function RoomScreen() {
           Waiting for players... ({currentRoom.players.length}/{currentRoom.maxPlayers})
         </p>
 
-        <div className="space-y-2 mb-8">
+        <div className="flex gap-3 mb-4">
+          <button
+            onClick={leaveRoom}
+            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition"
+          >
+            Leave
+          </button>
+          <button
+            onClick={toggleReady}
+            className={`flex-1 font-bold py-3 px-6 rounded-lg transition ${
+              myPlayer?.ready
+                ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
+                : 'bg-green-700 hover:bg-green-600 text-white'
+            }`}
+          >
+            {myPlayer?.ready ? 'Unready' : 'Ready Up'}
+          </button>
+          {isHost && (
+            <button
+              onClick={startGame}
+              disabled={!allReady}
+              className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-500 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-3 px-6 rounded-lg transition"
+            >
+              Start Game
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-2 mb-2">
           {currentRoom.players.map((p) => (
             <div
               key={p.id}
@@ -82,33 +110,31 @@ export default function RoomScreen() {
           ))}
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={leaveRoom}
-            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition"
-          >
-            Leave
-          </button>
-          <button
-            onClick={toggleReady}
-            className={`flex-1 font-bold py-3 px-6 rounded-lg transition ${
-              myPlayer?.ready
-                ? 'bg-yellow-600 hover:bg-yellow-500 text-white'
-                : 'bg-green-700 hover:bg-green-600 text-white'
-            }`}
-          >
-            {myPlayer?.ready ? 'Unready' : 'Ready Up'}
-          </button>
-          {isHost && (
-            <button
-              onClick={startGame}
-              disabled={!allReady}
-              className="flex-1 bg-[var(--color-gold)] hover:bg-yellow-500 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-3 px-6 rounded-lg transition"
-            >
-              Start Game
-            </button>
-          )}
-        </div>
+        {/* Add Bot buttons — right below player list */}
+        {isHost && !isFull && (
+          <div className="mb-6">
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => addBot('easy')}
+                className="bg-green-800 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition text-sm"
+              >
+                + Easy Bot
+              </button>
+              <button
+                onClick={() => addBot('medium')}
+                className="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
+              >
+                + Medium Bot
+              </button>
+              <button
+                onClick={() => addBot('hard')}
+                className="bg-red-700 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
+              >
+                + Hard Bot
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Theme selector (host only) */}
         {isHost && (
@@ -244,32 +270,6 @@ export default function RoomScreen() {
           </div>
         )}
 
-        {/* Add Bot buttons */}
-        {isHost && !isFull && (
-          <div className="mt-4">
-            <label className="block text-gray-400 text-xs mb-2 uppercase tracking-wide">Add Bot</label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => addBot('easy')}
-                className="bg-green-800 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition text-sm"
-              >
-                Easy
-              </button>
-              <button
-                onClick={() => addBot('medium')}
-                className="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
-              >
-                Medium
-              </button>
-              <button
-                onClick={() => addBot('hard')}
-                className="bg-red-700 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
-              >
-                Hard
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
