@@ -14,9 +14,17 @@ export class TutorialEngine {
 
   getStepConfig() {
     const step = this.steps[this.currentStepIndex];
+    const hiddenIds = ['select-target', 'complete'];
+    const visibleSteps = this.steps.filter(s => !hiddenIds.includes(s.id));
+    const displayTotalSteps = visibleSteps.length;
+    const displayStepNumber = this.steps
+      .slice(0, this.currentStepIndex + 1)
+      .filter(s => !hiddenIds.includes(s.id)).length;
     return {
       stepNumber: this.currentStepIndex + 1,
       totalSteps: this.steps.length,
+      displayStepNumber,
+      displayTotalSteps,
       id: step.id,
       title: step.title,
       instruction: step.instruction,

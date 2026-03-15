@@ -23,7 +23,7 @@ export default function TutorialOverlay() {
       const timer = setTimeout(() => {
         soundManager.play('victory');
         setShowVictory(true);
-      }, 3000); // Wait for attack + damage + destroy + sp_change animations
+      }, 2000); // Wait for attack + damage + destroy + sp_change animations
       return () => clearTimeout(timer);
     }
   }, [isComplete, showVictory]);
@@ -120,6 +120,21 @@ export default function TutorialOverlay() {
     );
   }
 
+  // Transitional victory state — show immediate feedback while waiting for animations
+  if (isComplete && !showVictory) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          <div className={`font-display text-[var(--color-gold-bright)] animate-pulse ${
+            isMobile ? 'text-3xl' : 'text-4xl'
+          }`}>
+            Victory!
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Opponent thinking interstitial
   if (showOpponentThinking) {
     return (
@@ -142,7 +157,7 @@ export default function TutorialOverlay() {
     : 'none';
 
   // Position prompt above center zone so it doesn't cover player UI
-  const promptTop = centerY ? `${centerY - 40}px` : '35%';
+  const promptTop = isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%');
 
   return (
     <>
@@ -184,8 +199,8 @@ export default function TutorialOverlay() {
 
       {/* Instruction panel — positioned above center zone */}
       {config.instruction && !hideInstruction && (
-        <div className={`fixed z-50 pointer-events-auto left-1/2 -translate-x-1/2 -translate-y-1/2 ${
-          isMobile ? 'w-[calc(100%-16px)]' : 'max-w-md w-full'
+        <div className={`fixed z-50 pointer-events-auto left-1/2 -translate-x-1/2 ${
+          isMobile ? 'w-[calc(100%-16px)]' : 'max-w-md w-full -translate-y-1/2'
         }`}
           style={{ top: promptTop }}
         >
@@ -194,7 +209,7 @@ export default function TutorialOverlay() {
           }`}>
             <div className="flex items-center justify-between mb-2">
               <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>
-                Step {config.stepNumber} of {config.totalSteps - 1}
+                Step {config.displayStepNumber} of {config.displayTotalSteps}
               </span>
               <span className={`font-display text-[var(--color-gold)] ${
                 isMobile ? 'text-[14px]' : 'text-[16px]'

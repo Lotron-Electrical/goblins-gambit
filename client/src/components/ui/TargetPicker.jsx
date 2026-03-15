@@ -87,6 +87,8 @@ export default function TargetPicker({ mobileCenterY }) {
         <div className={`space-y-2 overflow-y-auto ${isMobile ? 'max-h-[250px]' : 'max-h-[300px]'}`}>
           {pending.validTargets.map((target) => {
             const isMultiSel = multiSelected.some(t => t.uid === target.uid);
+            const ownerName = gameState.players[target.ownerId]?.name || 'Unknown';
+            const possessive = ownerName === 'You' ? 'Your' : `${ownerName}'s`;
             return (
               <button
                 key={target.uid}
@@ -104,8 +106,8 @@ export default function TargetPicker({ mobileCenterY }) {
                   {isPlayerTarget
                     ? `${gameState.players[target.ownerId]?.sp || 0} SP`
                     : target.slot
-                      ? `${gameState.players[target.ownerId]?.name}'s ${target.slot} armour`
-                      : `${gameState.players[target.ownerId]?.name}'s creature`
+                      ? `${possessive} ${target.slot} armour`
+                      : `${possessive} creature`
                   }
                 </span>
               </button>

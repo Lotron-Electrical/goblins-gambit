@@ -321,6 +321,18 @@ export const useStore = create((set, get) => ({
       if (newState.animations?.length) {
         engine.gameState = { ...engine.gameState, animations: [] };
       }
+      // Auto-select the highlighted card for the next step
+      const nextConfig = engine.getStepConfig();
+      if (nextConfig.highlightCardUid) {
+        const hand = newState.players?.['tutorial-player']?.hand;
+        const targetCard = hand?.find(c => c.uid === nextConfig.highlightCardUid);
+        if (targetCard) {
+          // Slight delay to let the UI update first
+          setTimeout(() => {
+            set({ selectedCard: { ...targetCard, _zone: 'hand' } });
+          }, 100);
+        }
+      }
     }
     if (finished) {
       // Stay in tutorial mode — completion overlay handles the exit

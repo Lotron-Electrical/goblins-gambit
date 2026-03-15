@@ -90,7 +90,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
   // Direct attack: can target opponent player if they have no visible creatures
   const visibleCreatures = player.swamp.filter(c => !c._invisible);
   const canDirectAttack = isOpponent && isMyTurn && selectedCard && selectedCard._zone === 'swamp'
-    && visibleCreatures.length === 0 && !gameState?.pendingTarget;
+    && visibleCreatures.length === 0 && !gameState?.pendingTarget && !tutorialMode;
 
   const handleDirectAttack = () => {
     if (canDirectAttack) {
