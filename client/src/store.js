@@ -41,6 +41,7 @@ export const useStore = create((set, get) => ({
   muted: JSON.parse(localStorage.getItem('gg_sfxMuted') || 'false'),
   musicMuted: JSON.parse(localStorage.getItem('gg_musicMuted') || 'false'),
   animationsOff: JSON.parse(localStorage.getItem('gg_animationsOff') || 'false'),
+  handArc: JSON.parse(localStorage.getItem('gg_handArc') || '0'),
   theme: 'swamp',
   hoveredCard: null,
   hoverPosition: null,
@@ -348,6 +349,10 @@ export const useStore = create((set, get) => ({
   setAnimationsOff: (animationsOff) => {
     localStorage.setItem('gg_animationsOff', JSON.stringify(animationsOff));
     set({ animationsOff });
+  },
+  setHandArc: (handArc) => {
+    localStorage.setItem('gg_handArc', JSON.stringify(handArc));
+    set({ handArc });
   },
   setTheme: (theme) => {
     if (theme === 'swamp') {

@@ -607,6 +607,9 @@ const SOUNDS = {
   ability_used: (ctx) => {
     playTone(ctx, 550, 0.15, 'sine', 0.2, 1100);
   },
+  card_tick: (ctx) => {
+    playTone(ctx, 1800, 0.03, 'triangle', 0.12);
+  },
   // Event system sounds
   volcano_rumble: (ctx) => {
     playTone(ctx, 60, 0.8, 'sawtooth', 0.25, 40);

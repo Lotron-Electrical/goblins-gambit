@@ -9,6 +9,7 @@ export default function GameMenu() {
     muted, setMuted,
     musicMuted, setMusicMuted,
     animationsOff, setAnimationsOff,
+    handArc, setHandArc,
     leaveRoom,
   } = useStore();
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -64,6 +65,26 @@ export default function GameMenu() {
           <ToggleRow label="Sound Effects" icon={ICONS.sound} active={!muted} onToggle={handleSfxToggle} />
           <ToggleRow label="Music" icon={ICONS.music} active={!musicMuted} onToggle={handleMusicToggle} />
           <ToggleRow label="Animations" icon={ICONS.sparkles} active={!animationsOff} onToggle={() => setAnimationsOff(!animationsOff)} />
+        </div>
+
+        {/* Hand Arc slider */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-gray-300 text-sm">Hand Arc</span>
+            <span className="text-gray-500 text-xs">{handArc}%</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={handArc}
+            onChange={(e) => setHandArc(parseInt(e.target.value, 10))}
+            className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[var(--color-gold)]"
+          />
+          <div className="flex justify-between text-[10px] text-gray-600 mt-0.5">
+            <span>Flat</span>
+            <span>Fan</span>
+          </div>
         </div>
 
         {/* Actions */}

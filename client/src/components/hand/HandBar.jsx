@@ -6,16 +6,19 @@ import ActivityLog from '../ui/ActivityLog.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { TYPE_ICON } from '../ui/icons.js';
 import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
+import { soundManager } from '../../audio/SoundManager.js';
 
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 const TYPE_ORDER = { Creature: 0, Magic: 1, Armour: 2, Tricks: 3 };
 
-function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, sortMode }) {
+function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, handArc }) {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const lastCentredUid = useRef(null);
 
-  // Auto-select centred card on scroll
+  // Auto-select centred card on scroll (not in reorder mode)
   const detectCentredCard = useCallback(() => {
+    if (reorderMode) return;
     const el = cardRowRef.current;
     if (!el) return;
     const centreLine = el.getBoundingClientRect().left + el.clientWidth / 2;
@@ -32,10 +35,15 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
       }
     }
     if (closest) {
+      // Play tick sound when centred card changes
+      if (closest !== lastCentredUid.current) {
+        lastCentredUid.current = closest;
+        soundManager.play('card_tick');
+      }
       const centredCard = sortedHand.find(c => c.uid === closest);
       if (centredCard) handleMobileSelect(centredCard, true);
     }
-  }, [cardRowRef, sortedHand, handleMobileSelect]);
+  }, [cardRowRef, sortedHand, handleMobileSelect, reorderMode]);
 
   const checkScroll = useCallback(() => {
     const el = cardRowRef.current;
@@ -55,72 +63,77 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
     return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
   }, [cardRowRef, checkScroll, sortedHand.length]);
 
+  // Compute arc transforms per card
+  const arcTransforms = useMemo(() => {
+    if (!handArc || sortedHand.length <= 1) return null;
+    const n = sortedHand.length;
+    const mid = (n - 1) / 2;
+    const maxAngle = 15; // max rotation degrees at full arc
+    const maxDrop = 20; // max vertical drop in px at full arc
+    const intensity = handArc / 100;
+    return sortedHand.map((_, i) => {
+      const offset = i - mid;
+      const rotation = offset * intensity * maxAngle / (n > 5 ? n / 4 : 1);
+      const drop = Math.abs(offset) * Math.abs(offset) * intensity * maxDrop / ((n / 2) * (n / 2) || 1);
+      return { rotation, drop };
+    });
+  }, [handArc, sortedHand.length]);
+
   return (
     <div className="relative">
-      {/* Centre indicator line */}
-      <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[var(--color-gold)]/30 z-10 pointer-events-none -translate-x-px" />
+      {/* Centre indicator line (hidden in reorder mode) */}
+      {!reorderMode && (
+        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[var(--color-gold)]/30 z-10 pointer-events-none -translate-x-px" />
+      )}
       {/* Left scroll indicator */}
-      {canScrollLeft && (
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-950/90 to-transparent z-10 flex items-center justify-start pl-0.5 pointer-events-none">
+      {canScrollLeft && !reorderMode && (
+        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/60 to-transparent z-10 flex items-center justify-start pl-0.5 pointer-events-none">
           <span className="text-gray-400 text-[16px] animate-pulse">&lsaquo;</span>
         </div>
       )}
       {/* Right scroll indicator */}
-      {canScrollRight && (
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-950/90 to-transparent z-10 flex items-center justify-end pr-0.5 pointer-events-none">
+      {canScrollRight && !reorderMode && (
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/60 to-transparent z-10 flex items-center justify-end pr-0.5 pointer-events-none">
           <span className="text-gray-400 text-[16px] animate-pulse">&rsaquo;</span>
         </div>
       )}
       <div
         ref={cardRowRef}
-        className="flex items-end overflow-x-auto px-3 pb-3 pt-1"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-        onTouchMove={handleReorderMove}
-        onTouchEnd={handleReorderEnd}
-        onTouchCancel={handleReorderEnd}
+        className={`flex items-end px-3 pb-3 pt-1 ${reorderMode ? 'overflow-x-hidden' : 'overflow-x-auto'}`}
+        style={{ WebkitOverflowScrolling: reorderMode ? undefined : 'touch' }}
+        onTouchMove={reorderMode ? handleReorderMove : undefined}
+        onTouchEnd={reorderMode ? handleReorderEnd : undefined}
+        onTouchCancel={reorderMode ? handleReorderEnd : undefined}
       >
-        {/* Left spacer to allow first card to reach centre */}
-        {sortedHand.length > 0 && <div className="shrink-0 w-[calc(50vw-60px)]" />}
-        {sortedHand.length > 0 ? sortedHand.map((card, idx) => (
-          <div
-            key={card.uid}
-            data-reorder-idx={idx}
-            style={{ marginRight: '-15px' }}
-            className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''}`}
-          >
+        {/* Left spacer to allow first card to reach centre (not in reorder mode) */}
+        {sortedHand.length > 0 && !reorderMode && <div className="shrink-0 w-[calc(50vw-60px)]" />}
+        {sortedHand.length > 0 ? sortedHand.map((card, idx) => {
+          const arc = arcTransforms?.[idx];
+          return (
             <div
-              onTouchStart={(e) => {
-                if (!sortMode) {
-                  const timer = setTimeout(() => handleReorderStart(idx, e), 500);
-                  e.currentTarget._reorderTimer = timer;
-                }
+              key={card.uid}
+              data-reorder-idx={idx}
+              style={{
+                marginRight: reorderMode ? '-10px' : '-15px',
+                ...(arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.drop}px)`, transformOrigin: 'bottom center' } : {}),
               }}
-              onTouchEnd={(e) => {
-                if (e.currentTarget._reorderTimer) {
-                  clearTimeout(e.currentTarget._reorderTimer);
-                  e.currentTarget._reorderTimer = null;
-                }
-              }}
-              onTouchMove={(e) => {
-                if (e.currentTarget._reorderTimer) {
-                  clearTimeout(e.currentTarget._reorderTimer);
-                  e.currentTarget._reorderTimer = null;
-                }
-              }}
+              className={`shrink-0 transition-transform ${reorderDragIdx === idx ? 'scale-110 opacity-70 z-20' : ''}`}
             >
-              <CardInHand
-                card={card}
-                isSelected={mobileSelectedCard?.uid === card.uid}
-                variant="row"
-                onSelect={handleMobileSelect}
-              />
+              <div onTouchStart={reorderMode ? () => handleReorderStart(idx) : undefined}>
+                <CardInHand
+                  card={card}
+                  isSelected={mobileSelectedCard?.uid === card.uid}
+                  variant="row"
+                  onSelect={reorderMode ? undefined : handleMobileSelect}
+                />
+              </div>
             </div>
-          </div>
-        )) : (
+          );
+        }) : (
           <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>
         )}
-        {/* Right spacer to allow last card to reach centre */}
-        {sortedHand.length > 0 && <div className="shrink-0 w-[calc(50vw-60px)]" />}
+        {/* Right spacer to allow last card to reach centre (not in reorder mode) */}
+        {sortedHand.length > 0 && !reorderMode && <div className="shrink-0 w-[calc(50vw-60px)]" />}
       </div>
     </div>
   );
@@ -128,6 +141,7 @@ function ScrollableCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleM
 
 export default function HandBar() {
   const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
+  const handArc = useStore(s => s.handArc);
   const isMobile = useIsMobile();
 
   if (!gameState) return null;
@@ -211,6 +225,8 @@ export default function HandBar() {
   const [sortMode, setSortMode] = useState(null);
   // Custom order: array of uids representing manual arrangement
   const [customOrder, setCustomOrder] = useState(null);
+  // Reorder mode toggle (replaces long-press)
+  const [reorderMode, setReorderMode] = useState(false);
 
   // When new cards appear, append them to custom order
   useEffect(() => {
@@ -254,13 +270,11 @@ export default function HandBar() {
   const dragOverIdx = useRef(null);
   const [reorderDragIdx, setReorderDragIdx] = useState(null);
 
-  const handleReorderStart = useCallback((idx, e) => {
-    if (sortMode) return; // Only allow manual reorder in custom mode
+  const handleReorderStart = useCallback((idx) => {
     dragIdx.current = idx;
     setReorderDragIdx(idx);
-    // Haptic feedback if available
     if (navigator.vibrate) navigator.vibrate(30);
-  }, [sortMode]);
+  }, []);
 
   const handleReorderMove = useCallback((e) => {
     if (dragIdx.current === null || !cardRowRef.current) return;
@@ -297,6 +311,12 @@ export default function HandBar() {
 
   const cycleSortMode = useCallback(() => {
     setSortMode(prev => prev === null ? 'type' : prev === 'type' ? 'cost' : null);
+    setReorderMode(false);
+  }, []);
+
+  const toggleReorderMode = useCallback(() => {
+    setReorderMode(prev => !prev);
+    setSortMode(null); // Reorder only works in custom order
   }, []);
 
   if (isMobile) {
@@ -309,16 +329,16 @@ export default function HandBar() {
           </div>
         )}
 
-        {/* Expanded overlay backdrop */}
+        {/* Expanded overlay backdrop — lighter dim */}
         <AnimatePresence>
           {handExpanded && (
             <motion.div
-              className="fixed inset-0 bg-black/60 z-20"
+              className="fixed inset-0 bg-black/40 z-20"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => { setHandExpanded(false); setMobileSelectedCard(null); }}
+              transition={{ duration: 0.15 }}
+              onClick={() => { setHandExpanded(false); setMobileSelectedCard(null); setReorderMode(false); }}
             />
           )}
         </AnimatePresence>
@@ -372,11 +392,11 @@ export default function HandBar() {
           </div>
         )}
 
-        {/* Expanded panel */}
+        {/* Expanded panel — transparent, cards float over dimmed field */}
         <AnimatePresence>
           {handExpanded && (
             <motion.div
-              className="fixed bottom-0 left-0 right-0 z-30 bg-gray-950/95 border-t border-gray-700 rounded-t-xl"
+              className="fixed bottom-0 left-0 right-0 z-30"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -385,21 +405,21 @@ export default function HandBar() {
               {/* Collapse handle */}
               <div
                 className="flex justify-center py-1.5 cursor-pointer"
-                onClick={() => { setHandExpanded(false); setMobileSelectedCard(null); }}
+                onClick={() => { setHandExpanded(false); setMobileSelectedCard(null); setReorderMode(false); }}
               >
-                <div className="w-10 h-1 bg-gray-600 rounded-full" />
+                <div className="w-10 h-1 bg-gray-500/60 rounded-full" />
               </div>
 
-              {/* Selected card popup */}
+              {/* Selected card popup — snappy transition */}
               <AnimatePresence mode="wait">
                 {mobileSelectedCard && hand.some(c => c.uid === mobileSelectedCard.uid) && (
                   <motion.div
                     key={mobileSelectedCard.uid}
                     className="flex justify-center pb-2"
-                    initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.8, opacity: 0, y: 20 }}
-                    transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    transition={{ duration: 0.1, ease: 'easeOut' }}
                   >
                     <CardInHand
                       card={mobileSelectedCard}
@@ -410,7 +430,7 @@ export default function HandBar() {
                 )}
               </AnimatePresence>
 
-              {/* Action buttons + sort row */}
+              {/* Action buttons + sort + custom row */}
               <div className="flex justify-center items-center gap-1.5 px-2 pb-2">
                 <button
                   onClick={drawCard}
@@ -445,26 +465,56 @@ export default function HandBar() {
                 >
                   {sortMode === 'type' ? 'Type' : sortMode === 'cost' ? 'Cost' : 'Sort'}
                 </button>
+                <button
+                  onClick={toggleReorderMode}
+                  className={`px-3 py-2 rounded text-[11px] font-bold transition ${
+                    reorderMode ? 'bg-[var(--color-gold)] text-black' : 'bg-gray-800 text-gray-400'
+                  }`}
+                >
+                  Custom
+                </button>
               </div>
 
-              {/* Horizontal scrollable card row with scroll indicators */}
-              <ScrollableCardRow
-                cardRowRef={cardRowRef}
-                sortedHand={sortedHand}
-                mobileSelectedCard={mobileSelectedCard}
-                handleMobileSelect={handleMobileSelect}
-                reorderDragIdx={reorderDragIdx}
-                handleReorderStart={handleReorderStart}
-                handleReorderMove={handleReorderMove}
-                handleReorderEnd={handleReorderEnd}
-                sortMode={sortMode}
-              />
+              {/* Horizontal scrollable card row with subtle background */}
+              <div className="bg-black/30 rounded-t-lg mx-1">
+                {reorderMode && (
+                  <div className="text-center text-[10px] text-gray-400 pt-1">Drag cards to reorder</div>
+                )}
+                <ScrollableCardRow
+                  cardRowRef={cardRowRef}
+                  sortedHand={sortedHand}
+                  mobileSelectedCard={mobileSelectedCard}
+                  handleMobileSelect={handleMobileSelect}
+                  reorderMode={reorderMode}
+                  reorderDragIdx={reorderDragIdx}
+                  handleReorderStart={handleReorderStart}
+                  handleReorderMove={handleReorderMove}
+                  handleReorderEnd={handleReorderEnd}
+                  handArc={handArc}
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     );
   }
+
+  // Desktop layout — apply arc transforms
+  const desktopArcTransforms = useMemo(() => {
+    if (!handArc || hand.length <= 1) return null;
+    const n = hand.length;
+    const mid = (n - 1) / 2;
+    const maxAngle = 12;
+    const maxDrop = 16;
+    const intensity = handArc / 100;
+    return hand.map((_, i) => {
+      const offset = i - mid;
+      const rotation = offset * intensity * maxAngle / (n > 5 ? n / 4 : 1);
+      const drop = Math.abs(offset) * Math.abs(offset) * intensity * maxDrop / ((n / 2) * (n / 2) || 1);
+      return { rotation, drop };
+    });
+  }, [handArc, hand.length]);
 
   return (
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0 overflow-visible z-30">
@@ -481,13 +531,20 @@ export default function HandBar() {
         </div>
         {/* Cards */}
         <div className="flex gap-1 justify-center items-end overflow-x-auto overflow-y-visible pb-1 flex-1 pr-40">
-          {hand.map((card) => (
-            <CardInHand
-              key={card.uid}
-              card={card}
-              isSelected={selectedCard?.uid === card.uid}
-            />
-          ))}
+          {hand.map((card, idx) => {
+            const arc = desktopArcTransforms?.[idx];
+            return (
+              <div
+                key={card.uid}
+                style={arc ? { transform: `rotate(${arc.rotation}deg) translateY(${arc.drop}px)`, transformOrigin: 'bottom center' } : undefined}
+              >
+                <CardInHand
+                  card={card}
+                  isSelected={selectedCard?.uid === card.uid}
+                />
+              </div>
+            );
+          })}
           {hand.length === 0 && (
             <div className="text-gray-600 py-4">No cards in hand</div>
           )}
