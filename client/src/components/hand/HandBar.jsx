@@ -276,16 +276,46 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
       if (Math.abs(vel) > VELOCITY_THRESHOLD) {
         inertiaRaf.current = requestAnimationFrame(runInertia);
       } else {
-        // Settle to nearest card
-        const snapped = Math.round(Math.max(0, Math.min(currentIndexRef.current, maxIdx)));
-        setCurrentIndex(snapped);
-        inertiaRaf.current = null;
+        // Smooth ease to nearest card instead of hard snap
+        const target = Math.round(Math.max(0, Math.min(currentIndexRef.current, maxIdx)));
+        const easeToTarget = () => {
+          const cur = currentIndexRef.current;
+          const diff = target - cur;
+          if (Math.abs(diff) < 0.005) {
+            setCurrentIndex(target);
+            currentIndexRef.current = target;
+            inertiaRaf.current = null;
+            return;
+          }
+          const next = cur + diff * 0.18;
+          currentIndexRef.current = next;
+          setCurrentIndex(next);
+          inertiaRaf.current = requestAnimationFrame(easeToTarget);
+        };
+        inertiaRaf.current = requestAnimationFrame(easeToTarget);
       }
     };
     if (Math.abs(vel) > VELOCITY_THRESHOLD) {
       inertiaRaf.current = requestAnimationFrame(runInertia);
     } else {
-      setCurrentIndex(prev => Math.round(Math.max(0, Math.min(prev, maxIdx))));
+      // Smooth ease to nearest card instead of hard snap
+      const maxIdx2 = sortedHand.length - 1;
+      const target = Math.round(Math.max(0, Math.min(currentIndexRef.current, maxIdx2)));
+      const easeToTarget = () => {
+        const cur = currentIndexRef.current;
+        const diff = target - cur;
+        if (Math.abs(diff) < 0.005) {
+          setCurrentIndex(target);
+          currentIndexRef.current = target;
+          inertiaRaf.current = null;
+          return;
+        }
+        const next = cur + diff * 0.18;
+        currentIndexRef.current = next;
+        setCurrentIndex(next);
+        inertiaRaf.current = requestAnimationFrame(easeToTarget);
+      };
+      inertiaRaf.current = requestAnimationFrame(easeToTarget);
     }
   }, [sortedHand.length, FRICTION, VELOCITY_THRESHOLD]);
 
