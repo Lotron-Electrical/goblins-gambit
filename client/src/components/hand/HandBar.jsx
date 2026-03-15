@@ -429,47 +429,6 @@ export default function HandBar() {
     prevHandCount.current = hand.length;
   }, [hand.length, handExpanded]);
 
-  // Draw card feedback: scroll carousel to newly drawn card
-  const [carouselScrollTo, setCarouselScrollTo] = useState(null);
-  const prevHandCountExpanded = useRef(hand.length);
-  useEffect(() => {
-    if (handExpanded && hand.length > prevHandCountExpanded.current) {
-      // New card drawn while expanded — scroll to it after React renders
-      const timer = setTimeout(() => setCarouselScrollTo(sortedHand.length - 1), 50);
-      prevHandCountExpanded.current = hand.length;
-      return () => clearTimeout(timer);
-    }
-    prevHandCountExpanded.current = hand.length;
-  }, [hand.length, handExpanded, sortedHand.length]);
-  // Clear scrollTo after it's consumed
-  useEffect(() => {
-    if (carouselScrollTo !== null) {
-      const t = setTimeout(() => setCarouselScrollTo(null), 100);
-      return () => clearTimeout(t);
-    }
-  }, [carouselScrollTo]);
-
-  // Auto-collapse when hand empties
-  useEffect(() => {
-    if (hand.length === 0 && handExpanded) setHandExpanded(false);
-  }, [hand.length, handExpanded]);
-
-  // Clear mobile selection if card leaves hand
-  useEffect(() => {
-    if (mobileSelectedCard && !hand.some(c => c.uid === mobileSelectedCard.uid)) {
-      setMobileSelectedCard(null);
-    }
-  }, [hand, mobileSelectedCard]);
-
-  const handleMobileSelect = useCallback((card, fromScroll) => {
-    if (fromScroll) {
-      // Scroll-based auto-select: always set, never toggle off
-      setMobileSelectedCard(prev => prev?.uid === card.uid ? prev : card);
-    } else {
-      setMobileSelectedCard(prev => prev?.uid === card.uid ? null : card);
-    }
-  }, []);
-
   // Sorting: null = custom/default order, 'type' = by category, 'cost' = by AP cost
   const [sortMode, setSortMode] = useState(null);
   // Custom order: array of uids representing manual arrangement
@@ -513,6 +472,47 @@ export default function HandBar() {
     }
     return hand;
   }, [hand, sortMode, customOrder, getEffectiveCost]);
+
+  // Draw card feedback: scroll carousel to newly drawn card
+  const [carouselScrollTo, setCarouselScrollTo] = useState(null);
+  const prevHandCountExpanded = useRef(hand.length);
+  useEffect(() => {
+    if (handExpanded && hand.length > prevHandCountExpanded.current) {
+      // New card drawn while expanded — scroll to it after React renders
+      const timer = setTimeout(() => setCarouselScrollTo(sortedHand.length - 1), 50);
+      prevHandCountExpanded.current = hand.length;
+      return () => clearTimeout(timer);
+    }
+    prevHandCountExpanded.current = hand.length;
+  }, [hand.length, handExpanded, sortedHand.length]);
+  // Clear scrollTo after it's consumed
+  useEffect(() => {
+    if (carouselScrollTo !== null) {
+      const t = setTimeout(() => setCarouselScrollTo(null), 100);
+      return () => clearTimeout(t);
+    }
+  }, [carouselScrollTo]);
+
+  // Auto-collapse when hand empties
+  useEffect(() => {
+    if (hand.length === 0 && handExpanded) setHandExpanded(false);
+  }, [hand.length, handExpanded]);
+
+  // Clear mobile selection if card leaves hand
+  useEffect(() => {
+    if (mobileSelectedCard && !hand.some(c => c.uid === mobileSelectedCard.uid)) {
+      setMobileSelectedCard(null);
+    }
+  }, [hand, mobileSelectedCard]);
+
+  const handleMobileSelect = useCallback((card, fromScroll) => {
+    if (fromScroll) {
+      // Scroll-based auto-select: always set, never toggle off
+      setMobileSelectedCard(prev => prev?.uid === card.uid ? prev : card);
+    } else {
+      setMobileSelectedCard(prev => prev?.uid === card.uid ? null : card);
+    }
+  }, []);
 
   // Drag reorder state
   const dragIdx = useRef(null);
