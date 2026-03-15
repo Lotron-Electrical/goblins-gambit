@@ -151,6 +151,9 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
   const touchStartIndex = useRef(0);
   const lastTickIndex = useRef(0);
   const isDragging = useRef(false);
+  const rafId = useRef(null);
+  const pendingIndex = useRef(null);
+  const lastSelectedIdx = useRef(-1);
   const RADIUS = 450; // Circle radius — controls arc curvature
   const ANGLE_STEP = 12; // Degrees between cards — tighter = closer together
   const CARD_WIDTH = 90; // Match CardInHand row variant width
@@ -162,10 +165,12 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
     }
   }, [sortedHand.length, currentIndex]);
 
-  // Auto-select the centred card
+  // Auto-select the centred card — only when the rounded index changes
   useEffect(() => {
     if (reorderMode || sortedHand.length === 0) return;
     const idx = Math.round(Math.max(0, Math.min(currentIndex, sortedHand.length - 1)));
+    if (idx === lastSelectedIdx.current) return;
+    lastSelectedIdx.current = idx;
     const card = sortedHand[idx];
     if (card) handleMobileSelect(card, true);
   }, [currentIndex, sortedHand, handleMobileSelect, reorderMode]);
@@ -184,11 +189,20 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
     const sensitivity = 70; // pixels per card
     const newIndex = touchStartIndex.current - dx / sensitivity;
     const clamped = Math.max(-0.4, Math.min(newIndex, sortedHand.length - 0.6));
-    setCurrentIndex(clamped);
-    const rounded = Math.round(Math.max(0, Math.min(clamped, sortedHand.length - 1)));
-    if (rounded !== lastTickIndex.current) {
-      lastTickIndex.current = rounded;
-      soundManager.play('card_tick');
+    // Throttle state updates to animation frames
+    pendingIndex.current = clamped;
+    if (!rafId.current) {
+      rafId.current = requestAnimationFrame(() => {
+        rafId.current = null;
+        if (pendingIndex.current !== null) {
+          setCurrentIndex(pendingIndex.current);
+          const rounded = Math.round(Math.max(0, Math.min(pendingIndex.current, sortedHand.length - 1)));
+          if (rounded !== lastTickIndex.current) {
+            lastTickIndex.current = rounded;
+            soundManager.play('card_tick');
+          }
+        }
+      });
     }
   }, [reorderMode, sortedHand.length]);
 
@@ -196,6 +210,11 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
     if (touchStartX.current === null) return;
     touchStartX.current = null;
     isDragging.current = false;
+    pendingIndex.current = null;
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
     setCurrentIndex(prev => Math.round(Math.max(0, Math.min(prev, sortedHand.length - 1))));
   }, [sortedHand.length]);
 
@@ -244,7 +263,8 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
                 transformOrigin: 'center bottom',
                 opacity,
                 zIndex,
-                transition: isDragging.current ? 'none' : 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                willChange: 'transform, opacity',
+                transition: isDragging.current ? 'none' : 'transform 0.25s ease-out, opacity 0.25s ease-out',
               }}
             >
               <div onTouchStart={reorderMode ? () => handleReorderStart(idx) : undefined}>

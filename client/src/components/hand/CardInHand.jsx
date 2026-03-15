@@ -146,7 +146,6 @@ export default function CardInHand({ card, isSelected, variant, onSelect, disabl
       onMouseLeave={isMobile ? undefined : clearHoveredCard}
       whileHover={animationsOff || isMobile ? undefined : { y: -12, scale: 1.05, zIndex: 50 }}
       animate={animationsOff ? {} : (isSelected ? { y: isMobile ? -6 : -12, scale: isMobile ? 1.02 : 1.05 } : {})}
-      layout
     >
       {/* Card art — cropped to artwork only, hiding text portion */}
       {card.image && (
