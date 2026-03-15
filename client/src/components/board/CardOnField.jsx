@@ -21,11 +21,14 @@ const TYPE_GLOW = {
 };
 
 export default function CardOnField({ card, isOpponent, onClick, isValidTarget, isAttacking, isDefending, prediction }) {
-  const { selectedCard, selectCard, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff } = useStore();
+  const { selectedCard, selectCard, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff, tutorialEngine } = useStore();
   const [hovered, setHovered] = useState(false);
   const isSelected = selectedCard?.uid === card.uid;
   const invisible = card._invisible;
   const isMobile = useIsMobile();
+  // Tutorial: highlight opponent creature as attack target
+  const tutConfig = tutorialEngine ? tutorialEngine.getStepConfig() : null;
+  const isTutorialAttackTarget = isOpponent && tutConfig?.expectedAction === 'attack' && selectedCard;
   const longPressTimer = useRef(null);
 
   const handleClick = () => {
@@ -133,6 +136,20 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       {invisible && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
           <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>???</span>
+        </div>
+      )}
+
+      {/* Tutorial: red attack target indicator */}
+      {isTutorialAttackTarget && (
+        <div className="absolute inset-0 z-20 pointer-events-none rounded-lg ring-2 ring-red-500 animate-pulse">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-red-500 rounded-full animate-ping opacity-40" />
+          </div>
+          <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <div className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg animate-bounce">
+              Tap to attack!
+            </div>
+          </div>
         </div>
       )}
 

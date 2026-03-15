@@ -183,6 +183,21 @@ export default function GameScreen() {
     return () => clearTimeout(timer);
   }, [expandedOpponent, isMobile]);
 
+  // Tutorial: auto-scroll opponent into view during attack steps
+  const tutorialEngine = useStore(s => s.tutorialEngine);
+  useEffect(() => {
+    if (!isMobile || !tutorialEngine || !opponentScrollRef.current) return;
+    const config = tutorialEngine.getStepConfig();
+    if (config.expectedAction === 'attack') {
+      // Scroll opponent field into view so the player can see the target
+      const timer = setTimeout(() => {
+        const opEl = opponentScrollRef.current?.querySelector('[data-opponent]');
+        if (opEl) opEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, tutorialEngine, tutorialEngine?.getCurrentStep()]);
+
   const { currentAnimation, isAnimating, announcement } = useAnimationQueue(
     gameState?.animations
   );

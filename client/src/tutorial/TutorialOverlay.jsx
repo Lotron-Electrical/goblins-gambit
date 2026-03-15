@@ -205,21 +205,36 @@ export default function TutorialOverlay() {
           style={{ top: promptTop }}
         >
           <div className={`bg-gray-900/95 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl ${
-            isMobile ? 'px-4 py-3' : 'px-6 py-4'
+            isMobile ? 'px-3 py-2' : 'px-6 py-4'
           }`}>
-            <div className="flex items-center justify-between mb-2">
+            <div className={`flex items-center justify-between ${isMobile ? 'mb-1' : 'mb-2'}`}>
               <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>
                 Step {config.displayStepNumber} of {config.displayTotalSteps}
               </span>
               <span className={`font-display text-[var(--color-gold)] ${
-                isMobile ? 'text-[14px]' : 'text-[16px]'
+                isMobile ? 'text-[13px]' : 'text-[16px]'
               }`}>
                 {config.title}
               </span>
             </div>
-            <p className={`text-gray-200 leading-relaxed ${isMobile ? 'text-[13px]' : 'text-[14px]'}`}>
+            <p className={`text-gray-200 ${isMobile ? 'text-[12px] leading-snug' : 'text-[14px] leading-relaxed'}`}>
               {config.instruction}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Bouncing arrow pointing to spotlight target */}
+      {spotlightRect && !hideInstruction && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: spotlightRect.left + spotlightRect.width / 2 - 12,
+            top: spotlightRect.top - 28,
+          }}
+        >
+          <div className="animate-bounce text-[var(--color-gold)] text-[20px] drop-shadow-[0_0_6px_rgba(212,175,55,0.8)]">
+            &#9660;
           </div>
         </div>
       )}

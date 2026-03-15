@@ -156,7 +156,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'end-turn',
     title: 'End Your Turn',
-    instruction: 'Out of AP! Tap End Turn to pass.',
+    instruction: 'Out of AP! Actions cost AP. Tap End Turn to pass to your opponent.',
     highlight: '[data-tutorial="end-turn-btn"]',
     tabHint: null,
     expectedAction: 'end_turn',
@@ -269,7 +269,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'end-turn-2',
     title: 'End Your Turn',
-    instruction: 'Happy Hippy is powered up to 600 ATK! End your turn.',
+    instruction: 'Happy Hippy is powered up to 600 ATK! End your turn for the final strike.',
     highlight: '[data-tutorial="end-turn-btn"]',
     tabHint: null,
     expectedAction: 'end_turn',

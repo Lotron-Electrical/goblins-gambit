@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import { useStore } from '../../store.js';
 import { motion } from 'framer-motion';
 import { ICONS, TYPE_ICON } from '../ui/icons.js';
@@ -33,11 +33,17 @@ const TYPE_COLOR_SOLID = {
 
 export default function CardInHand({ card, isSelected, variant, onSelect, disableTouch }) {
   const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff, tutorialEngine } = useStore();
-  const isTutorialHighlight = tutorialEngine && tutorialEngine.getStepConfig()?.highlightCardUid === card.uid;
+  const tutStepConfig = tutorialEngine ? tutorialEngine.getStepConfig() : null;
+  const isTutorialHighlight = tutStepConfig?.highlightCardUid === card.uid;
+  const isTutorialBlocked = tutorialEngine && tutStepConfig?.highlightCardUid && !isTutorialHighlight;
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
   const isReaction = REACTION_ABILITIES.includes(card.abilityId);
   const isMobile = useIsMobile();
   const longPressTimer = useRef(null);
+
+  // Tutorial wrong-card toast state (must be before early returns for hook rules)
+  const [showWrongToast, setShowWrongToast] = useState(false);
+  const wrongToastTimer = useRef(null);
 
   // Collapsed variant — minimal strip card, no interaction
   if (isMobile && variant === 'collapsed') {
@@ -52,6 +58,14 @@ export default function CardInHand({ card, isSelected, variant, onSelect, disabl
   }
 
   const handleClick = () => {
+    // Block interaction with non-highlighted cards during tutorial
+    if (isTutorialBlocked) {
+      // Show brief "wrong card" feedback
+      setShowWrongToast(true);
+      if (wrongToastTimer.current) clearTimeout(wrongToastTimer.current);
+      wrongToastTimer.current = setTimeout(() => setShowWrongToast(false), 1200);
+      return;
+    }
     if (!isMyTurn && !isReaction) return;
     // Row variant: tap to select (calls onSelect), not the store selectCard
     if (isMobile && variant === 'row') {
@@ -191,8 +205,31 @@ export default function CardInHand({ card, isSelected, variant, onSelect, disabl
       )}
 
       {/* Unaffordable darkening overlay for row/popup (instead of opacity which bleeds through overlapping cards) */}
-      {isRowOrPopup && !canAfford && (
+      {isRowOrPopup && !canAfford && !isTutorialHighlight && (
         <div className="absolute inset-0 bg-black/50 z-10 rounded-lg" />
+      )}
+
+      {/* Tutorial: dim non-target cards */}
+      {isTutorialBlocked && (
+        <div className="absolute inset-0 bg-black/60 z-20 rounded-lg" />
+      )}
+
+      {/* Tutorial: wrong card toast */}
+      {showWrongToast && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+          <div className="bg-red-900/90 border border-red-500 text-red-200 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap">
+            Not this one
+          </div>
+        </div>
+      )}
+
+      {/* Tutorial: card name label on highlighted card */}
+      {isTutorialHighlight && !isSelected && (
+        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-30 pointer-events-none whitespace-nowrap">
+          <div className="bg-[var(--color-gold)] text-black text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg animate-bounce">
+            {card.name}
+          </div>
+        </div>
       )}
 
       {/* Stats bar at bottom */}

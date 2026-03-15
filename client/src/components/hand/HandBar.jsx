@@ -13,15 +13,18 @@ const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 const TYPE_ORDER = { Creature: 0, Magic: 1, Armour: 2, Tricks: 3 };
 
 function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
-  const { playCard, discardCard, gameState } = useStore();
+  const { playCard, discardCard, gameState, tutorialEngine } = useStore();
   const [confirmAction, setConfirmAction] = useState(null);
 
   const myId = gameState?.myId;
   const myPlayer = myId ? gameState.players[myId] : null;
   const isMyTurn = gameState?.currentPlayerId === myId;
   const isInMyHand = myPlayer?.hand?.some(c => c.uid === card.uid);
-  const canPlay = isInMyHand && isMyTurn;
-  const canDiscard = isInMyHand && isMyTurn;
+  // In tutorial, only allow playing the highlighted card
+  const tutStepConfig = tutorialEngine ? tutorialEngine.getStepConfig() : null;
+  const isTutorialBlocked = tutorialEngine && tutStepConfig?.highlightCardUid && tutStepConfig.highlightCardUid !== card.uid;
+  const canPlay = isInMyHand && isMyTurn && !isTutorialBlocked;
+  const canDiscard = isInMyHand && isMyTurn && !isTutorialBlocked;
 
   const themeEffects = THEME_EFFECTS[gameState?.theme] || THEME_EFFECTS.swamp;
   const effectiveCost = card.type === 'Magic' && card.cost !== undefined && themeEffects.spellCostMultiplier !== undefined
@@ -96,6 +99,17 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
       {card.effect && (
         <div className="text-[11px] text-gray-300 leading-relaxed px-2 pb-1.5 border-t border-gray-800 pt-1.5 mx-1">
           {card.effect}
+        </div>
+      )}
+
+      {/* Tutorial: wrong card hint */}
+      {isTutorialBlocked && tutStepConfig?.highlightCardUid && (
+        <div className="px-2 pb-2 pt-1">
+          <div className="bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/40 rounded-lg py-2 text-center">
+            <span className="text-[var(--color-gold)] text-[11px] font-bold">
+              Swipe to find the highlighted card
+            </span>
+          </div>
         </div>
       )}
 
