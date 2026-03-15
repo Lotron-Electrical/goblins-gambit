@@ -168,6 +168,13 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
   // Keep ref in sync with state
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
 
+  const stopInertia = useCallback(() => {
+    if (inertiaRaf.current) {
+      cancelAnimationFrame(inertiaRaf.current);
+      inertiaRaf.current = null;
+    }
+  }, []);
+
   // Clamp currentIndex when hand size changes
   useEffect(() => {
     if (sortedHand.length > 0 && currentIndex >= sortedHand.length) {
@@ -181,7 +188,7 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
       stopInertia();
       setCurrentIndex(scrollToIndex);
     }
-  }, [scrollToIndex]);
+  }, [scrollToIndex, stopInertia]);
 
   // Auto-select the centred card — only when the rounded index changes
   useEffect(() => {
@@ -192,13 +199,6 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
     const card = sortedHand[idx];
     if (card) handleMobileSelect(card, true);
   }, [currentIndex, sortedHand, handleMobileSelect, reorderMode]);
-
-  const stopInertia = useCallback(() => {
-    if (inertiaRaf.current) {
-      cancelAnimationFrame(inertiaRaf.current);
-      inertiaRaf.current = null;
-    }
-  }, []);
 
   const handleTouchStart = useCallback((e) => {
     if (reorderMode) return;
