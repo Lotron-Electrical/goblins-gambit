@@ -26,9 +26,9 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
   const isSelected = selectedCard?.uid === card.uid;
   const invisible = card._invisible;
   const isMobile = useIsMobile();
-  // Tutorial: highlight opponent creature as attack target
+  // Tutorial: highlight opponent creature as attack target (show before and after selecting attacker)
   const tutConfig = tutorialEngine ? tutorialEngine.getStepConfig() : null;
-  const isTutorialAttackTarget = isOpponent && tutConfig?.expectedAction === 'attack' && selectedCard;
+  const isTutorialAttackTarget = isOpponent && tutConfig?.expectedAction === 'attack';
   const longPressTimer = useRef(null);
 
   const handleClick = () => {
@@ -142,12 +142,14 @@ export default function CardOnField({ card, isOpponent, onClick, isValidTarget, 
       {/* Tutorial: red attack target indicator */}
       {isTutorialAttackTarget && (
         <div className="absolute inset-0 z-20 pointer-events-none rounded-lg ring-2 ring-red-500 animate-pulse">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-red-500 rounded-full animate-ping opacity-40" />
-          </div>
+          {selectedCard && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-red-500 rounded-full animate-ping opacity-40" />
+            </div>
+          )}
           <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
             <div className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg animate-bounce">
-              Tap to attack!
+              {selectedCard ? 'Tap to attack!' : 'Target'}
             </div>
           </div>
         </div>

@@ -166,11 +166,10 @@ export default function TutorialOverlay() {
     : 'none';
 
   // Position prompt above center zone so it doesn't cover player UI
-  // During attack targeting (player selected their creature, now picking opponent's), move prompt to bottom
-  // so it doesn't obscure the opponent's creature
-  const isAttackTargeting = config.expectedAction === 'attack' && selectedCard;
-  const promptTop = isAttackTargeting && isMobile ? undefined : (isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%'));
-  const promptBottom = isAttackTargeting && isMobile ? '140px' : undefined;
+  // For attack steps, always position at bottom so opponent's creature is visible
+  const isAttackStep = config.expectedAction === 'attack';
+  const promptTop = isAttackStep && isMobile ? undefined : (isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%'));
+  const promptBottom = isAttackStep && isMobile ? '140px' : undefined;
 
   return (
     <>
