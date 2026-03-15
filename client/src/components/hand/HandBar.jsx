@@ -182,11 +182,27 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
     }
   }, [sortedHand.length, currentIndex]);
 
-  // External scroll-to (draw feedback, tap side card)
+  // External scroll-to (draw feedback, tap side card, tutorial)
   useEffect(() => {
     if (scrollToIndex !== null && scrollToIndex !== undefined && scrollToIndex !== currentIndex) {
       stopInertia();
-      setCurrentIndex(scrollToIndex);
+      // Smooth lerp to target index
+      const target = scrollToIndex;
+      const easeToTarget = () => {
+        const cur = currentIndexRef.current;
+        const diff = target - cur;
+        if (Math.abs(diff) < 0.005) {
+          setCurrentIndex(target);
+          currentIndexRef.current = target;
+          inertiaRaf.current = null;
+          return;
+        }
+        const next = cur + diff * 0.18;
+        currentIndexRef.current = next;
+        setCurrentIndex(next);
+        inertiaRaf.current = requestAnimationFrame(easeToTarget);
+      };
+      inertiaRaf.current = requestAnimationFrame(easeToTarget);
     }
   }, [scrollToIndex, stopInertia]);
 
@@ -427,7 +443,7 @@ export default function HandBar() {
   const [mobileSelectedCard, setMobileSelectedCard] = useState(null);
   const cardRowRef = useRef(null);
 
-  // Tutorial: auto-expand and scroll to highlighted card
+  // Tutorial: auto-expand and scroll fan to highlighted card
   const tutorialEngine = useStore(s => s.tutorialEngine);
   const tutorialHighlightUid = tutorialEngine ? tutorialEngine.getStepConfig()?.highlightCardUid : null;
   const tutorialTabHint = tutorialEngine ? tutorialEngine.getStepConfig()?.tabHint : null;
@@ -436,15 +452,15 @@ export default function HandBar() {
     const config = tutorialEngine.getStepConfig();
     if (config.highlightCardUid || config.tabHint) {
       setHandExpanded(true);
-      // Scroll to highlighted card after expansion
+      // Scroll fan to highlighted card after expansion
       if (config.highlightCardUid) {
         setTimeout(() => {
-          const el = cardRowRef.current?.querySelector(`[data-card-uid="${config.highlightCardUid}"]`);
-          el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          const idx = sortedHand.findIndex(c => c.uid === config.highlightCardUid);
+          if (idx >= 0) setCarouselScrollTo(idx);
         }, 300);
       }
     }
-  }, [tutorialEngine, isMobile, tutorialHighlightUid, tutorialTabHint]);
+  }, [tutorialEngine, isMobile, tutorialHighlightUid, tutorialTabHint, sortedHand]);
 
   // Track hand count for draw flash on collapsed strip
   const prevHandCount = useRef(hand.length);
