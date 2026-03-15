@@ -221,13 +221,7 @@ export default function CardInHand({ card, isSelected, variant, onSelect }) {
         />
       )}
 
-      {/* Cost badge */}
-      <div className={`absolute top-0.5 right-0.5 font-bold px-1 py-0.5 rounded z-10 ${
-        isRowOrPopup ? 'text-[10px] px-1' : isMobile ? 'text-[8px]' : 'text-[12px] px-1.5'
-      } ${effectiveCost === 0 ? 'bg-green-700 text-white' : costModified && effectiveCost > card.cost ? 'bg-red-800 text-red-200' : costModified && effectiveCost < card.cost ? 'bg-green-700 text-green-200' : 'bg-blue-800 text-blue-200'}`}>
-        {costText}
-      </div>
-
+      {/* Badge stack — left side for row/popup to avoid overlap bleed, right side for desktop */}
       {/* Type letter badge */}
       <div className={`absolute top-0.5 left-0.5 bg-black/70 rounded-full flex items-center justify-center z-10 font-bold ${
         isRowOrPopup ? 'text-[10px] w-5 h-5' : isMobile ? 'text-[9px] w-4 h-4' : 'text-[12px] w-6 h-6'
@@ -235,19 +229,26 @@ export default function CardInHand({ card, isSelected, variant, onSelect }) {
         {TYPE_LETTER[card.type]}
       </div>
 
-      {/* Ability indicator */}
+      {/* Cost badge — stacked below type on left for row/popup, top-right for desktop */}
+      <div className={`absolute font-bold px-1 py-0.5 rounded z-10 ${
+        isRowOrPopup ? 'top-6 left-0.5 text-[10px] px-1' : isMobile ? 'top-0.5 right-0.5 text-[8px]' : 'top-0.5 right-0.5 text-[12px] px-1.5'
+      } ${effectiveCost === 0 ? 'bg-green-700 text-white' : costModified && effectiveCost > card.cost ? 'bg-red-800 text-red-200' : costModified && effectiveCost < card.cost ? 'bg-green-700 text-green-200' : 'bg-blue-800 text-blue-200'}`}>
+        {costText}
+      </div>
+
+      {/* Ability indicator — below cost on left for row/popup */}
       {card.abilityId && (
         <div className={`absolute left-0.5 bg-yellow-600/80 rounded-full flex items-center justify-center z-10 ${
-          isRowOrPopup ? 'top-6 w-4 h-4' : isMobile ? 'top-5 w-3.5 h-3.5' : 'top-8 w-5 h-5'
+          isRowOrPopup ? 'top-[44px] w-4 h-4' : isMobile ? 'top-5 w-3.5 h-3.5' : 'top-8 w-5 h-5'
         }`}>
           <span className={isRowOrPopup ? 'text-[8px]' : isMobile ? 'text-[7px]' : 'text-[10px]'}>{ICONS.lightning}</span>
         </div>
       )}
 
-      {/* REACT badge — shown on reaction cards during opponent's turn */}
+      {/* REACT badge — left side for row/popup, right side for desktop */}
       {isReaction && !isMyTurn && (
-        <div className={`absolute right-0.5 bg-orange-500 text-white font-bold px-1 py-0.5 rounded z-10 animate-pulse ${
-          isRowOrPopup ? 'top-6 text-[7px]' : isMobile ? 'top-5 text-[6px]' : 'top-8 text-[9px]'
+        <div className={`absolute bg-orange-500 text-white font-bold px-1 py-0.5 rounded z-10 animate-pulse ${
+          isRowOrPopup ? 'left-0.5 bottom-4 text-[7px]' : isMobile ? 'right-0.5 top-5 text-[6px]' : 'right-0.5 top-8 text-[9px]'
         }`}>
           REACT
         </div>
