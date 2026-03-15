@@ -261,11 +261,25 @@ export default function CardInHand({ card, isSelected, variant, onSelect }) {
 
       {/* Stats bar at bottom */}
       {card.type === 'Creature' && (
-        <div className={`absolute bottom-0 left-0 right-0 bg-black/80 flex justify-between px-1.5 z-10 ${isRowOrPopup ? 'text-[10px] py-0.5' : isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
-          <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
-          <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
-          <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>
-        </div>
+        isRowOrPopup ? (
+          <div className={`absolute bottom-0 left-0 right-0 bg-black/80 flex justify-around z-10 ${variant === 'popup' ? 'py-1 text-[12px]' : 'py-0.5 text-[10px]'}`}>
+            <span className="text-red-400 font-bold flex flex-col items-center leading-tight">
+              <span>{ICONS.swords}</span><span>{card.attack}</span>
+            </span>
+            <span className="text-blue-400 font-bold flex flex-col items-center leading-tight">
+              <span>{ICONS.shield}</span><span>{card.defence}</span>
+            </span>
+            <span className="text-yellow-400 font-bold flex flex-col items-center leading-tight">
+              <span>{ICONS.coin}</span><span>{card.sp}</span>
+            </span>
+          </div>
+        ) : (
+          <div className={`absolute bottom-0 left-0 right-0 bg-black/80 flex justify-between px-1.5 z-10 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
+            <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
+            <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
+            <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>
+          </div>
+        )
       )}
     </motion.div>
   );
