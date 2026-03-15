@@ -145,7 +145,7 @@ export default function CardInHand({ card, isSelected, variant, onSelect, disabl
       } ${TYPE_BORDER_STYLE[card.type] || ''} ${
         isSelected ? 'ring-2 ring-[var(--color-gold)] z-10' : ''
       } ${!canAfford && !isRowOrPopup ? 'opacity-50' : ''} ${
-        isTutorialHighlight && !isSelected ? 'ring-2 ring-[var(--color-gold)] animate-pulse shadow-[0_0_12px_rgba(212,175,55,0.6)]' : ''
+        isTutorialHighlight && !isSelected ? 'border-[var(--color-gold)] shadow-[0_0_12px_rgba(212,175,55,0.6)]' : ''
       }`}
       data-card-hover
       data-card-uid={card.uid}

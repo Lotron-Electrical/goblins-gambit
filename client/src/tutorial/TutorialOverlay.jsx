@@ -158,7 +158,11 @@ export default function TutorialOverlay() {
     : 'none';
 
   // Position prompt above center zone so it doesn't cover player UI
-  const promptTop = isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%');
+  // During attack targeting (player selected their creature, now picking opponent's), move prompt to bottom
+  // so it doesn't obscure the opponent's creature
+  const isAttackTargeting = config.expectedAction === 'attack' && selectedCard;
+  const promptTop = isAttackTargeting && isMobile ? undefined : (isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%'));
+  const promptBottom = isAttackTargeting && isMobile ? '140px' : undefined;
 
   return (
     <>
@@ -181,20 +185,6 @@ export default function TutorialOverlay() {
               boxShadow: spotlightShadow,
             }}
           />
-          {/* Pulsing gold ring around highlighted element */}
-          <div
-            className="animate-pulse"
-            style={{
-              position: 'absolute',
-              top: spotlightRect.top - 2,
-              left: spotlightRect.left - 2,
-              width: spotlightRect.width + 4,
-              height: spotlightRect.height + 4,
-              borderRadius: '10px',
-              border: '2px solid var(--color-gold)',
-              boxShadow: '0 0 12px rgba(212,175,55,0.6), inset 0 0 12px rgba(212,175,55,0.2)',
-            }}
-          />
         </div>
       )}
 
@@ -203,7 +193,7 @@ export default function TutorialOverlay() {
         <div className={`fixed z-50 pointer-events-auto left-1/2 -translate-x-1/2 ${
           isMobile ? 'w-[calc(100%-16px)]' : 'max-w-md w-full -translate-y-1/2'
         }`}
-          style={{ top: promptTop }}
+          style={{ top: promptTop, bottom: promptBottom }}
         >
           <div className={`bg-gray-900/95 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl ${
             isMobile ? 'px-3 py-2' : 'px-6 py-4'

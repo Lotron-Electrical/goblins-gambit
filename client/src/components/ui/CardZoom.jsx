@@ -13,7 +13,7 @@ const TYPE_COLOR = {
 };
 
 export default function CardZoom() {
-  const { zoomedCard, setZoomedCard, gameState, discardCard, recycleCreature, playCard, selectCard } = useStore();
+  const { zoomedCard, setZoomedCard, gameState, discardCard, recycleCreature, playCard, selectCard, tutorialEngine } = useStore();
   const isMobile = useIsMobile();
   const [confirmAction, setConfirmAction] = useState(null); // 'discard' | 'recycle' | null
 
@@ -31,6 +31,10 @@ export default function CardZoom() {
 
   if (!zoomedCard) return null;
   const card = zoomedCard;
+
+  // Tutorial: highlight the zoomed card with gold border if it's the tutorial target
+  const tutStepConfig = tutorialEngine ? tutorialEngine.getStepConfig() : null;
+  const isTutorialHighlight = tutStepConfig?.highlightCardUid === card.uid;
 
   // Determine if card is in player's hand or on their field
   const myId = gameState?.myId;
@@ -64,7 +68,9 @@ export default function CardZoom() {
         onClick={() => setZoomedCard(null)}
       >
         <div
-          className="w-full max-w-[300px] max-h-[85dvh] bg-gray-950 rounded-xl border-2 border-gray-700 overflow-hidden shadow-2xl flex flex-col"
+          className={`w-full max-w-[300px] max-h-[85dvh] bg-gray-950 rounded-xl border-2 overflow-hidden shadow-2xl flex flex-col ${
+            isTutorialHighlight ? 'border-[var(--color-gold)] shadow-[0_0_20px_rgba(212,175,55,0.5)]' : 'border-gray-700'
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Card art — cropped to artwork only, constrained height */}
@@ -227,7 +233,9 @@ export default function CardZoom() {
 
   // Desktop: side panel
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-[260px] z-40 flex flex-col shadow-2xl border-l-2 border-gray-700 bg-gray-950/95 animate-slide-in-right">
+    <div className={`fixed right-0 top-0 bottom-0 w-[260px] z-40 flex flex-col shadow-2xl border-l-2 bg-gray-950/95 animate-slide-in-right ${
+      isTutorialHighlight ? 'border-[var(--color-gold)] shadow-[0_0_20px_rgba(212,175,55,0.5)]' : 'border-gray-700'
+    }`}>
       {/* Close button */}
       <button
         onClick={() => setZoomedCard(null)}
