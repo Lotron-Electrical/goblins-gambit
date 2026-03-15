@@ -185,11 +185,11 @@ export default function CardInHand({ card, isSelected, variant, onSelect }) {
 
   return (
     <motion.div
-      className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden ${
+      className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden bg-gray-900 ${
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${TYPE_BORDER_STYLE[card.type] || ''} ${
         isSelected ? 'ring-2 ring-[var(--color-gold)] z-10' : ''
-      } ${!canAfford ? 'opacity-50' : ''} ${isBeingDragged ? 'opacity-50' : ''} ${
+      } ${!canAfford && !isRowOrPopup ? 'opacity-50' : ''} ${isBeingDragged ? 'opacity-50' : ''} ${
         isTutorialHighlight && !isSelected ? 'ring-2 ring-[var(--color-gold)] animate-pulse shadow-[0_0_12px_rgba(212,175,55,0.6)]' : ''
       }`}
       data-card-hover
@@ -250,6 +250,11 @@ export default function CardInHand({ card, isSelected, variant, onSelect }) {
         }`}>
           REACT
         </div>
+      )}
+
+      {/* Unaffordable darkening overlay for row/popup (instead of opacity which bleeds through overlapping cards) */}
+      {isRowOrPopup && !canAfford && (
+        <div className="absolute inset-0 bg-black/50 z-10 rounded-lg" />
       )}
 
       {/* Stats bar at bottom */}
