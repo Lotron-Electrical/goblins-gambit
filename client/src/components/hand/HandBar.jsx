@@ -12,7 +12,7 @@ import { hasActivatedAbility } from '../ui/abilityInfo.js';
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 const TYPE_ORDER = { Creature: 0, Magic: 1, Armour: 2, Tricks: 3 };
 
-function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
+function MobileCardInfoPanel({ card, onClose, onPlaceCreature, onPlayNonCreature }) {
   const { playCard, discardCard, gameState, tutorialEngine } = useStore();
   const [confirmAction, setConfirmAction] = useState(null);
 
@@ -144,7 +144,7 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
                 </button>
               ) : (
                 <button
-                  onClick={() => playCard(card.uid)}
+                  onClick={() => { playCard(card.uid); onPlayNonCreature?.(); }}
                   disabled={!canAfford}
                   data-tutorial={isTutorialHighlighted ? 'play-btn' : undefined}
                   className="flex-1 bg-green-800 disabled:bg-gray-800 disabled:text-gray-600 border border-green-600 disabled:border-gray-700 text-white font-bold py-2 rounded-lg text-[12px] transition"
@@ -741,6 +741,10 @@ export default function HandBar() {
                     onClose={() => setMobileSelectedCard(null)}
                     onPlaceCreature={() => {
                       selectCard(mobileSelectedCard);
+                      setMobileSelectedCard(null);
+                      setHandExpanded(false);
+                    }}
+                    onPlayNonCreature={() => {
                       setMobileSelectedCard(null);
                       setHandExpanded(false);
                     }}
