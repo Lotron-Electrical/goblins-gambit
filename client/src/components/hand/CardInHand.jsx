@@ -25,7 +25,8 @@ const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 const DRAG_THRESHOLD = 15;
 
 export default function CardInHand({ card, isSelected }) {
-  const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff, setDraggingCard, clearDraggingCard } = useStore();
+  const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff, setDraggingCard, clearDraggingCard, tutorialEngine } = useStore();
+  const isTutorialHighlight = tutorialEngine && tutorialEngine.getStepConfig()?.highlightCardUid === card.uid;
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
   const isReaction = REACTION_ABILITIES.includes(card.abilityId);
   const isMobile = useIsMobile();
@@ -149,7 +150,9 @@ export default function CardInHand({ card, isSelected }) {
         TYPE_BORDER[card.type] || 'border-gray-600'
       } ${TYPE_BORDER_STYLE[card.type] || ''} ${
         isSelected ? 'ring-2 ring-[var(--color-gold)] z-10' : ''
-      } ${!canAfford ? 'opacity-50' : ''} ${isBeingDragged ? 'opacity-50' : ''}`}
+      } ${!canAfford ? 'opacity-50' : ''} ${isBeingDragged ? 'opacity-50' : ''} ${
+        isTutorialHighlight && !isSelected ? 'ring-2 ring-[var(--color-gold)] animate-pulse shadow-[0_0_12px_rgba(212,175,55,0.6)]' : ''
+      }`}
       data-card-hover
       data-card-uid={card.uid}
       onClick={handleClick}

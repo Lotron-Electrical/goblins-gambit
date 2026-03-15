@@ -63,9 +63,11 @@ export default function TutorialOverlay() {
 
   useEffect(() => {
     updateSpotlight();
+    // Run again after next frame to catch Framer Motion layout shifts
+    const raf = requestAnimationFrame(() => updateSpotlight());
     // Poll for position changes (layout shifts, scroll)
     const interval = setInterval(updateSpotlight, 300);
-    return () => clearInterval(interval);
+    return () => { cancelAnimationFrame(raf); clearInterval(interval); };
   }, [updateSpotlight]);
 
   // Handle opponent thinking interstitial after end turn

@@ -19,7 +19,7 @@ const CARD_TYPE_COLOR = {
 };
 
 export default function PlayerField({ player, playerId, isOpponent, isCurrentTurn, compact }) {
-  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard, theme, attackingCardUid, defendingCardUid, draggingCard, clearDraggingCard } = useStore();
+  const { selectedCard, targetMode, attack, selectTarget, gameState, useAbility, setZoomedCard, playCard, setHoveredCard, clearHoveredCard, theme, attackingCardUid, defendingCardUid, draggingCard, clearDraggingCard, tutorialMode } = useStore();
   const isMobile = useIsMobile();
   const isCompact = compact || isMobile;
 
@@ -235,7 +235,9 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
                         isOpponent={isOpponent}
                         onClick={() => handleCreatureClick(creature)}
                         isValidTarget={
-                          gameState?.pendingTarget?.validTargets?.some(t => t.uid === creature.uid) || false
+                          (gameState?.pendingTarget?.validTargets?.some(t => t.uid === creature.uid))
+                          || (isOpponent && tutorialMode && selectedCard && selectedCard._zone === 'swamp')
+                          || false
                         }
                         isAttacking={attackingCardUid === creature.uid}
                         isDefending={defendingCardUid === creature.uid}
