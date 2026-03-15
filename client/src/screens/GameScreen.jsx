@@ -37,9 +37,9 @@ function OpponentBar({ player, playerId, isCurrentTurn, isExpanded, onTap, gameS
       } ${isExpanded ? 'ring-1 ring-blue-500' : ''}`}
     >
       <div className="flex items-center gap-1.5 min-w-0">
-        <span className="text-red-400 font-bold text-[11px] truncate max-w-[120px]">{player.name}</span>
-        {isCurrentTurn && <span className="text-[var(--color-gold)] text-[9px]">TURN</span>}
-        {player.playerShield > 0 && <span className="text-cyan-400 text-[9px]">{player.playerShield}Sh</span>}
+        {player.playerShield > 0 && <span className="text-cyan-400 text-[9px] font-bold shrink-0">{player.playerShield}Sh</span>}
+        <span className="text-red-400 font-bold text-[11px] truncate max-w-[100px]">{player.name}</span>
+        {isCurrentTurn && <span className="text-[var(--color-gold)] text-[9px] shrink-0">TURN</span>}
       </div>
       <div className="flex items-center gap-2 text-[10px]">
         <span className="text-gray-400">{creatureCount} creat.</span>

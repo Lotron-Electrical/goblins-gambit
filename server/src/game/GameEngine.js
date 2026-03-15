@@ -44,6 +44,23 @@ export class GameEngine {
     this.actionLog = [];
   }
 
+  /** Safety timeout for pending target selection (20s, like Dead Meme choice) */
+  _startPendingTargetTimeout() {
+    clearTimeout(this._pendingTargetTimeout);
+    this._pendingTargetTimeout = setTimeout(() => {
+      if (this.state.pendingTarget) {
+        this.state.pendingTarget = null;
+        this.state.turnPhase = TURN_PHASE.MAIN;
+        this.state.animations.push({ type: 'buff', text: 'Target selection timed out' });
+        if (this._onPendingTargetTimeout) this._onPendingTargetTimeout();
+      }
+    }, 20000);
+  }
+
+  _clearPendingTargetTimeout() {
+    clearTimeout(this._pendingTargetTimeout);
+  }
+
   getStateForPlayer(playerId) {
     return getClientState(this.state, playerId);
   }
@@ -181,6 +198,7 @@ export class GameEngine {
     if (result.needsTarget) {
       this.state.pendingTarget = result.targetRequest;
       this.state.turnPhase = TURN_PHASE.TARGETING;
+      this._startPendingTargetTimeout();
       this.state.animations.push(...(result.events || []));
       return { success: true, events: result.events, needsTarget: true };
     }
@@ -217,6 +235,12 @@ export class GameEngine {
 
     if (attackerCard._hasAttacked) {
       return { success: false, error: 'This creature already attacked this turn' };
+    }
+
+    // Block 0-ATK creatures from attacking (wastes AP for nothing)
+    const preCheckStats = getEffectiveStats(this.state, playerId, attackerCard);
+    if (preCheckStats.attack <= 0) {
+      return { success: false, error: 'This creature has no attack power' };
     }
 
     const defenderPlayer = this.state.players[defenderOwnerId];
@@ -544,6 +568,7 @@ export class GameEngine {
       this.state.pendingTarget = result.targetRequest;
       this.state.pendingTarget.abilityActivation = true;
       this.state.turnPhase = TURN_PHASE.TARGETING;
+      this._startPendingTargetTimeout();
       this.state.animations.push(...(result.events || []));
       return { success: true, events: result.events, needsTarget: true };
     }
@@ -561,6 +586,7 @@ export class GameEngine {
   }
 
   handleTargetSelection(playerId, action) {
+    this._clearPendingTargetTimeout();
     const pending = this.state.pendingTarget;
     if (!pending || pending.playerId !== playerId) {
       return { success: false, error: 'No pending target selection for you' };

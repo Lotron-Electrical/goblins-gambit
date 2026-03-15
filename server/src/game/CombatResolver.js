@@ -176,6 +176,19 @@ function resolveAttackDamage(state, attackerId, defenderOwnerId, attackerCard, d
         events.push({ type: 'destroy', cardUid: adj.uid, owner: defenderOwnerId });
         events.push({ type: 'sp_change', playerId: attackerId, amount: adjStats.sp });
         killCreature(state, defenderOwnerId, adj.uid);
+        // Dead Meme trigger on splash kill
+        if (adj.abilityId === 'dead_meme_revive' && !adj._silenced && !deadMemeTriggered) {
+          const topGrave = state.graveyard.slice(-6);
+          if (topGrave.length > 0) {
+            deadMemeTriggered = true;
+            deadMemeChoice = {
+              playerId: defenderOwnerId,
+              type: 'dead_meme',
+              cards: topGrave,
+              prompt: 'Dead Meme died! Choose a card from the graveyard to return to your hand',
+            };
+          }
+        }
       }
     }
   }

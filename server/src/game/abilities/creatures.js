@@ -171,14 +171,15 @@ export function harambe_plant(state, playerId, card, cardIdx, targetInfo) {
     return { success: true, events };
   }
 
-  // Remove from current owner's swamp (it was placed there by resolveCreature)
-  const myIdx = player.swamp.findIndex(c => c.uid === card.uid);
-  if (myIdx !== -1) player.swamp.splice(myIdx, 1);
-
   // Place in opponent's swamp
   const { targetOwnerId } = targetInfo;
   const opponent = state.players[targetOwnerId];
   if (!opponent) return { success: false, events, error: 'Target player not found' };
+
+  // Remove from current owner's swamp (it was placed there by resolveCreature)
+  const myIdx = player.swamp.findIndex(c => c.uid === card.uid);
+  if (myIdx !== -1) player.swamp.splice(myIdx, 1);
+
   if (opponent.swamp.length < MAX_SWAMP_SIZE) {
     card._originalOwner = playerId;
     card._controller = targetOwnerId;
@@ -187,6 +188,10 @@ export function harambe_plant(state, playerId, card, cardIdx, targetInfo) {
     card._slot = getNextFreeSlot(opponent);
     opponent.swamp.push(card);
     events.push({ type: 'card_moved', cardUid: card.uid, from: playerId, to: targetOwnerId, reason: 'Harambe planted!' });
+  } else {
+    // Opponent swamp full — Harambe goes to graveyard instead of vanishing
+    state.graveyard.push(card);
+    events.push({ type: 'destroy', cardUid: card.uid, owner: playerId, reason: 'Opponent swamp full — Harambe discarded' });
   }
   return { success: true, events };
 }

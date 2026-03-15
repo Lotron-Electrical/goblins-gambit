@@ -91,8 +91,8 @@ export default function HandBar() {
       <div className="relative bg-gray-950/90 border-t border-gray-800 shrink-0 overflow-visible z-30">
         {/* Reaction banner */}
         {hasReaction && (
-          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-1 mb-1 mx-1 mt-1 text-center animate-[pulse_0.6s_ease-in-out_2] shadow-[0_0_8px_rgba(234,88,12,0.3)]">
-            <span className="text-orange-300 text-[10px] font-bold">You can react to {currentPlayerName}'s turn! Tap a REACT card.</span>
+          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mt-0.5 text-center animate-[pulse_0.6s_ease-in-out_2]">
+            <span className="text-orange-300 text-[9px] font-bold">REACT to {currentPlayerName}'s turn!</span>
           </div>
         )}
         {/* Type tabs + action buttons in one row */}

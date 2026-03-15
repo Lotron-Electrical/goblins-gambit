@@ -20,6 +20,24 @@ export default function TargetPicker({ mobileCenterY }) {
 
   if (!pending) return null;
 
+  // Auto-dismiss if no valid targets (prevents dialog lock)
+  if (!pending.validTargets || pending.validTargets.length === 0) {
+    return (
+      <div className="fixed inset-0 z-40 bg-black/50 pointer-events-auto flex items-center justify-center">
+        <div className={`bg-gray-900 border border-[var(--color-gold)] rounded-xl shadow-2xl ${isMobile ? 'p-3 max-w-sm' : 'p-6 max-w-md'}`}>
+          <h3 className={`font-display text-[var(--color-gold)] ${isMobile ? 'text-lg mb-2' : 'text-xl mb-3'}`}>No Valid Targets</h3>
+          <p className={`text-gray-300 ${isMobile ? 'text-[13px] mb-3' : 'text-[14px] mb-4'}`}>{pending.prompt}</p>
+          <button
+            onClick={() => selectTarget(null, null)}
+            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition text-[14px]"
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const isPlayerTarget = pending.targetType === 'player';
   const isMultiTarget = pending.maxTargets && pending.maxTargets > 1;
 

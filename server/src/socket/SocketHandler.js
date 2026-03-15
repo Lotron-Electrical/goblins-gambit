@@ -457,6 +457,12 @@ export function setupSocketHandlers(io, lobby) {
         runBotTurn(roomId, result.engine);
       };
 
+      // Wire up pending target timeout callback
+      result.engine._onPendingTargetTimeout = () => {
+        broadcastState(roomId, result.engine);
+        runBotTurn(roomId, result.engine);
+      };
+
       // Send initial state to each human player
       for (const p of result.room.players) {
         if (botIds.has(p.id)) continue;

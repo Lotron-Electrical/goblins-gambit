@@ -114,8 +114,13 @@ export function decideBotAction(state, difficulty = 'medium') {
   }
 
   // 5. Buy AP if we have lots of SP and useful cards/attacks remaining — hard only
-  if (difficulty === 'hard' && me.sp >= 2000 && me.hand.length > 3 && me.ap <= 1) {
-    return { type: ACTION.BUY_AP };
+  if (difficulty === 'hard' && me.sp >= 2000 && me.ap <= 1) {
+    // Buy AP more aggressively: if hand has playable cards or creatures can still attack
+    const hasPlayable = me.hand.some(c => !c.hidden && c.cost <= 2);
+    const hasUnattacked = me.swamp.some(c => !c._hasAttacked && !c._harambeOwner);
+    if (hasPlayable || hasUnattacked) {
+      return { type: ACTION.BUY_AP };
+    }
   }
 
   // 6. Recycle a creature that's about to die (low HP, high defence value for shield)
@@ -199,6 +204,11 @@ function pickCardToPlay(state, me) {
   return action;
 }
 
+/** Check if an opponent has Book Witch spell protection active */
+function hasBookWitchProtection(opponent) {
+  return opponent.swamp.some(c => c.abilityId === 'book_witch_shield' && !c._silenced);
+}
+
 function scoreCard(state, me, card) {
   const opponents = getOpponents(state);
 
@@ -214,33 +224,58 @@ function scoreCard(state, me, card) {
       if (card.abilityId) score += 2;
       // High priority for taunt (Gamer Boy) if we have multiple creatures
       if (card.abilityId === 'gamer_boy_taunt' && me.swamp.length >= 1) score += 3;
+      // King Goblin synergy: boost if Lesser Goblins are on field
+      if (card.abilityId === 'king_goblin_buff') {
+        const lesserCount = me.swamp.filter(c => c.id === 'lesser_goblin').length;
+        score += lesserCount * 2;
+      }
+      // Lesser Goblin: boost if King Goblin is on field
+      if (card.id === 'lesser_goblin' && me.swamp.some(c => c.id === 'king_goblin')) {
+        score += 2;
+      }
+      // Grencle debuff: higher value with more enemy creatures
+      if (card.abilityId === 'grencle_debuff') {
+        const totalEnemyCreatures = opponents.reduce((sum, o) => sum + o.swamp.length, 0);
+        score += totalEnemyCreatures * 1.5;
+      }
+      // Motherdazer: boost if we have adjacent slot neighbors
+      if (card.abilityId === 'motherdazer_buff' && me.swamp.length >= 1) score += 2;
+      // Book Witch: high value as spell protection
+      if (card.abilityId === 'book_witch_shield') score += 3;
+      // Karen: counter-kill trades, valuable against strong creatures
+      if (card.abilityId === 'karen_counter') {
+        const hasStrongEnemy = opponents.some(o => o.swamp.some(c => (c.attack || 0) >= 400));
+        if (hasStrongEnemy) score += 3;
+      }
       return Math.max(1, score);
     }
 
     case CARD_TYPE.MAGIC: {
+      // Filter opponents without Book Witch protection for targeted spells
+      const unprotectedOpponents = opponents.filter(o => !hasBookWitchProtection(o));
+
       // Score magic based on current board state
       if (card.abilityId === 'smesh_damage') {
-        return hasOpponentCreatures(opponents) ? 5 : 0;
+        return hasOpponentCreatures(unprotectedOpponents) ? 5 : 0;
       }
       if (card.abilityId === 'savage_destroy') {
-        // Save for high-value targets
-        const bestTarget = getBestOpponentCreature(opponents);
+        const bestTarget = getBestOpponentCreature(unprotectedOpponents);
         return bestTarget ? 6 + (bestTarget.attack || 0) / 200 : 0;
       }
       if (card.abilityId === 'ooft_buff' || card.abilityId === 'thicc_buff') {
-        return me.swamp.length > 0 ? 4 : 0;
+        return me.swamp.length > 0 ? 4 : 0; // Buffs target own creatures, not blocked
       }
       if (card.abilityId === 'judgment_steal') {
-        return me.sp === 1000 ? 10 : 0; // Only playable at exactly 1000 SP
+        return me.sp === 1000 && hasOpponentCreatures(unprotectedOpponents) ? 10 : 0;
       }
       if (card.abilityId === 'yeet_discard') {
-        return hasOpponentWithCards(opponents) ? 4 : 0;
+        return hasOpponentWithCards(unprotectedOpponents) ? 4 : 0;
       }
       if (card.abilityId === 'finesse_steal') {
-        return hasOpponentWithCards(opponents) ? 5 : 0;
+        return hasOpponentWithCards(unprotectedOpponents) ? 5 : 0;
       }
       if (card.abilityId === 'snacc_control') {
-        return hasOpponentCreatures(opponents) ? 7 : 0;
+        return hasOpponentCreatures(unprotectedOpponents) ? 7 : 0;
       }
       if (card.abilityId === 'lerker_draw') {
         return me.hand.length < 6 ? 5 : 1;
@@ -248,11 +283,12 @@ function scoreCard(state, me, card) {
       if (card.abilityId === 'woke_peek') return 2;
       if (card.abilityId === 'ama_reveal') return 2;
       if (card.abilityId === 'stfu_silence') {
-        // Silence creatures with abilities
-        const abilityCreature = getOpponentCreatureWithAbility(opponents);
+        const abilityCreature = getOpponentCreatureWithAbility(unprotectedOpponents);
         return abilityCreature ? 6 : 0;
       }
-      if (card.abilityId === 'lagg_delay') return 3;
+      if (card.abilityId === 'lagg_delay') {
+        return unprotectedOpponents.length > 0 ? 3 : 0;
+      }
       return 3; // Default magic score
     }
 
@@ -278,35 +314,39 @@ function scoreCard(state, me, card) {
 
 function getPlayTargetInfo(state, me, card) {
   const opponents = getOpponents(state);
+  // For targeted magic, skip Book Witch-protected opponents
+  const unprotected = card.type === CARD_TYPE.MAGIC
+    ? opponents.filter(o => !hasBookWitchProtection(o))
+    : opponents;
 
   // Cards that need a creature target
   if (['smesh_damage', 'savage_destroy', 'ooft_buff', 'thicc_buff', 'stfu_silence'].includes(card.abilityId)) {
     if (['ooft_buff', 'thicc_buff'].includes(card.abilityId)) {
-      // Target own creature
+      // Target own creature (not blocked by Book Witch)
       const best = [...me.swamp].sort((a, b) => (b.attack || 0) - (a.attack || 0))[0];
       if (best) return { targetOwnerId: me.id, targetUid: best.uid };
     } else {
       // Target opponent creature
-      const target = getBestOpponentCreature(opponents);
+      const target = getBestOpponentCreature(unprotected);
       if (target) return { targetOwnerId: target._ownerId, targetUid: target.uid };
     }
   }
 
   // Cards that need a player target
   if (['yeet_discard', 'finesse_steal', 'ama_reveal', 'lagg_delay', 'thief_steal', 'king_thief_steal'].includes(card.abilityId)) {
-    const opp = pickBestOpponent(opponents);
+    const opp = pickBestOpponent(unprotected);
     if (opp) return { targetOwnerId: opp.id };
   }
 
   // Snacc — target best opponent creature
   if (card.abilityId === 'snacc_control') {
-    const target = getBestOpponentCreature(opponents);
+    const target = getBestOpponentCreature(unprotected);
     if (target) return { targetOwnerId: target._ownerId, targetUid: target.uid };
   }
 
   // Judgment — target opponent with most creatures
   if (card.abilityId === 'judgment_steal') {
-    const opp = [...opponents].sort((a, b) => b.swamp.length - a.swamp.length)[0];
+    const opp = [...unprotected].sort((a, b) => b.swamp.length - a.swamp.length)[0];
     if (opp) return { targetOwnerId: opp.id };
   }
 
@@ -733,6 +773,7 @@ function getBestOpponentCreature(opponents) {
   let bestScore = -1;
   for (const opp of opponents) {
     for (const c of opp.swamp) {
+      if (c._invisible) continue; // Can't target invisible creatures
       const score = (c.attack || 0) + (c.sp || 0);
       if (score > bestScore) {
         bestScore = score;
@@ -746,7 +787,7 @@ function getBestOpponentCreature(opponents) {
 function getOpponentCreatureWithAbility(opponents) {
   for (const opp of opponents) {
     for (const c of opp.swamp) {
-      if (c.abilityId && !c._silenced) return { ...c, _ownerId: opp.id };
+      if (c.abilityId && !c._silenced && !c._invisible) return { ...c, _ownerId: opp.id };
     }
   }
   return null;

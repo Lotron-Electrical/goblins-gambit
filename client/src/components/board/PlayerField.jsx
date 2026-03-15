@@ -58,19 +58,28 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
   const myId = gameState?.myId;
   const isBerserk = gameState?.berserkPlayerIds?.includes(myId);
 
+  // Account for Swapeewee stat swap in attack calculations
+  const getAttackerAtk = (card) => {
+    const isSwapped = card.abilityId === 'swapeewee_swap' && card._swapped;
+    const baseAtk = isSwapped ? (card.defence || 0) : (card.attack || 0);
+    return baseAtk + (card._attackBuff || 0);
+  };
+
   const getPrediction = (targetCreature) => {
     if (!isOpponent || !isMyTurn || !selectedCard || selectedCard._zone !== 'swamp') return null;
-    const atkBase = (selectedCard.attack || 0) + (selectedCard._attackBuff || 0);
+    const atkBase = getAttackerAtk(selectedCard);
     let atk = Math.floor(atkBase * (themeEffects.atkMultiplier || 1));
     if (isBerserk && themeEffects.berserkMultiplier) atk = Math.floor(atk * themeEffects.berserkMultiplier);
-    const targetDef = Math.max(0, (targetCreature.defence || 0) - (targetCreature._defenceDamage || 0) + (targetCreature._defenceBuff || 0) + (targetCreature._tempShield || 0));
+    const isTargetSwapped = targetCreature.abilityId === 'swapeewee_swap' && targetCreature._swapped;
+    const tBaseDef = isTargetSwapped ? (targetCreature.attack || 0) : (targetCreature.defence || 0);
+    const targetDef = Math.max(0, tBaseDef - (targetCreature._defenceDamage || 0) + (targetCreature._defenceBuff || 0) + (targetCreature._tempShield || 0));
     const kills = atk >= targetDef;
     return { atk, def: targetDef, kills };
   };
 
   const getDirectPrediction = () => {
     if (!selectedCard || selectedCard._zone !== 'swamp') return null;
-    const atkBase = (selectedCard.attack || 0) + (selectedCard._attackBuff || 0);
+    const atkBase = getAttackerAtk(selectedCard);
     let atk = Math.floor(atkBase * (themeEffects.atkMultiplier || 1));
     if (isBerserk && themeEffects.berserkMultiplier) atk = Math.floor(atk * themeEffects.berserkMultiplier);
     const shield = player.playerShield || 0;
@@ -177,7 +186,7 @@ export default function PlayerField({ player, playerId, isOpponent, isCurrentTur
               {armour ? (
                 <div className="flex items-center gap-1 px-1">
                   <span className={`text-purple-300 font-medium truncate ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{armour.name}</span>
-                  <span className={`text-gray-400 ${isMobile ? 'text-[6px]' : 'text-[9px]'}`}>{armour._turnsRemaining ?? armour.durability}T</span>
+                  <span className={`font-bold ${(armour._turnsRemaining ?? armour.durability) <= 1 ? 'text-red-400 animate-pulse' : 'text-gray-400'} ${isMobile ? 'text-[6px]' : 'text-[9px]'}`}>{armour._turnsRemaining ?? armour.durability}T</span>
                 </div>
               ) : (
                 <span className={`text-gray-700 ${isMobile ? 'text-[7px]' : 'text-[10px]'}`}>{slot}</span>
