@@ -229,11 +229,11 @@ export default function TutorialOverlay() {
           className="fixed z-50 pointer-events-none"
           style={{
             left: spotlightRect.left + spotlightRect.width / 2 - 12,
-            top: spotlightRect.top - 28,
+            bottom: 8,
           }}
         >
           <div className="animate-bounce text-[var(--color-gold)] text-[20px] drop-shadow-[0_0_6px_rgba(212,175,55,0.8)]">
-            &#9660;
+            &#9650;
           </div>
         </div>
       )}
