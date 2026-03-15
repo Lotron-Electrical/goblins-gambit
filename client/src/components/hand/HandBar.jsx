@@ -23,6 +23,7 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
   // In tutorial, only allow playing the highlighted card
   const tutStepConfig = tutorialEngine ? tutorialEngine.getStepConfig() : null;
   const isTutorialBlocked = tutorialEngine && tutStepConfig?.highlightCardUid && tutStepConfig.highlightCardUid !== card.uid;
+  const isTutorialHighlighted = tutorialEngine && tutStepConfig?.highlightCardUid === card.uid;
   const canPlay = isInMyHand && isMyTurn && !isTutorialBlocked;
   const canDiscard = isInMyHand && isMyTurn && !isTutorialBlocked;
 
@@ -36,7 +37,11 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
   return (
     <motion.div
       key={card.uid}
-      className="mx-3 mb-2 bg-gray-950/95 rounded-xl border border-gray-700 overflow-hidden shadow-2xl"
+      className={`mx-3 mb-2 bg-gray-950/95 rounded-xl overflow-hidden shadow-2xl ${
+        isTutorialHighlighted
+          ? 'relative z-50 border-2 border-[var(--color-gold)] ring-2 ring-[var(--color-gold)]/50'
+          : 'border border-gray-700'
+      }`}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.95, opacity: 0 }}
