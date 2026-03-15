@@ -115,10 +115,18 @@ export const useStore = create((set, get) => ({
 
   createRoom: (options = {}) => {
     const { playerName } = get();
+    if (!socket.connected) {
+      set({ error: 'Not connected to server — try refreshing' });
+      return;
+    }
     socket.emit(EVENTS.CREATE_ROOM, { name: playerName, options }, (res) => {
-      if (res.room) {
+      if (res?.error) {
+        set({ error: res.error });
+      } else if (res?.room) {
         sessionStorage.setItem('gg_roomId', res.room.id);
         set({ currentRoom: res.room, screen: 'room' });
+      } else {
+        set({ error: 'Failed to create room — no response from server' });
       }
     });
   },
@@ -142,10 +150,18 @@ export const useStore = create((set, get) => ({
   },
 
   toggleReady: () => {
+    if (!socket.connected) {
+      set({ error: 'Not connected to server — try refreshing' });
+      return;
+    }
     socket.emit(EVENTS.READY_UP);
   },
 
   startGame: () => {
+    if (!socket.connected) {
+      set({ error: 'Not connected to server — try refreshing' });
+      return;
+    }
     socket.emit(EVENTS.START_GAME, null, (res) => {
       if (res?.error) set({ error: res.error });
     });

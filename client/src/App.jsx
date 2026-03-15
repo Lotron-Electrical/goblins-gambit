@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, Component } from 'react';
 import { useStore } from './store.js';
 import LoginScreen from './screens/LoginScreen.jsx';
 import LobbyScreen from './screens/LobbyScreen.jsx';
@@ -6,7 +6,39 @@ import RoomScreen from './screens/RoomScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
 import TutorialScreen from './screens/TutorialScreen.jsx';
 
-export default function App() {
+// Error boundary to catch React render crashes and show the error instead of blank screen
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error('[ErrorBoundary]', error, info?.componentStack);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 20, color: '#ff6b6b', background: '#1a1a2e', minHeight: '100vh', fontFamily: 'monospace' }}>
+          <h2 style={{ color: '#ffd93d' }}>Something went wrong</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 10 }}>{this.state.error?.message || String(this.state.error)}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, color: '#888', marginTop: 10 }}>{this.state.error?.stack}</pre>
+          <button
+            onClick={() => { this.setState({ error: null }); window.location.reload(); }}
+            style={{ marginTop: 20, padding: '10px 20px', background: '#ffd93d', color: '#000', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function AppInner() {
   const { screen, connected, error, clearError, connect, authToken, loadProfile } = useStore();
 
   // Auto-login with saved token on mount
@@ -54,5 +86,13 @@ export default function App() {
       {screen === 'tutorial' && <TutorialScreen />}
       {!['lobby', 'room', 'game', 'tutorial'].includes(screen) && <LobbyScreen />}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner />
+    </ErrorBoundary>
   );
 }
