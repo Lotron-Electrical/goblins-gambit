@@ -643,7 +643,7 @@ export default function HandBar() {
 
   if (isMobile) {
     return (
-      <div className="relative shrink-0 z-30">
+      <div className={`relative shrink-0 ${tutorialHighlightUid ? 'z-50' : 'z-30'}`}>
         {/* Reaction banner — always visible */}
         {hasReaction && (
           <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mb-0.5 text-center animate-[pulse_0.6s_ease-in-out_2]">
