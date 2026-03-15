@@ -1,20 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store.js';
+import { motion, AnimatePresence } from 'framer-motion';
 import CardInHand from './CardInHand.jsx';
 import ActivityLog from '../ui/ActivityLog.jsx';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { TYPE_ICON } from '../ui/icons.js';
 
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
-
-const TAB_LABELS = { Creature: 'Creat.', Magic: 'Magic', Armour: 'Armr.', Tricks: 'Tricks' };
-
-const HAND_TABS = [
-  { type: 'Creature', inactive: 'bg-red-950/40 border-red-800/50 text-red-400', active: 'bg-red-700 border-red-500 text-white' },
-  { type: 'Magic', inactive: 'bg-blue-950/40 border-blue-800/50 text-blue-400', active: 'bg-blue-700 border-blue-500 text-white' },
-  { type: 'Armour', inactive: 'bg-gray-900/40 border-gray-600/50 text-gray-400', active: 'bg-gray-600 border-gray-400 text-white' },
-  { type: 'Tricks', inactive: 'bg-green-950/40 border-green-800/50 text-green-400', active: 'bg-green-700 border-green-500 text-white' },
-];
 
 export default function HandBar() {
   const { gameState, selectedCard, drawCard, endTurn, buyAP } = useStore();
@@ -39,133 +31,222 @@ export default function HandBar() {
   buyAPCost = Math.max(0, buyAPCost);
   const canBuyAP = myPlayer.sp >= buyAPCost;
 
-  // Mobile: tabbed hand by card type
-  const [activeTab, setActiveTab] = useState('Creature');
+  // Mobile: collapsed/expanded hand (no tabs)
+  const [handExpanded, setHandExpanded] = useState(false);
+  const [mobileSelectedCard, setMobileSelectedCard] = useState(null);
+  const cardRowRef = useRef(null);
 
-  // Tutorial: auto-switch to the tab the tutorial wants + highlight it
+  // Tutorial: auto-expand and scroll to highlighted card
   const tutorialEngine = useStore(s => s.tutorialEngine);
-  const tutorialTabHint = tutorialEngine ? tutorialEngine.getStepConfig()?.tabHint : null;
   const tutorialHighlightUid = tutorialEngine ? tutorialEngine.getStepConfig()?.highlightCardUid : null;
+  const tutorialTabHint = tutorialEngine ? tutorialEngine.getStepConfig()?.tabHint : null;
   useEffect(() => {
-    if (!tutorialEngine || !isMobile) return;
+    if (!isMobile || !tutorialEngine) return;
     const config = tutorialEngine.getStepConfig();
-    if (config.tabHint && config.tabHint !== activeTab) {
-      setActiveTab(config.tabHint);
+    if (config.highlightCardUid || config.tabHint) {
+      setHandExpanded(true);
+      // Scroll to highlighted card after expansion
+      if (config.highlightCardUid) {
+        setTimeout(() => {
+          const el = cardRowRef.current?.querySelector(`[data-card-uid="${config.highlightCardUid}"]`);
+          el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }, 300);
+      }
     }
-  }, [tutorialEngine, isMobile]);
+  }, [tutorialEngine, isMobile, tutorialHighlightUid, tutorialTabHint]);
 
-  // Track hand counts per type for draw glow
-  const prevCountsRef = useRef({});
-  const [glowingTabs, setGlowingTabs] = useState({});
-
+  // Track hand count for draw flash on collapsed strip
+  const prevHandCount = useRef(hand.length);
+  const [stripFlash, setStripFlash] = useState(false);
   useEffect(() => {
-    const newCounts = {};
-    for (const tab of HAND_TABS) {
-      newCounts[tab.type] = hand.filter(c => c.type === tab.type).length;
+    if (hand.length > prevHandCount.current && !handExpanded) {
+      setStripFlash(true);
+      const t = setTimeout(() => setStripFlash(false), 800);
+      prevHandCount.current = hand.length;
+      return () => clearTimeout(t);
     }
-    const prev = prevCountsRef.current;
-    prevCountsRef.current = newCounts;
-    if (Object.keys(prev).length > 0) {
-      const glows = {};
-      for (const type of Object.keys(newCounts)) {
-        if (newCounts[type] > (prev[type] || 0)) {
-          glows[type] = true;
-        }
-      }
-      if (Object.keys(glows).length > 0) {
-        setGlowingTabs(glows);
-        const timer = setTimeout(() => setGlowingTabs({}), 1200);
-        return () => clearTimeout(timer);
-      }
+    prevHandCount.current = hand.length;
+  }, [hand.length, handExpanded]);
+
+  // Auto-collapse when hand empties
+  useEffect(() => {
+    if (hand.length === 0 && handExpanded) setHandExpanded(false);
+  }, [hand.length, handExpanded]);
+
+  // Clear mobile selection if card leaves hand
+  useEffect(() => {
+    if (mobileSelectedCard && !hand.some(c => c.uid === mobileSelectedCard.uid)) {
+      setMobileSelectedCard(null);
     }
-  }, [hand.length]);
+  }, [hand, mobileSelectedCard]);
+
+  const handleMobileSelect = useCallback((card) => {
+    setMobileSelectedCard(prev => prev?.uid === card.uid ? null : card);
+  }, []);
 
   if (isMobile) {
-    const filteredCards = hand.filter(c => c.type === activeTab);
-    const tabCounts = {};
-    for (const tab of HAND_TABS) {
-      tabCounts[tab.type] = hand.filter(c => c.type === tab.type).length;
-    }
-
     return (
-      <div className="relative bg-gray-950/90 border-t border-gray-800 shrink-0 overflow-visible z-30">
-        {/* Reaction banner */}
+      <div className="relative shrink-0 z-30">
+        {/* Reaction banner — always visible */}
         {hasReaction && (
-          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mt-0.5 text-center animate-[pulse_0.6s_ease-in-out_2]">
+          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mb-0.5 text-center animate-[pulse_0.6s_ease-in-out_2]">
             <span className="text-orange-300 text-[9px] font-bold">REACT to {currentPlayerName}'s turn!</span>
           </div>
         )}
-        {/* Type tabs + action buttons in one row */}
-        <div className="flex">
-          <div className="flex flex-1 min-w-0">
-            {HAND_TABS.map(tab => {
-              const isActive = activeTab === tab.type;
-              const count = tabCounts[tab.type];
-              const isGlowing = glowingTabs[tab.type];
-              const isTutorialTab = tutorialTabHint === tab.type;
-              return (
-                <button
-                  key={tab.type}
-                  onClick={() => setActiveTab(tab.type)}
-                  data-tutorial-tab={tab.type}
-                  className={`flex-1 flex items-center justify-center gap-0.5 py-3 text-[11px] font-bold transition-colors border-b-2 ${
-                    isActive ? tab.active : tab.inactive
-                  } ${isGlowing ? 'animate-[pulse_0.4s_ease-in-out_3] ring-1 ring-white/40' : ''} ${
-                    isTutorialTab && !isActive ? 'ring-2 ring-[var(--color-gold)] animate-pulse shadow-[0_0_12px_rgba(212,175,55,0.6)]' : ''
-                  }`}
-                >
-                  <span className="text-[12px]">{TYPE_ICON[tab.type]}</span>
-                  {count > 0 && (
-                    <span className={`text-[9px] rounded-full min-w-[14px] h-[14px] flex items-center justify-center ${
-                      isActive ? 'bg-white/20' : 'bg-gray-700'
-                    }`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-0.5 px-0.5 shrink-0 border-b-2 border-gray-800">
-            <button
-              onClick={drawCard}
-              disabled={!isMyTurn || myPlayer.ap < 1}
-              data-tutorial="draw-btn"
-              className="bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-3 py-2.5 rounded text-[11px] transition"
-            >
-              Draw
-            </button>
-            <button
-              onClick={buyAP}
-              disabled={!isMyTurn || !canBuyAP}
-              data-tutorial="buy-ap-btn"
-              className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-3 py-2.5 rounded text-[11px] transition"
-            >
-              Buy
-            </button>
-            <button
-              onClick={endTurn}
-              disabled={!isMyTurn}
-              data-tutorial="end-turn-btn"
-              className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-3 py-2.5 rounded text-[11px] transition"
-            >
-              End
-            </button>
-          </div>
-        </div>
-        {/* Cards for active tab */}
-        <div className="flex gap-0.5 justify-start items-end overflow-x-auto overflow-y-visible pb-1 px-1 pt-1 min-h-[100px]">
-          {filteredCards.map((card) => (
-            <CardInHand
-              key={card.uid}
-              card={card}
-              isSelected={selectedCard?.uid === card.uid}
+
+        {/* Expanded overlay backdrop */}
+        <AnimatePresence>
+          {handExpanded && (
+            <motion.div
+              className="fixed inset-0 bg-black/60 z-20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => { setHandExpanded(false); setMobileSelectedCard(null); }}
             />
-          ))}
-          {filteredCards.length === 0 && (
-            <div className="text-gray-600 py-2 text-[11px] w-full text-center">No {activeTab.toLowerCase()} cards</div>
           )}
-        </div>
+        </AnimatePresence>
+
+        {/* Collapsed strip */}
+        {!handExpanded && (
+          <div
+            className={`bg-gray-950/90 border-t border-gray-800 px-2 py-1 ${
+              stripFlash ? 'ring-2 ring-[var(--color-gold)] animate-[pulse_0.3s_ease-in-out_2]' : ''
+            }`}
+            onClick={() => hand.length > 0 && setHandExpanded(true)}
+          >
+            {/* Action buttons row — right-aligned above strip */}
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-gray-500 text-[10px]">{hand.length} card{hand.length !== 1 ? 's' : ''} — tap to view</span>
+              <div className="flex gap-0.5">
+                <button
+                  onClick={(e) => { e.stopPropagation(); drawCard(); }}
+                  disabled={!isMyTurn || myPlayer.ap < 1}
+                  data-tutorial="draw-btn"
+                  className="bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-3 py-1.5 rounded text-[11px] transition"
+                >
+                  Draw
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); buyAP(); }}
+                  disabled={!isMyTurn || !canBuyAP}
+                  data-tutorial="buy-ap-btn"
+                  className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-3 py-1.5 rounded text-[11px] transition"
+                >
+                  Buy
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); endTurn(); }}
+                  disabled={!isMyTurn}
+                  data-tutorial="end-turn-btn"
+                  className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-3 py-1.5 rounded text-[11px] transition"
+                >
+                  End
+                </button>
+              </div>
+            </div>
+            {/* Overlapping card tops */}
+            <div className="flex items-center pl-1 h-[34px]">
+              {hand.length > 0 ? hand.map(card => (
+                <CardInHand key={card.uid} card={card} variant="collapsed" />
+              )) : (
+                <span className="text-gray-600 text-[10px]">No cards</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Expanded panel */}
+        <AnimatePresence>
+          {handExpanded && (
+            <motion.div
+              className="fixed bottom-0 left-0 right-0 z-30 bg-gray-950/95 border-t border-gray-700 rounded-t-xl"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            >
+              {/* Collapse handle */}
+              <div
+                className="flex justify-center py-1.5 cursor-pointer"
+                onClick={() => { setHandExpanded(false); setMobileSelectedCard(null); }}
+              >
+                <div className="w-10 h-1 bg-gray-600 rounded-full" />
+              </div>
+
+              {/* Selected card popup */}
+              <AnimatePresence mode="wait">
+                {mobileSelectedCard && hand.some(c => c.uid === mobileSelectedCard.uid) && (
+                  <motion.div
+                    key={mobileSelectedCard.uid}
+                    className="flex justify-center pb-2"
+                    initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.8, opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                  >
+                    <CardInHand
+                      card={mobileSelectedCard}
+                      isSelected={true}
+                      variant="popup"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Action buttons row */}
+              <div className="flex justify-center gap-1.5 px-2 pb-2">
+                <button
+                  onClick={drawCard}
+                  disabled={!isMyTurn || myPlayer.ap < 1}
+                  data-tutorial="draw-btn"
+                  className="bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-4 py-2 rounded text-[12px] transition"
+                >
+                  Draw
+                </button>
+                <button
+                  onClick={buyAP}
+                  disabled={!isMyTurn || !canBuyAP}
+                  data-tutorial="buy-ap-btn"
+                  className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-4 py-2 rounded text-[12px] transition"
+                >
+                  Buy
+                </button>
+                <button
+                  onClick={endTurn}
+                  disabled={!isMyTurn}
+                  data-tutorial="end-turn-btn"
+                  className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-4 py-2 rounded text-[12px] transition"
+                >
+                  End
+                </button>
+              </div>
+
+              {/* Horizontal scrollable card row */}
+              <div
+                ref={cardRowRef}
+                className="flex items-end overflow-x-auto px-3 pb-3 pt-1 gap-[-15px]"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                {hand.length > 0 ? hand.map(card => (
+                  <div key={card.uid} style={{ marginRight: '-15px' }} className="shrink-0">
+                    <CardInHand
+                      card={card}
+                      isSelected={mobileSelectedCard?.uid === card.uid}
+                      variant="row"
+                      onSelect={handleMobileSelect}
+                    />
+                  </div>
+                )) : (
+                  <div className="text-gray-600 py-4 text-[11px] w-full text-center">No cards in hand</div>
+                )}
+                {/* Spacer so last card isn't cut off */}
+                {hand.length > 0 && <div className="shrink-0 w-4" />}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }

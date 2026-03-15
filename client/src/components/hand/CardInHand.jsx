@@ -24,7 +24,15 @@ const TYPE_LETTER = { Creature: 'C', Magic: 'M', Armour: 'A', Tricks: 'T' };
 const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
 const DRAG_THRESHOLD = 15;
 
-export default function CardInHand({ card, isSelected }) {
+// Type-colored border for collapsed strip cards
+const TYPE_COLOR_SOLID = {
+  Creature: 'border-red-500',
+  Magic: 'border-blue-500',
+  Armour: 'border-gray-400',
+  Tricks: 'border-green-500',
+};
+
+export default function CardInHand({ card, isSelected, variant, onSelect }) {
   const { selectCard, playCard, gameState, setZoomedCard, setHoveredCard, clearHoveredCard, animationsOff, setDraggingCard, clearDraggingCard, tutorialEngine } = useStore();
   const isTutorialHighlight = tutorialEngine && tutorialEngine.getStepConfig()?.highlightCardUid === card.uid;
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
@@ -36,10 +44,33 @@ export default function CardInHand({ card, isSelected }) {
 
   const canDrag = card.type === 'Creature' && (isMyTurn || isReaction);
 
+  // Collapsed variant — minimal strip card, no interaction
+  if (isMobile && variant === 'collapsed') {
+    return (
+      <div
+        className={`w-[28px] h-[30px] rounded-sm border-2 ${TYPE_COLOR_SOLID[card.type] || 'border-gray-600'} bg-gray-900 flex items-center justify-center shrink-0`}
+        style={{ marginRight: '-20px' }}
+      >
+        <span className="text-[9px] font-bold text-gray-300">{TYPE_LETTER[card.type]}</span>
+      </div>
+    );
+  }
+
   const handleClick = () => {
     // If we just finished a drag, don't fire click
     if (isDragging.current) return;
     if (!isMyTurn && !isReaction) return;
+    // Row variant: tap to select (calls onSelect), not the store selectCard
+    if (isMobile && variant === 'row') {
+      onSelect?.(card);
+      return;
+    }
+    // Popup variant: tap to play (non-creatures)
+    if (isMobile && variant === 'popup') {
+      if (card.type === 'Creature') return;
+      playCard(card.uid);
+      return;
+    }
     if (isSelected || (!isMyTurn && isReaction)) {
       // Creatures are placed via swamp slot click, not double-click
       if (card.type === 'Creature') return;
@@ -141,8 +172,16 @@ export default function CardInHand({ card, isSelected }) {
   const costText = effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`;
   const canAfford = (isMyTurn || isReaction) && (effectiveCost === 0 || (gameState?.players[gameState.myId]?.ap >= effectiveCost));
 
-  const w = isMobile ? 'w-[72px]' : 'w-[130px]';
-  const h = isMobile ? 'h-[100px]' : 'h-[182px]';
+  const sizeByVariant = isMobile && variant === 'popup'
+    ? { w: 'w-[160px]', h: 'h-[224px]', textScale: '' }
+    : isMobile && variant === 'row'
+    ? { w: 'w-[90px]', h: 'h-[126px]', textScale: 'mobile-row' }
+    : isMobile
+    ? { w: 'w-[72px]', h: 'h-[100px]', textScale: '' }
+    : { w: 'w-[130px]', h: 'h-[182px]', textScale: '' };
+  const w = sizeByVariant.w;
+  const h = sizeByVariant.h;
+  const isRowOrPopup = isMobile && (variant === 'row' || variant === 'popup');
 
   return (
     <motion.div
@@ -183,14 +222,14 @@ export default function CardInHand({ card, isSelected }) {
 
       {/* Cost badge */}
       <div className={`absolute top-0.5 right-0.5 font-bold px-1 py-0.5 rounded z-10 ${
-        isMobile ? 'text-[8px]' : 'text-[12px] px-1.5'
+        isRowOrPopup ? 'text-[10px] px-1' : isMobile ? 'text-[8px]' : 'text-[12px] px-1.5'
       } ${effectiveCost === 0 ? 'bg-green-700 text-white' : costModified && effectiveCost > card.cost ? 'bg-red-800 text-red-200' : costModified && effectiveCost < card.cost ? 'bg-green-700 text-green-200' : 'bg-blue-800 text-blue-200'}`}>
         {costText}
       </div>
 
       {/* Type letter badge */}
       <div className={`absolute top-0.5 left-0.5 bg-black/70 rounded-full flex items-center justify-center z-10 font-bold ${
-        isMobile ? 'text-[9px] w-4 h-4' : 'text-[12px] w-6 h-6'
+        isRowOrPopup ? 'text-[10px] w-5 h-5' : isMobile ? 'text-[9px] w-4 h-4' : 'text-[12px] w-6 h-6'
       }`}>
         {TYPE_LETTER[card.type]}
       </div>
@@ -198,16 +237,16 @@ export default function CardInHand({ card, isSelected }) {
       {/* Ability indicator */}
       {card.abilityId && (
         <div className={`absolute left-0.5 bg-yellow-600/80 rounded-full flex items-center justify-center z-10 ${
-          isMobile ? 'top-5 w-3.5 h-3.5' : 'top-8 w-5 h-5'
+          isRowOrPopup ? 'top-6 w-4 h-4' : isMobile ? 'top-5 w-3.5 h-3.5' : 'top-8 w-5 h-5'
         }`}>
-          <span className={isMobile ? 'text-[7px]' : 'text-[10px]'}>{ICONS.lightning}</span>
+          <span className={isRowOrPopup ? 'text-[8px]' : isMobile ? 'text-[7px]' : 'text-[10px]'}>{ICONS.lightning}</span>
         </div>
       )}
 
       {/* REACT badge — shown on reaction cards during opponent's turn */}
       {isReaction && !isMyTurn && (
         <div className={`absolute right-0.5 bg-orange-500 text-white font-bold px-1 py-0.5 rounded z-10 animate-pulse ${
-          isMobile ? 'top-5 text-[6px]' : 'top-8 text-[9px]'
+          isRowOrPopup ? 'top-6 text-[7px]' : isMobile ? 'top-5 text-[6px]' : 'top-8 text-[9px]'
         }`}>
           REACT
         </div>
@@ -215,7 +254,7 @@ export default function CardInHand({ card, isSelected }) {
 
       {/* Stats bar at bottom */}
       {card.type === 'Creature' && (
-        <div className={`absolute bottom-0 left-0 right-0 bg-black/80 flex justify-between px-1.5 z-10 ${isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
+        <div className={`absolute bottom-0 left-0 right-0 bg-black/80 flex justify-between px-1.5 z-10 ${isRowOrPopup ? 'text-[10px] py-0.5' : isMobile ? 'text-[9px] py-0.5' : 'text-[12px] py-0.5'}`}>
           <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
           <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
           <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>
