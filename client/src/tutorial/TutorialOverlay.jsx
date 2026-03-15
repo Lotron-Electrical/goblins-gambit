@@ -41,6 +41,14 @@ export default function TutorialOverlay() {
     }
   }
 
+  // For play_card steps, shift spotlight to the Play button once the card info panel is visible
+  if (config.expectedAction === 'play_card' && config.highlightCardUid) {
+    const playBtn = document.querySelector('[data-tutorial="play-btn"]');
+    if (playBtn) {
+      effectiveHighlight = '[data-tutorial="play-btn"]';
+    }
+  }
+
   // Track the highlighted element position
   const updateSpotlight = useCallback(() => {
     if (!effectiveHighlight) {

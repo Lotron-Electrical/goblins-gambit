@@ -117,7 +117,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'play-trick',
     title: 'Play a Trick',
-    instruction: 'You drew a Trick card! Tricks are free and give instant SP. Tap Kickflip to play it.',
+    instruction: 'You drew a Trick card! Tricks are free and give instant SP. Tap play to use it.',
     highlight: null, // Will highlight the card in hand
     highlightCardUid: 'tut-kickflip',
     tabHint: 'Tricks',

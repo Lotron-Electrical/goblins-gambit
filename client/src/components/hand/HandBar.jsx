@@ -135,6 +135,7 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
                 <button
                   onClick={onPlaceCreature}
                   disabled={!canAfford}
+                  data-tutorial={isTutorialHighlighted ? 'play-btn' : undefined}
                   className="flex-1 bg-green-800 disabled:bg-gray-800 disabled:text-gray-600 border border-green-600 disabled:border-gray-700 text-white font-bold py-2 rounded-lg text-[12px] transition"
                 >
                   Place on Field
@@ -143,6 +144,7 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
                 <button
                   onClick={() => playCard(card.uid)}
                   disabled={!canAfford}
+                  data-tutorial={isTutorialHighlighted ? 'play-btn' : undefined}
                   className="flex-1 bg-green-800 disabled:bg-gray-800 disabled:text-gray-600 border border-green-600 disabled:border-gray-700 text-white font-bold py-2 rounded-lg text-[12px] transition"
                 >
                   Play
@@ -164,7 +166,7 @@ function MobileCardInfoPanel({ card, onClose, onPlaceCreature }) {
   );
 }
 
-function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, scrollToIndex }) {
+function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMobileSelect, reorderMode, reorderDragIdx, handleReorderStart, handleReorderMove, handleReorderEnd, scrollToIndex, scrollLocked }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef(null);
   const touchStartIndex = useRef(0);
@@ -181,6 +183,7 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
   const RADIUS = 450; // Circle radius — controls arc curvature
   const ANGLE_STEP = 7; // Degrees between cards — tighter = closer together
   const CARD_WIDTH = 90; // Match CardInHand row variant width
+  const Y_OFFSET = 12; // Push cards down so tops don't overlap with buttons above
   const FRICTION = 0.92;
   const VELOCITY_THRESHOLD = 0.005;
 
@@ -379,10 +382,10 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
       <div
         ref={cardRowRef}
         className="relative w-full h-full"
-        onTouchStart={reorderMode ? undefined : handleTouchStart}
-        onTouchMove={reorderMode ? handleReorderMove || handleTouchMove : handleTouchMove}
-        onTouchEnd={reorderMode ? handleReorderEnd || handleTouchEnd : handleTouchEnd}
-        onTouchCancel={reorderMode ? handleReorderEnd : handleTouchEnd}
+        onTouchStart={scrollLocked ? undefined : (reorderMode ? undefined : handleTouchStart)}
+        onTouchMove={scrollLocked ? undefined : (reorderMode ? handleReorderMove || handleTouchMove : handleTouchMove)}
+        onTouchEnd={scrollLocked ? undefined : (reorderMode ? handleReorderEnd || handleTouchEnd : handleTouchEnd)}
+        onTouchCancel={scrollLocked ? undefined : (reorderMode ? handleReorderEnd : handleTouchEnd)}
       >
         {sortedHand.map((card, idx) => {
           const angleDeg = (idx - currentIndex) * ANGLE_STEP;
@@ -407,7 +410,7 @@ function CircularCardRow({ cardRowRef, sortedHand, mobileSelectedCard, handleMob
               className="absolute"
               style={{
                 left: `${x}px`,
-                top: `${y}px`,
+                top: `${y + Y_OFFSET}px`,
                 transform: `rotate(${angleDeg}deg) scale(${scale})`,
                 transformOrigin: 'center bottom',
                 opacity,
@@ -713,7 +716,7 @@ export default function HandBar() {
         <AnimatePresence>
           {handExpanded && (
             <motion.div
-              className="fixed bottom-0 left-0 right-0 z-30"
+              className={`fixed bottom-0 left-0 right-0 ${tutorialHighlightUid ? 'z-50' : 'z-30'}`}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -804,6 +807,7 @@ export default function HandBar() {
                   handleReorderMove={handleReorderMove}
                   handleReorderEnd={handleReorderEnd}
                   scrollToIndex={carouselScrollTo}
+                  scrollLocked={!!tutorialHighlightUid}
                 />
               </div>
             </motion.div>
