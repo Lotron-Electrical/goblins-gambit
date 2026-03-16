@@ -173,14 +173,17 @@ function resolveAttackDamage(
     remaining: Math.max(0, currentDef - damage),
   });
 
-  // Gabber splash: capture adjacent indices NOW, before any kill removes defender from swamp
+  // Gabber splash: capture adjacent creatures by _slot proximity, before any kill removes defender from swamp
   let gabberAdjacentCards = null;
   if (attackerCard.abilityId === "gabber_splash" && !attackerCard._silenced) {
-    const idx = defender.swamp.findIndex((c) => c.uid === defenderCard.uid);
+    const defSlot = defenderCard._slot;
     gabberAdjacentCards = [];
-    if (idx > 0) gabberAdjacentCards.push(defender.swamp[idx - 1]);
-    if (idx < defender.swamp.length - 1)
-      gabberAdjacentCards.push(defender.swamp[idx + 1]);
+    if (defSlot != null) {
+      const leftNeighbor = defender.swamp.find((c) => c._slot === defSlot - 1);
+      const rightNeighbor = defender.swamp.find((c) => c._slot === defSlot + 1);
+      if (leftNeighbor) gabberAdjacentCards.push(leftNeighbor);
+      if (rightNeighbor) gabberAdjacentCards.push(rightNeighbor);
+    }
   }
 
   if (damage >= currentDef) {

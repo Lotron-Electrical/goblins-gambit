@@ -902,9 +902,7 @@ export default function HandBar() {
                 REACTION_ABILITIES.includes(c.abilityId),
               );
               if (reactionCard) {
-                const idx = sortedHand.indexOf(reactionCard);
-                if (idx >= 0) scrollToIndex(idx);
-                handleMobileSelect(reactionCard);
+                playCard(reactionCard.uid);
               }
             }}
           >
@@ -1167,12 +1165,11 @@ export default function HandBar() {
             const reactionCard = hand.find((c) =>
               REACTION_ABILITIES.includes(c.abilityId),
             );
-            if (reactionCard) selectCard(reactionCard);
+            if (reactionCard) playCard(reactionCard.uid);
           }}
         >
           <span className="text-orange-300 text-sm font-bold">
-            You can react to {currentPlayerName}'s turn! Click a REACT card to
-            interrupt.
+            Tap to react to {currentPlayerName}'s turn!
           </span>
         </div>
       )}

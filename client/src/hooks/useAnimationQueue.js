@@ -154,6 +154,16 @@ export function useAnimationQueue(animations) {
       setTimeout(() => setAnnouncement(null), 2000);
     }
 
+    // Show announcement for card stolen (Finesse)
+    if (evt.type === "card_stolen" && evt.card) {
+      setAnnouncement({
+        name: "Finesse",
+        type: "Magic",
+        flavor: `STOLE ${evt.card.name.toUpperCase()}!`,
+      });
+      setTimeout(() => setAnnouncement(null), 1500);
+    }
+
     // Show announcement for card plays
     if (evt.type === "card_played" && evt.card) {
       setAnnouncement({
