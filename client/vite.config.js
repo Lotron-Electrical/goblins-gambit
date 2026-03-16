@@ -93,7 +93,7 @@ const SECOND = [
 const hashNum = parseInt(commitHash, 16);
 const first = FIRST[hashNum % FIRST.length];
 const second = SECOND[Math.floor(hashNum / FIRST.length) % SECOND.length];
-const APP_VERSION = `0.4.${first}-${second}`;
+const APP_VERSION = `0.5.${first}-${second}`;
 
 export default defineConfig({
   root: path.resolve(__dirname),
