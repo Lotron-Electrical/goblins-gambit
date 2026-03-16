@@ -106,27 +106,32 @@ function AppInner() {
 
   return (
     <div className="min-h-screen">
-      {error && (() => {
-        const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
-        return (
-          <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
-            isInfo
-              ? "bg-blue-900/90 border border-blue-500 text-blue-100"
-              : "bg-amber-900/90 border border-amber-500 text-amber-100"
-          }`}>
-            <span className={`text-lg ${isInfo ? "text-blue-300" : "text-amber-300"}`}>
-              {isInfo ? "\u2139" : "!"}
-            </span>
-            <span>{error}</span>
-            <button
-              onClick={clearError}
-              className={`font-bold ${isInfo ? "text-blue-400 hover:text-white" : "text-amber-400 hover:text-white"}`}
+      {error &&
+        (() => {
+          const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
+          return (
+            <div
+              className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
+                isInfo
+                  ? "bg-blue-900/90 border border-blue-500 text-blue-100"
+                  : "bg-amber-900/90 border border-amber-500 text-amber-100"
+              }`}
             >
-              X
-            </button>
-          </div>
-        );
-      })()}
+              <span
+                className={`text-lg ${isInfo ? "text-blue-300" : "text-amber-300"}`}
+              >
+                {isInfo ? "\u2139" : "!"}
+              </span>
+              <span>{error}</span>
+              <button
+                onClick={clearError}
+                className={`font-bold ${isInfo ? "text-blue-400 hover:text-white" : "text-amber-400 hover:text-white"}`}
+              >
+                X
+              </button>
+            </div>
+          );
+        })()}
 
       {!connected && screen !== "tutorial" && (
         <div className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center">

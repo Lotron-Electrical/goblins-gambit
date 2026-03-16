@@ -68,7 +68,10 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
           <div className="text-center">
             <div
               className={`font-display text-white animate-announce-burst ${isMobile ? "text-2xl" : "text-4xl"}`}
-              style={{ textShadow: "0 0 30px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5)" }}
+              style={{
+                textShadow:
+                  "0 0 30px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5)",
+              }}
             >
               {announcement.name}
             </div>
@@ -97,7 +100,11 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
             className={`flex items-center gap-2 border rounded-lg backdrop-blur-md text-center ${
               isMobile ? "px-4 py-2.5" : "px-5 py-3"
             } ${TYPE_BORDER[announcement.type] || "border-gray-600/60"} ${TYPE_BG[announcement.type] || "bg-gray-900/85"}`}
-            style={{ boxShadow: TYPE_GLOW_SHADOW[announcement.type] || "0 4px 20px rgba(0, 0, 0, 0.5)" }}
+            style={{
+              boxShadow:
+                TYPE_GLOW_SHADOW[announcement.type] ||
+                "0 4px 20px rgba(0, 0, 0, 0.5)",
+            }}
           >
             <div>
               <div

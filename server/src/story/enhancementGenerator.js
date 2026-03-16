@@ -17,20 +17,51 @@ const STAT_BOOSTS = [
 
 // Ability options
 const ABILITY_OPTIONS = [
-  { type: "ability", abilityId: "sweep_attack", description: "Sweep Attack — split ATK across all enemies" },
-  { type: "ability", abilityId: "dodge_evade", description: "Dodge — attacks bypass creature, hit SP instead" },
-  { type: "ability", abilityId: "streamer_draw", description: "Streamer — draw 1 card when played" },
-  { type: "ability", abilityId: "stoner_shield", description: "Shield — spend 1 AP for temp shield" },
-  { type: "ability", abilityId: "wood_elf_burn", description: "Burn — +100 SP bonus on kill" },
-  { type: "ability", abilityId: "viper_sting", description: "Viper Sting — -1 AP to attacker" },
-  { type: "ability", abilityId: "ghost_invisible", description: "Ghost — invisible until you attack" },
+  {
+    type: "ability",
+    abilityId: "sweep_attack",
+    description: "Sweep Attack — split ATK across all enemies",
+  },
+  {
+    type: "ability",
+    abilityId: "dodge_evade",
+    description: "Dodge — attacks bypass creature, hit SP instead",
+  },
+  {
+    type: "ability",
+    abilityId: "streamer_draw",
+    description: "Streamer — draw 1 card when played",
+  },
+  {
+    type: "ability",
+    abilityId: "stoner_shield",
+    description: "Shield — spend 1 AP for temp shield",
+  },
+  {
+    type: "ability",
+    abilityId: "wood_elf_burn",
+    description: "Burn — +100 SP bonus on kill",
+  },
+  {
+    type: "ability",
+    abilityId: "viper_sting",
+    description: "Viper Sting — -1 AP to attacker",
+  },
+  {
+    type: "ability",
+    abilityId: "ghost_invisible",
+    description: "Ghost — invisible until you attack",
+  },
 ];
 
 // Life recovery
 const LIFE_OPTION = { type: "life", description: "+1 Life" };
 
 // Draw boost
-const DRAW_BOOST = { type: "draw_boost", description: "Draw Boost — custom card appears more often" };
+const DRAW_BOOST = {
+  type: "draw_boost",
+  description: "Draw Boost — custom card appears more often",
+};
 
 // Items
 const ITEM_BERSERK = {
@@ -71,7 +102,10 @@ export function generateEnhancements(levelKey, run) {
   }
 
   // Swamp+ get life recovery (if below max)
-  if (["swamp", "tundra", "cliffs"].includes(levelKey) && run.lives < maxLives) {
+  if (
+    ["swamp", "tundra", "cliffs"].includes(levelKey) &&
+    run.lives < maxLives
+  ) {
     pool.push(LIFE_OPTION);
   }
 
@@ -102,8 +136,18 @@ export function generateEnhancements(levelKey, run) {
     }
     // Add some big stat boosts too
     volcanoPool.push(
-      { type: "stat_boost", stat: "attack", amount: 300, description: "+300 ATK" },
-      { type: "stat_boost", stat: "defence", amount: 300, description: "+300 DEF" },
+      {
+        type: "stat_boost",
+        stat: "attack",
+        amount: 300,
+        description: "+300 ATK",
+      },
+      {
+        type: "stat_boost",
+        stat: "defence",
+        amount: 300,
+        description: "+300 DEF",
+      },
     );
     return pickRandom(volcanoPool, 3);
   }

@@ -463,12 +463,21 @@ export function activate_sweep_attack(state, playerId, card, targetInfo) {
     if (tStats.defence <= 0) {
       player.sp += tStats.sp;
       events.push({ type: "destroy", cardUid: t.card.uid, owner: t.ownerId });
-      events.push({ type: "sp_change", playerId, amount: tStats.sp, reason: "Sweep kill" });
+      events.push({
+        type: "sp_change",
+        playerId,
+        amount: tStats.sp,
+        reason: "Sweep kill",
+      });
       killCreature(state, t.ownerId, t.card.uid);
     }
   }
 
-  events.unshift({ type: "buff", cardUid: card.uid, text: `Sweep! ${damageEach} damage to ${targets.length} creatures` });
+  events.unshift({
+    type: "buff",
+    cardUid: card.uid,
+    text: `Sweep! ${damageEach} damage to ${targets.length} creatures`,
+  });
   events.push({
     type: "ability_used",
     cardUid: card.uid,

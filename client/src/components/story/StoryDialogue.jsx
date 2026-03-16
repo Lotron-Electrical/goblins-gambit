@@ -42,7 +42,9 @@ export default function StoryDialogue({ characterName, text, onDismiss }) {
       className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-gray-950/95 border-2 border-amber-600 rounded-xl px-6 py-4 max-w-md cursor-pointer shadow-2xl shadow-amber-900/20"
       onClick={handleClick}
     >
-      <div className="text-amber-400 font-display text-sm mb-1">{characterName}</div>
+      <div className="text-amber-400 font-display text-sm mb-1">
+        {characterName}
+      </div>
       <div className="text-gray-200 text-sm min-h-[2.5em]">
         "{displayedText}"
         {!isComplete && <span className="animate-pulse text-amber-400">|</span>}

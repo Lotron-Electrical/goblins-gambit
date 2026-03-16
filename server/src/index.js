@@ -57,7 +57,9 @@ function rateLimiter(req, res, next) {
   }
   entry.count++;
   if (entry.count > RATE_LIMIT_MAX) {
-    return res.status(429).json({ error: "Too many requests. Try again later." });
+    return res
+      .status(429)
+      .json({ error: "Too many requests. Try again later." });
   }
   next();
 }

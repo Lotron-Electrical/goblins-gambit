@@ -14,10 +14,14 @@ const TYPE_BORDER = {
 const TYPE_LETTER = { Creature: "C", Magic: "M", Armour: "A", Tricks: "T" };
 
 const TYPE_GLOW = {
-  Creature: "0 0 12px rgba(220, 38, 38, 0.4), 0 0 28px rgba(220, 38, 38, 0.15), inset 0 0 8px rgba(220, 38, 38, 0.1)",
-  Magic: "0 0 12px rgba(37, 99, 235, 0.4), 0 0 28px rgba(37, 99, 235, 0.15), inset 0 0 8px rgba(37, 99, 235, 0.1)",
-  Armour: "0 0 12px rgba(156, 163, 175, 0.3), 0 0 28px rgba(156, 163, 175, 0.1), inset 0 0 8px rgba(156, 163, 175, 0.08)",
-  Tricks: "0 0 12px rgba(22, 163, 74, 0.4), 0 0 28px rgba(22, 163, 74, 0.15), inset 0 0 8px rgba(22, 163, 74, 0.1)",
+  Creature:
+    "0 0 12px rgba(220, 38, 38, 0.4), 0 0 28px rgba(220, 38, 38, 0.15), inset 0 0 8px rgba(220, 38, 38, 0.1)",
+  Magic:
+    "0 0 12px rgba(37, 99, 235, 0.4), 0 0 28px rgba(37, 99, 235, 0.15), inset 0 0 8px rgba(37, 99, 235, 0.1)",
+  Armour:
+    "0 0 12px rgba(156, 163, 175, 0.3), 0 0 28px rgba(156, 163, 175, 0.1), inset 0 0 8px rgba(156, 163, 175, 0.08)",
+  Tricks:
+    "0 0 12px rgba(22, 163, 74, 0.4), 0 0 28px rgba(22, 163, 74, 0.15), inset 0 0 8px rgba(22, 163, 74, 0.1)",
 };
 
 export default function CardOnField({
@@ -261,7 +265,14 @@ export default function CardOnField({
               clearHoveredCard();
             }
       }
-      whileHover={animationsOff || isMobile ? undefined : { scale: 1.06, transition: { type: "spring", stiffness: 400, damping: 22 } }}
+      whileHover={
+        animationsOff || isMobile
+          ? undefined
+          : {
+              scale: 1.06,
+              transition: { type: "spring", stiffness: 400, damping: 22 },
+            }
+      }
       animate={
         animationsOff
           ? {}
@@ -292,8 +303,14 @@ export default function CardOnField({
                   transition: { duration: 0.35, ease: "easeOut" },
                 }
               : isSelected
-                ? { scale: 1.06, transition: { type: "spring", stiffness: 300, damping: 18 } }
-                : { scale: 1, transition: { type: "spring", stiffness: 300, damping: 22 } }
+                ? {
+                    scale: 1.06,
+                    transition: { type: "spring", stiffness: 300, damping: 18 },
+                  }
+                : {
+                    scale: 1,
+                    transition: { type: "spring", stiffness: 300, damping: 22 },
+                  }
       }
       layout
     >

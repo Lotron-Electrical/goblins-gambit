@@ -91,7 +91,8 @@ export default function DragOverlay() {
         style={{
           opacity: 0.9,
           transform: "rotate(-4deg) scale(1.05)",
-          boxShadow: "0 0 24px rgba(212, 175, 55, 0.5), 0 8px 32px rgba(0, 0, 0, 0.5)",
+          boxShadow:
+            "0 0 24px rgba(212, 175, 55, 0.5), 0 8px 32px rgba(0, 0, 0, 0.5)",
         }}
       >
         {draggingCard.image && (

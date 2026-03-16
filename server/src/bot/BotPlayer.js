@@ -89,16 +89,21 @@ export function decideBotAction(state, difficulty = "medium") {
   if (me.ap <= 0) return { type: ACTION.END_TURN };
 
   // Easy: randomly skip good plays 40% of the time (plays dumber)
-  const skip = difficulty === "easy"
-    ? () => Math.random() < 0.4
-    : difficulty === "easy+"
-      ? () => Math.random() < 0.2
-      : () => false;
+  const skip =
+    difficulty === "easy"
+      ? () => Math.random() < 0.4
+      : difficulty === "easy+"
+        ? () => Math.random() < 0.2
+        : () => false;
 
   // --- Decision priority ---
 
   // 0. Lethal detection — hard only
-  if (difficulty === "hard" || difficulty === "hard-" || difficulty === "medium+") {
+  if (
+    difficulty === "hard" ||
+    difficulty === "hard-" ||
+    difficulty === "medium+"
+  ) {
     const lethalAction = checkLethal(state, me);
     if (lethalAction) return lethalAction;
   }
@@ -127,7 +132,9 @@ export function decideBotAction(state, difficulty = "medium") {
   // 5. Buy AP if we have lots of SP and useful cards/attacks remaining — hard only
   if (difficulty === "hard" && me.sp >= 2000 && me.ap <= 1) {
     // Buy AP more aggressively: if hand has playable cards or creatures can still attack
-    const hasPlayable = me.hand.some((c) => !c.hidden && effectiveCost(c, state.theme) <= 2);
+    const hasPlayable = me.hand.some(
+      (c) => !c.hidden && effectiveCost(c, state.theme) <= 2,
+    );
     const hasUnattacked = me.swamp.some(
       (c) => !c._hasAttacked && !c._harambeOwner,
     );
@@ -777,7 +784,8 @@ function handleTargetSelection(state) {
     let best;
     if (isOffensive) {
       best = [...validTargets].sort(
-        (a, b) => ((b.attack || 0) + (b.sp || 0)) - ((a.attack || 0) + (a.sp || 0)),
+        (a, b) =>
+          (b.attack || 0) + (b.sp || 0) - ((a.attack || 0) + (a.sp || 0)),
       )[0];
     } else {
       best = [...validTargets].sort(
@@ -943,7 +951,10 @@ function effectiveHP(t, theme) {
 /** Get theme-adjusted spell cost for a card */
 function effectiveCost(card, theme) {
   const themeEffects = theme ? THEME_EFFECTS[theme] : null;
-  if (card.type === CARD_TYPE.MAGIC && themeEffects?.spellCostMultiplier !== undefined) {
+  if (
+    card.type === CARD_TYPE.MAGIC &&
+    themeEffects?.spellCostMultiplier !== undefined
+  ) {
     return Math.floor(card.cost * themeEffects.spellCostMultiplier);
   }
   return card.cost;

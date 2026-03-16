@@ -660,7 +660,10 @@ export default function HandBar() {
     setActionPending(true);
     endTurn();
     // Fallback reset in case gameState doesn't update quickly
-    setTimeout(() => { actionPendingRef.current = false; setActionPending(false); }, 2000);
+    setTimeout(() => {
+      actionPendingRef.current = false;
+      setActionPending(false);
+    }, 2000);
   }, [endTurn]);
 
   const guardedBuyAP = useCallback(() => {
@@ -668,7 +671,10 @@ export default function HandBar() {
     actionPendingRef.current = true;
     setActionPending(true);
     buyAP();
-    setTimeout(() => { actionPendingRef.current = false; setActionPending(false); }, 1000);
+    setTimeout(() => {
+      actionPendingRef.current = false;
+      setActionPending(false);
+    }, 1000);
   }, [buyAP]);
 
   if (!gameState) return null;

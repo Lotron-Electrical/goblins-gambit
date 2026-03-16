@@ -368,7 +368,9 @@ export default function CardZoom() {
           ? "border-[var(--color-gold)] shadow-[0_0_20px_rgba(212,175,55,0.5)]"
           : TYPE_PANEL_BORDER[card.type] || "border-gray-700"
       }`}
-      style={{ boxShadow: `${isTutorialHighlight ? "" : (TYPE_PANEL_GLOW[card.type] || "")}, -4px 0 24px rgba(0, 0, 0, 0.5)` }}
+      style={{
+        boxShadow: `${isTutorialHighlight ? "" : TYPE_PANEL_GLOW[card.type] || ""}, -4px 0 24px rgba(0, 0, 0, 0.5)`,
+      }}
     >
       {/* Close button */}
       <button

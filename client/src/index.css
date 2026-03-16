@@ -287,7 +287,11 @@ body::after {
   background: rgba(196, 64, 64, 0.35);
 }
 [data-theme="blood"] ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(196, 64, 64, 0.4) 0%, rgba(138, 32, 32, 0.5) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(196, 64, 64, 0.4) 0%,
+    rgba(138, 32, 32, 0.5) 100%
+  );
 }
 [data-theme="blood"] {
   scrollbar-color: rgba(196, 64, 64, 0.35) rgba(14, 4, 4, 0.6);
@@ -355,7 +359,11 @@ body::after {
   background: rgba(64, 160, 196, 0.35);
 }
 [data-theme="frost"] ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(64, 160, 196, 0.4) 0%, rgba(42, 112, 144, 0.5) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(64, 160, 196, 0.4) 0%,
+    rgba(42, 112, 144, 0.5) 100%
+  );
 }
 [data-theme="frost"] {
   scrollbar-color: rgba(64, 160, 196, 0.35) rgba(4, 8, 16, 0.6);
@@ -381,7 +389,8 @@ body::after {
 
 /* Glowing turn indicator pulse */
 @keyframes turn-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 0 8px 2px rgba(212, 160, 23, 0.3),
       inset 0 0 6px 1px rgba(212, 160, 23, 0.08);
@@ -398,8 +407,12 @@ body::after {
 
 /* SP bar shimmer effect */
 @keyframes sp-shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
 }
 .animate-sp-shimmer {
   background-size: 200% 100%;
@@ -408,8 +421,15 @@ body::after {
 
 /* Swamp zone fog drift */
 @keyframes fog-drift {
-  0%, 100% { opacity: 0.03; transform: translateX(0); }
-  50% { opacity: 0.06; transform: translateX(8px); }
+  0%,
+  100% {
+    opacity: 0.03;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.06;
+    transform: translateX(8px);
+  }
 }
 .animate-fog-drift {
   animation: fog-drift 8s ease-in-out infinite;
@@ -417,8 +437,13 @@ body::after {
 
 /* Gear slot equipped shimmer */
 @keyframes gear-shimmer {
-  0%, 100% { border-color: rgba(147, 51, 234, 0.5); }
-  50% { border-color: rgba(192, 132, 252, 0.7); }
+  0%,
+  100% {
+    border-color: rgba(147, 51, 234, 0.5);
+  }
+  50% {
+    border-color: rgba(192, 132, 252, 0.7);
+  }
 }
 .animate-gear-shimmer {
   animation: gear-shimmer 2.5s ease-in-out infinite;
@@ -426,9 +451,18 @@ body::after {
 
 /* Creature enter animation */
 @keyframes creature-enter {
-  0% { transform: scale(0.6) translateY(12px); opacity: 0; }
-  60% { transform: scale(1.06) translateY(-2px); opacity: 1; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+  0% {
+    transform: scale(0.6) translateY(12px);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.06) translateY(-2px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 .animate-creature-enter {
   animation: creature-enter 0.35s ease-out;
@@ -436,7 +470,8 @@ body::after {
 
 /* Direct attack target pulsing border */
 @keyframes direct-attack-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 6px 2px rgba(239, 68, 68, 0.3);
     border-color: rgba(239, 68, 68, 0.6);
   }
@@ -451,30 +486,86 @@ body::after {
 
 /* Type-colored ambient glow for card hover in hand */
 @keyframes glow-red {
-  0%, 100% { box-shadow: 0 0 8px 2px rgba(220, 38, 38, 0.3), 0 0 20px 6px rgba(220, 38, 38, 0.1), inset 0 0 8px 1px rgba(220, 38, 38, 0.1); }
-  50% { box-shadow: 0 0 16px 5px rgba(248, 113, 113, 0.5), 0 0 32px 10px rgba(220, 38, 38, 0.2), inset 0 0 12px 2px rgba(248, 113, 113, 0.15); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px 2px rgba(220, 38, 38, 0.3),
+      0 0 20px 6px rgba(220, 38, 38, 0.1),
+      inset 0 0 8px 1px rgba(220, 38, 38, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 16px 5px rgba(248, 113, 113, 0.5),
+      0 0 32px 10px rgba(220, 38, 38, 0.2),
+      inset 0 0 12px 2px rgba(248, 113, 113, 0.15);
+  }
 }
 @keyframes glow-blue {
-  0%, 100% { box-shadow: 0 0 8px 2px rgba(37, 99, 235, 0.3), 0 0 20px 6px rgba(37, 99, 235, 0.1), inset 0 0 8px 1px rgba(37, 99, 235, 0.1); }
-  50% { box-shadow: 0 0 16px 5px rgba(96, 165, 250, 0.5), 0 0 32px 10px rgba(37, 99, 235, 0.2), inset 0 0 12px 2px rgba(96, 165, 250, 0.15); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px 2px rgba(37, 99, 235, 0.3),
+      0 0 20px 6px rgba(37, 99, 235, 0.1),
+      inset 0 0 8px 1px rgba(37, 99, 235, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 16px 5px rgba(96, 165, 250, 0.5),
+      0 0 32px 10px rgba(37, 99, 235, 0.2),
+      inset 0 0 12px 2px rgba(96, 165, 250, 0.15);
+  }
 }
 @keyframes glow-gray {
-  0%, 100% { box-shadow: 0 0 8px 2px rgba(156, 163, 175, 0.25), 0 0 20px 6px rgba(156, 163, 175, 0.08), inset 0 0 8px 1px rgba(156, 163, 175, 0.08); }
-  50% { box-shadow: 0 0 16px 5px rgba(209, 213, 219, 0.4), 0 0 32px 10px rgba(156, 163, 175, 0.15), inset 0 0 12px 2px rgba(209, 213, 219, 0.12); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px 2px rgba(156, 163, 175, 0.25),
+      0 0 20px 6px rgba(156, 163, 175, 0.08),
+      inset 0 0 8px 1px rgba(156, 163, 175, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 16px 5px rgba(209, 213, 219, 0.4),
+      0 0 32px 10px rgba(156, 163, 175, 0.15),
+      inset 0 0 12px 2px rgba(209, 213, 219, 0.12);
+  }
 }
 @keyframes glow-green {
-  0%, 100% { box-shadow: 0 0 8px 2px rgba(22, 163, 74, 0.3), 0 0 20px 6px rgba(22, 163, 74, 0.1), inset 0 0 8px 1px rgba(22, 163, 74, 0.1); }
-  50% { box-shadow: 0 0 16px 5px rgba(74, 222, 128, 0.5), 0 0 32px 10px rgba(22, 163, 74, 0.2), inset 0 0 12px 2px rgba(74, 222, 128, 0.15); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px 2px rgba(22, 163, 74, 0.3),
+      0 0 20px 6px rgba(22, 163, 74, 0.1),
+      inset 0 0 8px 1px rgba(22, 163, 74, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 16px 5px rgba(74, 222, 128, 0.5),
+      0 0 32px 10px rgba(22, 163, 74, 0.2),
+      inset 0 0 12px 2px rgba(74, 222, 128, 0.15);
+  }
 }
-.animate-glow-red { animation: glow-red 2s ease-in-out infinite; }
-.animate-glow-blue { animation: glow-blue 2s ease-in-out infinite; }
-.animate-glow-gray { animation: glow-gray 2s ease-in-out infinite; }
-.animate-glow-green { animation: glow-green 2s ease-in-out infinite; }
+.animate-glow-red {
+  animation: glow-red 2s ease-in-out infinite;
+}
+.animate-glow-blue {
+  animation: glow-blue 2s ease-in-out infinite;
+}
+.animate-glow-gray {
+  animation: glow-gray 2s ease-in-out infinite;
+}
+.animate-glow-green {
+  animation: glow-green 2s ease-in-out infinite;
+}
 
 /* Card shimmer — diagonal light sweep on hover */
 @keyframes card-shimmer {
-  0% { transform: translateX(-120%) rotate(25deg); }
-  100% { transform: translateX(220%) rotate(25deg); }
+  0% {
+    transform: translateX(-120%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(220%) rotate(25deg);
+  }
 }
 .card-shimmer-overlay {
   position: absolute;
@@ -527,8 +618,17 @@ body::after {
 
 /* Drag ghost glow pulse */
 @keyframes drag-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 0 40px rgba(212, 175, 55, 0.15); }
-  50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.7), 0 0 60px rgba(212, 175, 55, 0.25); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px rgba(212, 175, 55, 0.5),
+      0 0 40px rgba(212, 175, 55, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(212, 175, 55, 0.7),
+      0 0 60px rgba(212, 175, 55, 0.25);
+  }
 }
 .animate-drag-glow {
   animation: drag-glow 0.8s ease-in-out infinite;
@@ -536,9 +636,17 @@ body::after {
 
 /* Card announcement text burst */
 @keyframes announce-burst {
-  0% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.8); }
-  50% { text-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 0 60px rgba(212, 175, 55, 0.3); }
-  100% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.2); }
+  0% {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  }
+  50% {
+    text-shadow:
+      0 0 30px rgba(255, 255, 255, 0.4),
+      0 0 60px rgba(212, 175, 55, 0.3);
+  }
+  100% {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  }
 }
 .animate-announce-burst {
   animation: announce-burst 0.6s ease-out forwards;
@@ -546,9 +654,15 @@ body::after {
 
 /* Card announcement background flash */
 @keyframes announce-bg-flash {
-  0% { opacity: 0.3; }
-  50% { opacity: 0.6; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 .animate-announce-bg-flash {
   animation: announce-bg-flash 0.8s ease-out forwards;

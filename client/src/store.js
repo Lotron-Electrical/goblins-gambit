@@ -134,13 +134,25 @@ export const useStore = create((set, get) => ({
     } catch {
       // Token invalid — clear it
       localStorage.removeItem("gg_token");
-      set({ authToken: null, authUser: null, screen: "lobby", currentRoom: null, gameState: null });
+      set({
+        authToken: null,
+        authUser: null,
+        screen: "lobby",
+        currentRoom: null,
+        gameState: null,
+      });
     }
   },
 
   logout: () => {
     localStorage.removeItem("gg_token");
-    set({ authToken: null, authUser: null, playerName: "", screen: "lobby", guestAuthenticated: false });
+    set({
+      authToken: null,
+      authUser: null,
+      playerName: "",
+      screen: "lobby",
+      guestAuthenticated: false,
+    });
   },
 
   clearAuthError: () => set({ authError: null }),

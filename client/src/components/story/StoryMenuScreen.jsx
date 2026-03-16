@@ -8,7 +8,15 @@ import { useStoryStore } from "../../storyStore.js";
 import { useStore } from "../../store.js";
 
 export default function StoryMenuScreen() {
-  const { setStoryScreen, loadRun, fetchTrophies, hasSavedRun, storyError, clearStoryError, trophyCards } = useStoryStore();
+  const {
+    setStoryScreen,
+    loadRun,
+    fetchTrophies,
+    hasSavedRun,
+    storyError,
+    clearStoryError,
+    trophyCards,
+  } = useStoryStore();
   const { setScreen } = useStore();
 
   useEffect(() => {
@@ -20,8 +28,14 @@ export default function StoryMenuScreen() {
       {/* Atmospheric background particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-600/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-red-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        <div
+          className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-red-600/5 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        />
       </div>
 
       {/* Decorative top border */}
@@ -44,7 +58,12 @@ export default function StoryMenuScreen() {
         {storyError && (
           <div className="bg-red-900/50 border border-red-500/60 text-red-200 px-4 py-2 rounded-lg mb-4 text-sm backdrop-blur-sm">
             {storyError}
-            <button onClick={clearStoryError} className="ml-3 text-red-400 hover:text-white font-bold">X</button>
+            <button
+              onClick={clearStoryError}
+              className="ml-3 text-red-400 hover:text-white font-bold"
+            >
+              X
+            </button>
           </div>
         )}
 
@@ -55,7 +74,9 @@ export default function StoryMenuScreen() {
             className="group w-full bg-gradient-to-r from-amber-700 to-red-800 hover:from-amber-600 hover:to-red-700 text-white font-bold py-4 rounded-xl transition-all text-lg border border-amber-500/30 shadow-lg shadow-amber-900/30 hover:shadow-amber-800/50 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span className="flex items-center justify-center gap-3">
-              <span className="text-xl opacity-80 group-hover:opacity-100 transition-opacity">{"\u2694\uFE0F"}</span>
+              <span className="text-xl opacity-80 group-hover:opacity-100 transition-opacity">
+                {"\u2694\uFE0F"}
+              </span>
               New Run
             </span>
           </button>
@@ -67,7 +88,9 @@ export default function StoryMenuScreen() {
               className="group w-full bg-gray-800/80 hover:bg-gray-700/80 text-white font-bold py-4 rounded-xl transition-all text-lg border border-gray-600/50 backdrop-blur-sm hover:border-amber-600/30 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="flex items-center justify-center gap-3">
-                <span className="text-xl opacity-60 group-hover:opacity-100 transition-opacity">{"\uD83D\uDDFA\uFE0F"}</span>
+                <span className="text-xl opacity-60 group-hover:opacity-100 transition-opacity">
+                  {"\uD83D\uDDFA\uFE0F"}
+                </span>
                 Continue Run
               </span>
             </button>
@@ -82,10 +105,14 @@ export default function StoryMenuScreen() {
             className="group w-full bg-gray-800/80 hover:bg-gray-700/80 text-amber-300 font-bold py-4 rounded-xl transition-all text-lg border border-amber-700/30 backdrop-blur-sm hover:border-amber-500/40 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span className="flex items-center justify-center gap-3">
-              <span className="text-xl opacity-70 group-hover:opacity-100 transition-opacity">{"\uD83C\uDFC6"}</span>
+              <span className="text-xl opacity-70 group-hover:opacity-100 transition-opacity">
+                {"\uD83C\uDFC6"}
+              </span>
               Trophy Cabinet
               {trophyCards.length > 0 && (
-                <span className="text-xs bg-amber-600/30 text-amber-300 px-2 py-0.5 rounded-full">{trophyCards.length}</span>
+                <span className="text-xs bg-amber-600/30 text-amber-300 px-2 py-0.5 rounded-full">
+                  {trophyCards.length}
+                </span>
               )}
             </span>
           </button>
@@ -111,13 +138,18 @@ export default function StoryMenuScreen() {
               { name: "Volcano", color: "text-red-500" },
             ].map((level, i) => (
               <span key={level.name} className="flex items-center gap-1">
-                <span className={`${level.color} font-medium`}>{level.name}</span>
-                {i < 5 && <span className="text-gray-700 mx-0.5">{"\u203A"}</span>}
+                <span className={`${level.color} font-medium`}>
+                  {level.name}
+                </span>
+                {i < 5 && (
+                  <span className="text-gray-700 mx-0.5">{"\u203A"}</span>
+                )}
               </span>
             ))}
           </div>
           <p className="text-gray-600 text-[11px] text-center mt-2 leading-relaxed">
-            Create a custom creature card, battle through 6 themed levels, choose upgrades, survive with 3 lives.
+            Create a custom creature card, battle through 6 themed levels,
+            choose upgrades, survive with 3 lives.
           </p>
         </div>
       </div>

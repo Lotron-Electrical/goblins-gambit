@@ -24,7 +24,10 @@ import {
   getSavedGameInfo,
 } from "../savedGames.js";
 import { GameEngine } from "../game/GameEngine.js";
-import { setupStoryHandlers, cleanupStoryEngine } from "../story/storySocketHandler.js";
+import {
+  setupStoryHandlers,
+  cleanupStoryEngine,
+} from "../story/storySocketHandler.js";
 
 export function setupSocketHandlers(io, lobby) {
   // Track which rooms have bots and bot IDs + difficulty
@@ -322,7 +325,8 @@ export function setupSocketHandlers(io, lobby) {
     // Authenticate guest players (for story mode)
     socket.on("authenticate_guest", ({ playerName }, callback) => {
       // Validate guest name: trim, limit length, reject empty
-      const trimmedName = typeof playerName === "string" ? playerName.trim().slice(0, 20) : "";
+      const trimmedName =
+        typeof playerName === "string" ? playerName.trim().slice(0, 20) : "";
       if (!trimmedName) {
         callback?.({ error: "Player name is required" });
         return;
@@ -376,9 +380,15 @@ export function setupSocketHandlers(io, lobby) {
       // If this socket is authenticated, verify account matches the original player
       if (socketAccounts.has(socket.id)) {
         const game = lobby.getGame(roomId);
-        const originalUsername = game?.state.players[oldPlayer.id]?._accountUsername;
-        if (originalUsername && originalUsername !== socketAccounts.get(socket.id)) {
-          callback?.({ error: "Account mismatch — cannot rejoin as another player" });
+        const originalUsername =
+          game?.state.players[oldPlayer.id]?._accountUsername;
+        if (
+          originalUsername &&
+          originalUsername !== socketAccounts.get(socket.id)
+        ) {
+          callback?.({
+            error: "Account mismatch — cannot rejoin as another player",
+          });
           return;
         }
       }

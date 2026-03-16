@@ -45,7 +45,10 @@ export default function CardChoiceModal({ mobileCenterY }) {
       >
         <div
           className="bg-gray-900/95 border border-[var(--color-gold)] rounded-xl p-4 sm:p-6 max-w-lg w-full"
-          style={{ boxShadow: "0 0 40px rgba(212, 175, 55, 0.15), 0 8px 32px rgba(0, 0, 0, 0.6)" }}
+          style={{
+            boxShadow:
+              "0 0 40px rgba(212, 175, 55, 0.15), 0 8px 32px rgba(0, 0, 0, 0.6)",
+          }}
         >
           <h3
             className="text-lg sm:text-xl font-display text-[var(--color-gold)] mb-2 sm:mb-3"
@@ -81,14 +84,20 @@ export default function CardChoiceModal({ mobileCenterY }) {
                 <div className="text-white font-bold text-[13px] truncate">
                   {card.name}
                 </div>
-                <div className={`text-[11px] ${TYPE_COLOR_TEXT[card.type] || "text-gray-400"}`}>
+                <div
+                  className={`text-[11px] ${TYPE_COLOR_TEXT[card.type] || "text-gray-400"}`}
+                >
                   {card.type}
                 </div>
                 {card.type === "Creature" && (
                   <div className="text-[10px] mt-1.5 flex justify-center gap-2">
-                    <span className="text-red-400 font-medium">ATK {card.attack}</span>
+                    <span className="text-red-400 font-medium">
+                      ATK {card.attack}
+                    </span>
                     <span className="text-gray-600">|</span>
-                    <span className="text-blue-400 font-medium">DEF {card.defence}</span>
+                    <span className="text-blue-400 font-medium">
+                      DEF {card.defence}
+                    </span>
                   </div>
                 )}
                 {card.effect && (

@@ -47,18 +47,22 @@ export const useStoryStore = create((set, get) => ({
 
   startRun: (cardName, nightmare = false) => {
     set({ storyLoading: true, storyError: null });
-    socket.emit(STORY_EVENTS.STORY_START_RUN, { cardName, nightmare }, (res) => {
-      if (res?.error) {
-        set({ storyLoading: false, storyError: res.error });
-      } else {
-        set({
-          storyLoading: false,
-          storyRun: res.run,
-          currentMap: res.map,
-          storyScreen: "map",
-        });
-      }
-    });
+    socket.emit(
+      STORY_EVENTS.STORY_START_RUN,
+      { cardName, nightmare },
+      (res) => {
+        if (res?.error) {
+          set({ storyLoading: false, storyError: res.error });
+        } else {
+          set({
+            storyLoading: false,
+            storyRun: res.run,
+            currentMap: res.map,
+            storyScreen: "map",
+          });
+        }
+      },
+    );
   },
 
   loadRun: () => {
@@ -191,7 +195,11 @@ export const useStoryStore = create((set, get) => ({
       battleResultTimeout = null;
     }
     useStore.getState().setStoryBattle(false);
-    useStore.setState({ gameState: null, selectedCard: null, targetMode: null });
+    useStore.setState({
+      gameState: null,
+      selectedCard: null,
+      targetMode: null,
+    });
     set({
       storyScreen: "menu",
       storyRun: null,
@@ -228,35 +236,38 @@ export const useStoryStore = create((set, get) => ({
 }));
 
 // Listen for story battle results
-socket.on(STORY_EVENTS.STORY_BATTLE_RESULT, ({ won, battleResult, run, map }) => {
-  // Clear story battle flag so actions route normally again
-  useStore.getState().setStoryBattle(false);
+socket.on(
+  STORY_EVENTS.STORY_BATTLE_RESULT,
+  ({ won, battleResult, run, map }) => {
+    // Clear story battle flag so actions route normally again
+    useStore.getState().setStoryBattle(false);
 
-  useStoryStore.setState({
-    storyRun: run,
-    currentMap: map,
-  });
-
-  if (battleResult.type === "run_over") {
-    useStoryStore.setState({
-      storyScreen: "run_over",
-      runResult: { victory: battleResult.victory, run },
-    });
-  } else if (battleResult.type === "next_level") {
-    // New level reached — update map immediately and show map after delay
     useStoryStore.setState({
       storyRun: run,
       currentMap: map,
     });
-    battleResultTimeout = setTimeout(() => {
-      battleResultTimeout = null;
-      useStoryStore.setState({ storyScreen: "map" });
-    }, 2500);
-  } else {
-    // Normal continue — short delay before returning to map
-    battleResultTimeout = setTimeout(() => {
-      battleResultTimeout = null;
-      useStoryStore.setState({ storyScreen: "map" });
-    }, 2000);
-  }
-});
+
+    if (battleResult.type === "run_over") {
+      useStoryStore.setState({
+        storyScreen: "run_over",
+        runResult: { victory: battleResult.victory, run },
+      });
+    } else if (battleResult.type === "next_level") {
+      // New level reached — update map immediately and show map after delay
+      useStoryStore.setState({
+        storyRun: run,
+        currentMap: map,
+      });
+      battleResultTimeout = setTimeout(() => {
+        battleResultTimeout = null;
+        useStoryStore.setState({ storyScreen: "map" });
+      }, 2500);
+    } else {
+      // Normal continue — short delay before returning to map
+      battleResultTimeout = setTimeout(() => {
+        battleResultTimeout = null;
+        useStoryStore.setState({ storyScreen: "map" });
+      }, 2000);
+    }
+  },
+);

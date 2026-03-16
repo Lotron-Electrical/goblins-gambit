@@ -6,7 +6,8 @@ import { useEffect } from "react";
 import { useStoryStore } from "../../storyStore.js";
 
 export default function TrophyCabinetScreen() {
-  const { trophyCards, achievements, fetchTrophies, setStoryScreen } = useStoryStore();
+  const { trophyCards, achievements, fetchTrophies, setStoryScreen } =
+    useStoryStore();
 
   useEffect(() => {
     fetchTrophies();
@@ -24,7 +25,9 @@ export default function TrophyCabinetScreen() {
 
       <div className="relative z-10 flex flex-col items-center w-full">
         {/* Header */}
-        <div className="text-4xl mb-3 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]">{"\uD83C\uDFC6"}</div>
+        <div className="text-4xl mb-3 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]">
+          {"\uD83C\uDFC6"}
+        </div>
         <h2 className="text-3xl md:text-4xl font-display text-transparent bg-clip-text bg-gradient-to-b from-amber-300 to-amber-500 mb-1">
           Trophy Cabinet
         </h2>
@@ -32,8 +35,7 @@ export default function TrophyCabinetScreen() {
         <p className="text-gray-600 text-sm mb-8">
           {trophyCards.length === 0
             ? "Your victories will be displayed here"
-            : `${trophyCards.length} ${trophyCards.length === 1 ? "trophy" : "trophies"} collected`
-          }
+            : `${trophyCards.length} ${trophyCards.length === 1 ? "trophy" : "trophies"} collected`}
         </p>
 
         {trophyCards.length === 0 ? (
@@ -42,7 +44,8 @@ export default function TrophyCabinetScreen() {
               <span className="text-3xl text-gray-700">{"\uD83C\uDFC6"}</span>
             </div>
             <p className="text-gray-500 text-center max-w-xs leading-relaxed">
-              Complete a story run to earn your first trophy! Your victorious creatures will be immortalized here.
+              Complete a story run to earn your first trophy! Your victorious
+              creatures will be immortalized here.
             </p>
           </div>
         ) : (
@@ -62,9 +65,13 @@ export default function TrophyCabinetScreen() {
                 >
                   <div className="bg-gray-950 rounded-[14px] p-4 flex flex-col items-center h-full relative overflow-hidden">
                     {/* Card inner ambiance */}
-                    <div className={`absolute inset-0 rounded-[14px] ${
-                      isNightmare ? "bg-gradient-to-b from-red-900/10 to-transparent" : "bg-gradient-to-b from-amber-900/10 to-transparent"
-                    }`} />
+                    <div
+                      className={`absolute inset-0 rounded-[14px] ${
+                        isNightmare
+                          ? "bg-gradient-to-b from-red-900/10 to-transparent"
+                          : "bg-gradient-to-b from-amber-900/10 to-transparent"
+                      }`}
+                    />
 
                     {/* Nightmare badge */}
                     {isNightmare && (
@@ -74,9 +81,11 @@ export default function TrophyCabinetScreen() {
                     )}
 
                     {/* Name */}
-                    <div className={`relative z-10 font-display text-sm mb-2 truncate w-full text-center ${
-                      isNightmare ? "text-red-300" : "text-amber-300"
-                    }`}>
+                    <div
+                      className={`relative z-10 font-display text-sm mb-2 truncate w-full text-center ${
+                        isNightmare ? "text-red-300" : "text-amber-300"
+                      }`}
+                    >
                       {card.name || "Trophy"}
                     </div>
 
@@ -92,19 +101,45 @@ export default function TrophyCabinetScreen() {
                     {/* Stats with bars */}
                     <div className="relative z-10 w-full space-y-1.5 text-xs">
                       {[
-                        { label: "ATK", value: card.attack, color: "text-red-400", barColor: "bg-red-500/50" },
-                        { label: "DEF", value: card.defence, color: "text-blue-400", barColor: "bg-blue-500/50" },
-                        { label: "SP", value: card.sp, color: "text-yellow-400", barColor: "bg-yellow-500/50" },
+                        {
+                          label: "ATK",
+                          value: card.attack,
+                          color: "text-red-400",
+                          barColor: "bg-red-500/50",
+                        },
+                        {
+                          label: "DEF",
+                          value: card.defence,
+                          color: "text-blue-400",
+                          barColor: "bg-blue-500/50",
+                        },
+                        {
+                          label: "SP",
+                          value: card.sp,
+                          color: "text-yellow-400",
+                          barColor: "bg-yellow-500/50",
+                        },
                       ].map((stat) => (
-                        <div key={stat.label} className="flex items-center gap-1.5">
-                          <span className={`${stat.color} font-bold w-6 text-[10px]`}>{stat.label}</span>
+                        <div
+                          key={stat.label}
+                          className="flex items-center gap-1.5"
+                        >
+                          <span
+                            className={`${stat.color} font-bold w-6 text-[10px]`}
+                          >
+                            {stat.label}
+                          </span>
                           <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
                             <div
                               className={`h-full ${stat.barColor} rounded-full`}
-                              style={{ width: `${Math.min(100, (stat.value || 0) / 3)}%` }}
+                              style={{
+                                width: `${Math.min(100, (stat.value || 0) / 3)}%`,
+                              }}
                             />
                           </div>
-                          <span className="text-white font-bold w-6 text-right text-[10px]">{stat.value || "?"}</span>
+                          <span className="text-white font-bold w-6 text-right text-[10px]">
+                            {stat.value || "?"}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -125,8 +160,12 @@ export default function TrophyCabinetScreen() {
           <div className="mt-10 w-full max-w-lg">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">{"\u2B50"}</span>
-              <h3 className="text-xl font-display text-amber-400">Achievements</h3>
-              <span className="text-xs text-gray-600 ml-auto">{achievements.length} unlocked</span>
+              <h3 className="text-xl font-display text-amber-400">
+                Achievements
+              </h3>
+              <span className="text-xs text-gray-600 ml-auto">
+                {achievements.length} unlocked
+              </span>
             </div>
             <div className="space-y-2">
               {achievements.map((ach, idx) => (

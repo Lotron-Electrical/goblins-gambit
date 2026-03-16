@@ -60,7 +60,14 @@ export const THEME_EFFECTS = {
 };
 
 // Story Mode constants
-export const STORY_LEVELS = ['tavern', 'hills', 'swamp', 'tundra', 'cliffs', 'volcano'];
+export const STORY_LEVELS = [
+  "tavern",
+  "hills",
+  "swamp",
+  "tundra",
+  "cliffs",
+  "volcano",
+];
 
 export const STORY_LEVEL_CONFIG = {
   tavern: {

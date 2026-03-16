@@ -18,7 +18,8 @@ const PLAYER_CARD_IMAGES = [
  * @param {boolean} nightmare - nightmare mode flag
  */
 export function createStoryRun(username, customCard, nightmare = false) {
-  const randomImage = PLAYER_CARD_IMAGES[Math.floor(Math.random() * PLAYER_CARD_IMAGES.length)];
+  const randomImage =
+    PLAYER_CARD_IMAGES[Math.floor(Math.random() * PLAYER_CARD_IMAGES.length)];
   return {
     runId: randomUUID(),
     username,
@@ -42,7 +43,7 @@ export function createStoryRun(username, customCard, nightmare = false) {
     nightmare,
     currentMap: null,
     currentNodeId: null,
-    items: [],          // { id, name, description, used }
+    items: [], // { id, name, description, used }
     completedNodes: [], // node IDs that have been completed
     stats: {
       battlesWon: 0,

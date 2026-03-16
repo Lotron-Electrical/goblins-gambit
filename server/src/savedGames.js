@@ -3,7 +3,13 @@
  * One save slot per player (overwrite on re-save).
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from "fs";
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+  renameSync,
+} from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -148,7 +154,8 @@ async function getSavedGameInfo(username) {
   if (!save) return { hasSave: false };
 
   const { gameState, roomSettings } = save;
-  const players = (gameState && gameState.players) ? Object.values(gameState.players) : [];
+  const players =
+    gameState && gameState.players ? Object.values(gameState.players) : [];
   const botCount = players.filter((p) => p && p.isBot).length;
 
   return {

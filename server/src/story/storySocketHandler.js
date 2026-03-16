@@ -5,12 +5,21 @@
 
 import { StoryModeEngine } from "./StoryModeEngine.js";
 import {
-  saveStoryRun, loadStoryRun, deleteStoryRun,
-  saveTrophyCard, getTrophyCards,
-  unlockAchievement, getAchievements
+  saveStoryRun,
+  loadStoryRun,
+  deleteStoryRun,
+  saveTrophyCard,
+  getTrophyCards,
+  unlockAchievement,
+  getAchievements,
 } from "./storyPersistence.js";
 import { generateEnhancements } from "./enhancementGenerator.js";
-import { STORY_EVENTS, STORY_LEVELS, ACTION, EVENTS } from "../../../shared/src/constants.js";
+import {
+  STORY_EVENTS,
+  STORY_LEVELS,
+  ACTION,
+  EVENTS,
+} from "../../../shared/src/constants.js";
 import { decideBotAction } from "../bot/BotPlayer.js";
 
 // Active story engines per username
@@ -24,30 +33,51 @@ const storyEngines = new Map();
  * @param {Map} botIds - Set of bot IDs from main handler (for compatibility)
  */
 export function setupStoryHandlers(socket, io, getUsername) {
+  socket.on(
+    STORY_EVENTS.STORY_START_RUN,
+    async ({ cardName, nightmare }, callback) => {
+      const username = getUsername();
+      console.log(
+        "[STORY] STORY_START_RUN, socket:",
+        socket.id,
+        "username:",
+        username,
+      );
+      if (!username) {
+        console.log("[STORY] REJECTED - no username for socket", socket.id);
+        callback?.({ error: "Must be logged in" });
+        return;
+      }
 
-  socket.on(STORY_EVENTS.STORY_START_RUN, async ({ cardName, nightmare }, callback) => {
-    const username = getUsername();
-    console.log("[STORY] STORY_START_RUN, socket:", socket.id, "username:", username);
-    if (!username) { console.log("[STORY] REJECTED - no username for socket", socket.id); callback?.({ error: "Must be logged in" }); return; }
+      const engine = new StoryModeEngine();
+      const result = engine.startRun(
+        username,
+        { name: cardName || "Custom Goblin" },
+        nightmare || false,
+      );
+      storyEngines.set(username, engine);
 
-    const engine = new StoryModeEngine();
-    const result = engine.startRun(username, { name: cardName || "Custom Goblin" }, nightmare || false);
-    storyEngines.set(username, engine);
+      // Join a story-specific room
+      const roomId = `story_room_${username}`;
+      socket.join(roomId);
 
-    // Join a story-specific room
-    const roomId = `story_room_${username}`;
-    socket.join(roomId);
-
-    callback?.({ success: true, run: result.run, map: result.map });
-  });
+      callback?.({ success: true, run: result.run, map: result.map });
+    },
+  );
 
   socket.on(STORY_EVENTS.STORY_LOAD_RUN, async (_, callback) => {
     const username = getUsername();
-    if (!username) { callback?.({ error: "Must be logged in" }); return; }
+    if (!username) {
+      callback?.({ error: "Must be logged in" });
+      return;
+    }
 
     try {
       const runState = await loadStoryRun(username);
-      if (!runState) { callback?.({ error: "No saved story run" }); return; }
+      if (!runState) {
+        callback?.({ error: "No saved story run" });
+        return;
+      }
 
       const engine = new StoryModeEngine();
       const result = engine.loadRun(runState.runState);
@@ -66,10 +96,16 @@ export function setupStoryHandlers(socket, io, getUsername) {
   socket.on(STORY_EVENTS.STORY_SELECT_NODE, async ({ nodeId }, callback) => {
     const username = getUsername();
     const engine = storyEngines.get(username);
-    if (!engine) { callback?.({ error: "No active story run" }); return; }
+    if (!engine) {
+      callback?.({ error: "No active story run" });
+      return;
+    }
 
     const result = engine.selectNode(nodeId);
-    if (result.error) { callback?.({ error: result.error }); return; }
+    if (result.error) {
+      callback?.({ error: result.error });
+      return;
+    }
 
     if (result.type === "battle") {
       // Start a battle — run the bot in story mode
@@ -113,16 +149,33 @@ export function setupStoryHandlers(socket, io, getUsername) {
       let options;
       try {
         // Dynamic import to avoid circular deps if needed
-        const { generateEnhancements: genEnh } = await import("./enhancementGenerator.js");
+        const { generateEnhancements: genEnh } =
+          await import("./enhancementGenerator.js");
         options = genEnh(levelKey, engine.run);
       } catch {
         options = [
-          { type: "stat_boost", stat: "attack", amount: 50, description: "+50 ATK" },
-          { type: "stat_boost", stat: "defence", amount: 50, description: "+50 DEF" },
+          {
+            type: "stat_boost",
+            stat: "attack",
+            amount: 50,
+            description: "+50 ATK",
+          },
+          {
+            type: "stat_boost",
+            stat: "defence",
+            amount: 50,
+            description: "+50 DEF",
+          },
           { type: "stat_boost", stat: "sp", amount: 50, description: "+50 SP" },
         ];
       }
-      callback?.({ success: true, type: "enhancement", options, run: engine.run, map: engine.run.currentMap });
+      callback?.({
+        success: true,
+        type: "enhancement",
+        options,
+        run: engine.run,
+        map: engine.run.currentMap,
+      });
     }
   });
 
@@ -130,7 +183,10 @@ export function setupStoryHandlers(socket, io, getUsername) {
   socket.on("story_game_action", (action, callback) => {
     const username = getUsername();
     const engine = storyEngines.get(username);
-    if (!engine?.gameEngine) { callback?.({ error: "No active battle" }); return; }
+    if (!engine?.gameEngine) {
+      callback?.({ error: "No active battle" });
+      return;
+    }
 
     const ctx = engine._battleContext;
     const result = engine.gameEngine.handleAction(ctx.playerId, action);
@@ -159,10 +215,17 @@ export function setupStoryHandlers(socket, io, getUsername) {
 
       // Save trophy card at end of any completed run
       if (battleResult.type === "run_over") {
-        saveTrophyCard(username, engine.run.customCard,
-          STORY_LEVELS[Math.max(0, engine.run.currentLevelIndex - (battleResult.victory ? 1 : 0))] || "tavern",
-          engine.run.nightmare
-        ).catch(err => console.error("[StoryTrophy] Error:", err));
+        saveTrophyCard(
+          username,
+          engine.run.customCard,
+          STORY_LEVELS[
+            Math.max(
+              0,
+              engine.run.currentLevelIndex - (battleResult.victory ? 1 : 0),
+            )
+          ] || "tavern",
+          engine.run.nightmare,
+        ).catch((err) => console.error("[StoryTrophy] Error:", err));
       }
       return;
     }
@@ -171,49 +234,87 @@ export function setupStoryHandlers(socket, io, getUsername) {
     setTimeout(() => runStoryBotTurn(engine, socket, io), 500);
   });
 
-  socket.on(STORY_EVENTS.STORY_PICK_ENHANCEMENT, ({ enhancement }, callback) => {
-    const username = getUsername();
-    const engine = storyEngines.get(username);
-    if (!engine) { callback?.({ error: "No active story run" }); return; }
+  socket.on(
+    STORY_EVENTS.STORY_PICK_ENHANCEMENT,
+    ({ enhancement }, callback) => {
+      const username = getUsername();
+      const engine = storyEngines.get(username);
+      if (!engine) {
+        callback?.({ error: "No active story run" });
+        return;
+      }
 
-    const result = engine.pickEnhancement(enhancement);
-    callback?.({ success: true, run: result.run, map: engine.run.currentMap });
-  });
+      const result = engine.pickEnhancement(enhancement);
+      callback?.({
+        success: true,
+        run: result.run,
+        map: engine.run.currentMap,
+      });
+    },
+  );
 
   socket.on(STORY_EVENTS.STORY_USE_ITEM, ({ itemId }, callback) => {
     const username = getUsername();
     const engine = storyEngines.get(username);
-    if (!engine) { callback?.({ error: "No active story run" }); return; }
+    if (!engine) {
+      callback?.({ error: "No active story run" });
+      return;
+    }
 
     const result = engine.useItem(itemId);
-    if (result.error) { callback?.({ error: result.error }); return; }
+    if (result.error) {
+      callback?.({ error: result.error });
+      return;
+    }
 
     if (result.success) {
       broadcastStoryBattleState(socket, engine);
-      callback?.({ success: true, effect: result.effect, needsTrophySelection: result.needsTrophySelection });
+      callback?.({
+        success: true,
+        effect: result.effect,
+        needsTrophySelection: result.needsTrophySelection,
+      });
     }
   });
 
-  socket.on(STORY_EVENTS.STORY_SELECT_TROPHY, async ({ trophyCard }, callback) => {
-    const username = getUsername();
-    const engine = storyEngines.get(username);
-    if (!engine) { callback?.({ error: "No active story run" }); return; }
-    if (!engine.gameEngine) { callback?.({ error: "No active battle" }); return; }
+  socket.on(
+    STORY_EVENTS.STORY_SELECT_TROPHY,
+    async ({ trophyCard }, callback) => {
+      const username = getUsername();
+      const engine = storyEngines.get(username);
+      if (!engine) {
+        callback?.({ error: "No active story run" });
+        return;
+      }
+      if (!engine.gameEngine) {
+        callback?.({ error: "No active battle" });
+        return;
+      }
 
-    const result = engine.addTrophyCardToHand(trophyCard);
-    if (result.error) { callback?.({ error: result.error }); return; }
+      const result = engine.addTrophyCardToHand(trophyCard);
+      if (result.error) {
+        callback?.({ error: result.error });
+        return;
+      }
 
-    broadcastStoryBattleState(socket, engine);
-    callback?.({ success: true });
-  });
+      broadcastStoryBattleState(socket, engine);
+      callback?.({ success: true });
+    },
+  );
 
   socket.on(STORY_EVENTS.STORY_SAVE_RUN, async (_, callback) => {
     const username = getUsername();
     const engine = storyEngines.get(username);
-    if (!engine) { callback?.({ error: "No active story run" }); return; }
+    if (!engine) {
+      callback?.({ error: "No active story run" });
+      return;
+    }
 
     // Can only save between battles (not during)
-    if (engine.gameEngine) { callback?.({ error: "Cannot save during battle" }); return; }
+    if (engine.gameEngine) {
+      callback?.({ error: "Cannot save during battle" });
+      return;
+    }
 
     try {
       await saveStoryRun(username, engine.getRunState());
@@ -227,7 +328,10 @@ export function setupStoryHandlers(socket, io, getUsername) {
 
   socket.on(STORY_EVENTS.STORY_GET_TROPHIES, async (_, callback) => {
     const username = getUsername();
-    if (!username) { callback?.({ error: "Must be logged in" }); return; }
+    if (!username) {
+      callback?.({ error: "Must be logged in" });
+      return;
+    }
 
     try {
       const trophies = await getTrophyCards(username);
@@ -243,7 +347,9 @@ export function setupStoryHandlers(socket, io, getUsername) {
 /** Send current battle state to the story player */
 function broadcastStoryBattleState(socket, engine) {
   if (!engine.gameEngine || !engine._battleContext) return;
-  const state = engine.gameEngine.getStateForPlayer(engine._battleContext.playerId);
+  const state = engine.gameEngine.getStateForPlayer(
+    engine._battleContext.playerId,
+  );
   socket.emit(EVENTS.GAME_STATE, state);
 }
 
@@ -295,10 +401,17 @@ function runStoryBotTurn(engine, socket, io) {
 
     if (battleResult.type === "run_over") {
       const uname = engine.run.username;
-      saveTrophyCard(uname, engine.run.customCard,
-        STORY_LEVELS[Math.max(0, engine.run.currentLevelIndex - (battleResult.victory ? 1 : 0))] || "tavern",
-        engine.run.nightmare
-      ).catch(err => console.error("[StoryTrophy] Error:", err));
+      saveTrophyCard(
+        uname,
+        engine.run.customCard,
+        STORY_LEVELS[
+          Math.max(
+            0,
+            engine.run.currentLevelIndex - (battleResult.victory ? 1 : 0),
+          )
+        ] || "tavern",
+        engine.run.nightmare,
+      ).catch((err) => console.error("[StoryTrophy] Error:", err));
     }
     return;
   }
@@ -311,7 +424,10 @@ function runStoryBotTurn(engine, socket, io) {
     updatedState.pendingChoice?.playerId === ctx.botId;
 
   if (stillNeeds) {
-    setTimeout(() => runStoryBotTurn(engine, socket, io), 600 + Math.random() * 400);
+    setTimeout(
+      () => runStoryBotTurn(engine, socket, io),
+      600 + Math.random() * 400,
+    );
   }
 }
 
@@ -319,11 +435,19 @@ function runStoryBotTurn(engine, socket, io) {
 async function checkAchievements(username, engine) {
   const run = engine.run;
   try {
-    if (run.stats.battlesWon === 1) await unlockAchievement(username, "first_blood");
-    if (run.stats.battlesWon >= 5) await unlockAchievement(username, "tavern_regular");
-    if (run.stats.creaturesKilled >= 50) await unlockAchievement(username, "goblin_slayer");
-    if (run.stats.levelsCompleted >= 6) await unlockAchievement(username, "story_complete");
-    if (run.customCard.attack >= 500 && run.customCard.defence >= 500 && run.customCard.sp >= 500) {
+    if (run.stats.battlesWon === 1)
+      await unlockAchievement(username, "first_blood");
+    if (run.stats.battlesWon >= 5)
+      await unlockAchievement(username, "tavern_regular");
+    if (run.stats.creaturesKilled >= 50)
+      await unlockAchievement(username, "goblin_slayer");
+    if (run.stats.levelsCompleted >= 6)
+      await unlockAchievement(username, "story_complete");
+    if (
+      run.customCard.attack >= 500 &&
+      run.customCard.defence >= 500 &&
+      run.customCard.sp >= 500
+    ) {
       await unlockAchievement(username, "fully_loaded");
     }
     if (run.nightmare && run.stats.levelsCompleted >= 6) {

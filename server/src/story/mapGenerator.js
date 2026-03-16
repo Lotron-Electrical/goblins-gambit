@@ -16,10 +16,10 @@ function createNode(row, col, type, revealed) {
     row,
     col,
     type,
-    connections: [],       // populated later with IDs of next-row nodes
+    connections: [], // populated later with IDs of next-row nodes
     revealed,
     completed: false,
-    characterId: null,     // filled in for battle/boss nodes at runtime
+    characterId: null, // filled in for battle/boss nodes at runtime
   };
 }
 
@@ -35,7 +35,7 @@ function randInt(min, max) {
  * ~60% chance of "battle", ~40% chance of "enhancement".
  */
 function randomMiddleType() {
-  return Math.random() < 0.6 ? 'battle' : 'enhancement';
+  return Math.random() < 0.6 ? "battle" : "enhancement";
 }
 
 /**
@@ -75,7 +75,11 @@ function connectRows(currentRow, nextRow) {
 
   // Step 3: Optionally add a second connection for branching variety.
   for (let i = 0; i < currentRow.length; i++) {
-    if (currentConnSets[i].size < 2 && nextRow.length > 1 && Math.random() < 0.5) {
+    if (
+      currentConnSets[i].size < 2 &&
+      nextRow.length > 1 &&
+      Math.random() < 0.5
+    ) {
       // Pick a next-row node not already connected
       const remaining = nextIds.filter((id) => !currentConnSets[i].has(id));
       if (remaining.length > 0) {
@@ -102,7 +106,7 @@ function generateMap(levelIndex, levelName) {
   const rows = [];
 
   // --- Row 0: single start node (always a battle) ---
-  const startNode = createNode(0, 0, 'battle', true);
+  const startNode = createNode(0, 0, "battle", true);
   rows.push([startNode]);
 
   // --- Rows 1-3: middle rows with 2-3 random nodes each ---
@@ -117,7 +121,7 @@ function generateMap(levelIndex, levelName) {
   }
 
   // --- Row 4: single boss node (always "boss") ---
-  const bossNode = createNode(4, 0, 'boss', false);
+  const bossNode = createNode(4, 0, "boss", false);
   rows.push([bossNode]);
 
   // --- Wire up connections between adjacent rows ---

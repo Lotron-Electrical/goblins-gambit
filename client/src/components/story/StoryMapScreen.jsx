@@ -3,20 +3,54 @@
  */
 
 import { useStoryStore } from "../../storyStore.js";
-import { STORY_LEVELS, STORY_LEVEL_CONFIG } from "../../../../shared/src/constants.js";
+import {
+  STORY_LEVELS,
+  STORY_LEVEL_CONFIG,
+} from "../../../../shared/src/constants.js";
 
 /** Per-level theme colors for the map background and accents */
 const LEVEL_THEMES = {
-  tavern:  { bg: "from-gray-950 via-amber-950/20 to-gray-950", accent: "amber", glow: "rgba(217,119,6,0.08)" },
-  hills:   { bg: "from-gray-950 via-green-950/20 to-gray-950", accent: "green", glow: "rgba(34,197,94,0.06)" },
-  swamp:   { bg: "from-gray-950 via-emerald-950/25 to-gray-950", accent: "emerald", glow: "rgba(16,185,129,0.08)" },
-  tundra:  { bg: "from-gray-950 via-blue-950/20 to-gray-950", accent: "blue", glow: "rgba(59,130,246,0.06)" },
-  cliffs:  { bg: "from-gray-950 via-stone-900/30 to-gray-950", accent: "stone", glow: "rgba(168,162,158,0.06)" },
-  volcano: { bg: "from-gray-950 via-red-950/25 to-gray-950", accent: "red", glow: "rgba(239,68,68,0.08)" },
+  tavern: {
+    bg: "from-gray-950 via-amber-950/20 to-gray-950",
+    accent: "amber",
+    glow: "rgba(217,119,6,0.08)",
+  },
+  hills: {
+    bg: "from-gray-950 via-green-950/20 to-gray-950",
+    accent: "green",
+    glow: "rgba(34,197,94,0.06)",
+  },
+  swamp: {
+    bg: "from-gray-950 via-emerald-950/25 to-gray-950",
+    accent: "emerald",
+    glow: "rgba(16,185,129,0.08)",
+  },
+  tundra: {
+    bg: "from-gray-950 via-blue-950/20 to-gray-950",
+    accent: "blue",
+    glow: "rgba(59,130,246,0.06)",
+  },
+  cliffs: {
+    bg: "from-gray-950 via-stone-900/30 to-gray-950",
+    accent: "stone",
+    glow: "rgba(168,162,158,0.06)",
+  },
+  volcano: {
+    bg: "from-gray-950 via-red-950/25 to-gray-950",
+    accent: "red",
+    glow: "rgba(239,68,68,0.08)",
+  },
 };
 
 export default function StoryMapScreen() {
-  const { storyRun, currentMap, selectNode, saveRun, setStoryScreen, storyLoading } = useStoryStore();
+  const {
+    storyRun,
+    currentMap,
+    selectNode,
+    saveRun,
+    setStoryScreen,
+    storyLoading,
+  } = useStoryStore();
 
   if (!storyRun || !currentMap) {
     return (
@@ -57,7 +91,11 @@ export default function StoryMapScreen() {
         if (node.completed) {
           for (const connId of node.connections) {
             const connNode = currentMap.nodes[connId];
-            if (connNode && !connNode.completed && connNode.row >= highestCompletedRow) {
+            if (
+              connNode &&
+              !connNode.completed &&
+              connNode.row >= highestCompletedRow
+            ) {
               selectableNodes.add(connId);
             }
           }
@@ -68,44 +106,56 @@ export default function StoryMapScreen() {
 
   const nodeTypeIcon = (type) => {
     switch (type) {
-      case "battle": return "\u2694\uFE0F";
-      case "boss": return "\uD83D\uDC80";
-      case "enhancement": return "\u2B50";
-      default: return "?";
+      case "battle":
+        return "\u2694\uFE0F";
+      case "boss":
+        return "\uD83D\uDC80";
+      case "enhancement":
+        return "\u2B50";
+      default:
+        return "?";
     }
   };
 
   const nodeTypeLabel = (type) => {
     switch (type) {
-      case "battle": return "Battle";
-      case "boss": return "BOSS";
-      case "enhancement": return "Upgrade";
-      default: return "";
+      case "battle":
+        return "Battle";
+      case "boss":
+        return "BOSS";
+      case "enhancement":
+        return "Upgrade";
+      default:
+        return "";
     }
   };
 
   const nodeBaseStyles = (type) => {
     switch (type) {
-      case "battle": return {
-        border: "border-red-500/70",
-        bg: "bg-gradient-to-b from-red-900/40 to-red-950/60",
-        glow: "shadow-red-500/20",
-      };
-      case "boss": return {
-        border: "border-amber-400/80",
-        bg: "bg-gradient-to-b from-amber-900/40 to-amber-950/60",
-        glow: "shadow-amber-400/30",
-      };
-      case "enhancement": return {
-        border: "border-green-500/70",
-        bg: "bg-gradient-to-b from-green-900/40 to-green-950/60",
-        glow: "shadow-green-500/20",
-      };
-      default: return {
-        border: "border-gray-600",
-        bg: "bg-gray-800",
-        glow: "",
-      };
+      case "battle":
+        return {
+          border: "border-red-500/70",
+          bg: "bg-gradient-to-b from-red-900/40 to-red-950/60",
+          glow: "shadow-red-500/20",
+        };
+      case "boss":
+        return {
+          border: "border-amber-400/80",
+          bg: "bg-gradient-to-b from-amber-900/40 to-amber-950/60",
+          glow: "shadow-amber-400/30",
+        };
+      case "enhancement":
+        return {
+          border: "border-green-500/70",
+          bg: "bg-gradient-to-b from-green-900/40 to-green-950/60",
+          glow: "shadow-green-500/20",
+        };
+      default:
+        return {
+          border: "border-gray-600",
+          bg: "bg-gray-800",
+          glow: "",
+        };
     }
   };
 
@@ -154,10 +204,15 @@ export default function StoryMapScreen() {
   const svgHeight = currentMap.rows.length * rowGap;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 bg-gradient-to-b ${theme.bg} relative overflow-hidden`}>
+    <div
+      className={`min-h-screen flex flex-col items-center p-4 bg-gradient-to-b ${theme.bg} relative overflow-hidden`}
+    >
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl animate-pulse" style={{ background: theme.glow }} />
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl animate-pulse"
+          style={{ background: theme.glow }}
+        />
       </div>
 
       {/* Header */}
@@ -173,34 +228,48 @@ export default function StoryMapScreen() {
             </h2>
             {/* Lives display */}
             <div className="flex items-center gap-1 mt-1.5">
-              {Array.from({ length: storyRun.nightmare ? 2 : 3 }).map((_, i) => (
-                <span
-                  key={i}
-                  className={`text-lg transition-all ${
-                    i < storyRun.lives
-                      ? "text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.6)]"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {"\u2665"}
-                </span>
-              ))}
+              {Array.from({ length: storyRun.nightmare ? 2 : 3 }).map(
+                (_, i) => (
+                  <span
+                    key={i}
+                    className={`text-lg transition-all ${
+                      i < storyRun.lives
+                        ? "text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.6)]"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {"\u2665"}
+                  </span>
+                ),
+              )}
               {storyRun.nightmare && (
-                <span className="text-[10px] text-red-400/70 ml-1 font-bold uppercase tracking-wider">Nightmare</span>
+                <span className="text-[10px] text-red-400/70 ml-1 font-bold uppercase tracking-wider">
+                  Nightmare
+                </span>
               )}
             </div>
           </div>
 
           {/* Custom card mini display */}
           <div className="bg-gray-900/80 border border-amber-600/30 rounded-xl px-3 py-2 backdrop-blur-sm">
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Your Creature</div>
-            <div className="text-sm text-amber-300 font-bold">{storyRun.customCard.name}</div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">
+              Your Creature
+            </div>
+            <div className="text-sm text-amber-300 font-bold">
+              {storyRun.customCard.name}
+            </div>
             <div className="flex gap-2 mt-1 text-[11px]">
-              <span className="text-red-400 font-medium">{storyRun.customCard.attack}</span>
+              <span className="text-red-400 font-medium">
+                {storyRun.customCard.attack}
+              </span>
               <span className="text-gray-600">/</span>
-              <span className="text-blue-400 font-medium">{storyRun.customCard.defence}</span>
+              <span className="text-blue-400 font-medium">
+                {storyRun.customCard.defence}
+              </span>
               <span className="text-gray-600">/</span>
-              <span className="text-yellow-400 font-medium">{storyRun.customCard.sp}</span>
+              <span className="text-yellow-400 font-medium">
+                {storyRun.customCard.sp}
+              </span>
             </div>
           </div>
         </div>
@@ -226,14 +295,19 @@ export default function StoryMapScreen() {
           <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-700"
-              style={{ width: `${((storyRun.currentLevelIndex) / STORY_LEVELS.length) * 100}%` }}
+              style={{
+                width: `${(storyRun.currentLevelIndex / STORY_LEVELS.length) * 100}%`,
+              }}
             />
           </div>
         </div>
       </div>
 
       {/* Map with SVG connection lines */}
-      <div className="relative z-10 w-full max-w-lg" style={{ minHeight: svgHeight }}>
+      <div
+        className="relative z-10 w-full max-w-lg"
+        style={{ minHeight: svgHeight }}
+      >
         {/* SVG layer for connection lines */}
         <svg
           className="absolute inset-0 pointer-events-none"
@@ -265,7 +339,11 @@ export default function StoryMapScreen() {
         {/* Node rows */}
         <div className="relative z-10 space-y-4" style={{ paddingTop: 0 }}>
           {currentMap.rows.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex justify-center gap-5" style={{ height: `${rowGap}px`, alignItems: "center" }}>
+            <div
+              key={rowIdx}
+              className="flex justify-center gap-5"
+              style={{ height: `${rowGap}px`, alignItems: "center" }}
+            >
               {row.map((node) => {
                 const isSelectable = selectableNodes.has(node.id);
                 const isRevealed = node.revealed;
@@ -275,7 +353,9 @@ export default function StoryMapScreen() {
                 return (
                   <button
                     key={node.id}
-                    onClick={() => isSelectable && !storyLoading && selectNode(node.id)}
+                    onClick={() =>
+                      isSelectable && !storyLoading && selectNode(node.id)
+                    }
                     disabled={!isSelectable || storyLoading}
                     className={`relative flex flex-col items-center justify-center transition-all duration-300 rounded-xl border-2 ${
                       isCompleted
@@ -289,24 +369,35 @@ export default function StoryMapScreen() {
                   >
                     {/* Selectable pulse ring */}
                     {isSelectable && (
-                      <span className="absolute inset-0 rounded-xl border-2 border-amber-400/30 animate-ping" style={{ animationDuration: "2s" }} />
+                      <span
+                        className="absolute inset-0 rounded-xl border-2 border-amber-400/30 animate-ping"
+                        style={{ animationDuration: "2s" }}
+                      />
                     )}
 
                     {isRevealed || isCompleted ? (
                       <>
-                        <span className={`text-xl ${isCompleted ? "grayscale opacity-60" : ""}`}>
+                        <span
+                          className={`text-xl ${isCompleted ? "grayscale opacity-60" : ""}`}
+                        >
                           {nodeTypeIcon(node.type)}
                         </span>
-                        <span className={`text-[9px] font-bold uppercase tracking-wider mt-0.5 ${
-                          isCompleted ? "text-green-600" : "text-gray-500"
-                        }`}>
-                          {isCompleted ? "\u2713 Done" : nodeTypeLabel(node.type)}
+                        <span
+                          className={`text-[9px] font-bold uppercase tracking-wider mt-0.5 ${
+                            isCompleted ? "text-green-600" : "text-gray-500"
+                          }`}
+                        >
+                          {isCompleted
+                            ? "\u2713 Done"
+                            : nodeTypeLabel(node.type)}
                         </span>
                       </>
                     ) : (
                       <>
                         <span className="text-gray-700 text-xl">?</span>
-                        <span className="text-[9px] text-gray-700">Unknown</span>
+                        <span className="text-[9px] text-gray-700">
+                          Unknown
+                        </span>
                       </>
                     )}
                   </button>

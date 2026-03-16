@@ -414,7 +414,10 @@ export class GameEngine {
 
       // Safety timeout: auto-pick first card after 20s to prevent permanent softlock
       this._pendingChoiceTimeout = setTimeout(() => {
-        if (this.state.phase !== GAME_PHASE.PLAYING || this.state.pendingChoice === null) {
+        if (
+          this.state.phase !== GAME_PHASE.PLAYING ||
+          this.state.pendingChoice === null
+        ) {
           return;
         }
         if (this.state.pendingChoice?.type === "dead_meme") {
@@ -559,7 +562,10 @@ export class GameEngine {
         const storyPlayer = this.state.players["story_player"];
         if (storyPlayer) {
           for (const creature of storyPlayer.swamp) {
-            creature._attackBuff = Math.max(0, (creature._attackBuff || 0) - (creature.attack || 0));
+            creature._attackBuff = Math.max(
+              0,
+              (creature._attackBuff || 0) - (creature.attack || 0),
+            );
           }
         }
       }
@@ -654,8 +660,7 @@ export class GameEngine {
       const hessianSkipCount = ["head", "body", "feet"].filter(
         (s) => np.gear[s]?.set === "hessian",
       ).length;
-      if (hessianSkipCount >= 2)
-        np.ap = Math.max(np.ap, hessianSkipCount);
+      if (hessianSkipCount >= 2) np.ap = Math.max(np.ap, hessianSkipCount);
       for (const c of np.swamp) {
         delete c._silenced;
       }

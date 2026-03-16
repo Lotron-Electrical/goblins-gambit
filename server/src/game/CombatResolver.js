@@ -104,7 +104,12 @@ export function resolveAttack(
       amount: -dodgeDamage,
       reason: "Dodge bypass",
     });
-    return { defenderKilled: false, attackerKilled: false, spGained: 0, events };
+    return {
+      defenderKilled: false,
+      attackerKilled: false,
+      spGained: 0,
+      events,
+    };
   }
 
   // --- Catfish mimic: first attack copies attacker's stats ---
@@ -254,7 +259,6 @@ function resolveAttackDamage(
         });
       }
     }
-
   } else {
     defenderCard._defenceDamage = (defenderCard._defenceDamage || 0) + damage;
   }

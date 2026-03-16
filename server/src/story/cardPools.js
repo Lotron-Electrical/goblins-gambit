@@ -7,22 +7,50 @@ import { getAllCards, shuffleDeck } from "../game/CardRegistry.js";
 
 // Limited pool: basic creatures and tricks only — no complex abilities
 const LIMITED_CARD_IDS = new Set([
-  "happy_hippy", "lesser_goblin", "stoner", "streamer",
-  "nerd", "nerdet", "gamer_boy", "wood_elf",
-  "viper", "gabber", "book_witch",
-  "smesh", "ooft", "thicc", "lerker",
-  "trick_sp", "horse_dice",
+  "happy_hippy",
+  "lesser_goblin",
+  "stoner",
+  "streamer",
+  "nerd",
+  "nerdet",
+  "gamer_boy",
+  "wood_elf",
+  "viper",
+  "gabber",
+  "book_witch",
+  "smesh",
+  "ooft",
+  "thicc",
+  "lerker",
+  "trick_sp",
+  "horse_dice",
   // Basic armour
-  "rusty_helmet", "rusty_chestplate", "rusty_boots",
-  "hessian_hood", "hessian_tunic", "hessian_sandals",
+  "rusty_helmet",
+  "rusty_chestplate",
+  "rusty_boots",
+  "hessian_hood",
+  "hessian_tunic",
+  "hessian_sandals",
 ]);
 
 // Expanded pool: adds more creatures and magic, still no endgame cards
 const EXPANDED_EXTRA_IDS = new Set([
-  "king_goblin", "ghost", "thief", "karen", "catfish",
-  "motherdazer", "digital_artist", "swapeewee",
-  "savage", "yeet", "finesse", "ama", "stfu",
-  "lucky_helmet", "lucky_chestplate", "lucky_boots",
+  "king_goblin",
+  "ghost",
+  "thief",
+  "karen",
+  "catfish",
+  "motherdazer",
+  "digital_artist",
+  "swapeewee",
+  "savage",
+  "yeet",
+  "finesse",
+  "ama",
+  "stfu",
+  "lucky_helmet",
+  "lucky_chestplate",
+  "lucky_boots",
 ]);
 
 /**

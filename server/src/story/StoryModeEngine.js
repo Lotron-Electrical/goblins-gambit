@@ -8,14 +8,18 @@ import { createStoryRun } from "./StoryRunState.js";
 import { generateMap } from "./mapGenerator.js";
 import { buildStoryDeck } from "./cardPools.js";
 import { getRandomCharacter, getBossCharacter } from "./storyCharacters.js";
-import { STORY_LEVELS, STORY_LEVEL_CONFIG, BASE_AP } from "../../../shared/src/constants.js";
+import {
+  STORY_LEVELS,
+  STORY_LEVEL_CONFIG,
+  BASE_AP,
+} from "../../../shared/src/constants.js";
 
 export class StoryModeEngine {
   constructor() {
-    this.run = null;          // StoryRunState
-    this.gameEngine = null;   // Current battle's GameEngine (null between battles)
+    this.run = null; // StoryRunState
+    this.gameEngine = null; // Current battle's GameEngine (null between battles)
     this.currentCharacter = null; // Current opponent character
-    this.usedCharacterIds = [];   // Track used characters to avoid repeats
+    this.usedCharacterIds = []; // Track used characters to avoid repeats
   }
 
   /** Start a new story run */
@@ -58,7 +62,7 @@ export class StoryModeEngine {
     if (node.row > 0) {
       const prevRow = this.run.currentMap.rows[node.row - 1];
       const canReach = prevRow.some(
-        (n) => n.completed && n.connections.includes(nodeId)
+        (n) => n.completed && n.connections.includes(nodeId),
       );
       if (!canReach) return { error: "Node not reachable" };
     }
@@ -105,7 +109,10 @@ export class StoryModeEngine {
     if (node.type === "boss") {
       this.currentCharacter = getBossCharacter(levelKey);
     } else {
-      this.currentCharacter = getRandomCharacter(levelKey, this.usedCharacterIds);
+      this.currentCharacter = getRandomCharacter(
+        levelKey,
+        this.usedCharacterIds,
+      );
       if (this.currentCharacter) {
         this.usedCharacterIds.push(this.currentCharacter.id);
       }
@@ -139,7 +146,7 @@ export class StoryModeEngine {
       [playerName, botName],
       winSP,
       config.theme,
-      { baseAP }
+      { baseAP },
     );
 
     // Replace deck with story deck
@@ -230,7 +237,10 @@ export class StoryModeEngine {
         card.effect = enhancement.description;
         break;
       case "life":
-        this.run.lives = Math.min(this.run.lives + 1, this.run.nightmare ? 2 : 3);
+        this.run.lives = Math.min(
+          this.run.lives + 1,
+          this.run.nightmare ? 2 : 3,
+        );
         break;
       case "item":
         this.run.items.push({
@@ -261,16 +271,24 @@ export class StoryModeEngine {
       // Double ATK for all player creatures for 10 turns
       const player = this.gameEngine.state.players["story_player"];
       for (const creature of player.swamp) {
-        creature._attackBuff = (creature._attackBuff || 0) + (creature.attack || 0);
+        creature._attackBuff =
+          (creature._attackBuff || 0) + (creature.attack || 0);
       }
       this.gameEngine.state._berserkCharmActive = true;
       this.gameEngine.state._berserkCharmTurnsLeft = 10;
-      return { success: true, effect: "Berserk Charm activated! ATK doubled for 10 turns" };
+      return {
+        success: true,
+        effect: "Berserk Charm activated! ATK doubled for 10 turns",
+      };
     }
 
     if (item.id === "sock_satchel") {
       // Client will show trophy picker; selected trophy injected via addTrophyCardToHand
-      return { success: true, effect: "sock_satchel", needsTrophySelection: true };
+      return {
+        success: true,
+        effect: "sock_satchel",
+        needsTrophySelection: true,
+      };
     }
 
     return { error: "Unknown item" };

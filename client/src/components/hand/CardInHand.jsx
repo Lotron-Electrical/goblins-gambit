@@ -219,7 +219,9 @@ export default function CardInHand({
       className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden bg-gray-900 transition-[border-color] duration-200 ${
         TYPE_BORDER[card.type] || "border-gray-600"
       } ${TYPE_BORDER_STYLE[card.type] || ""} ${
-        isSelected ? "ring-2 ring-[var(--color-gold)] z-10 animate-sparkle-border" : ""
+        isSelected
+          ? "ring-2 ring-[var(--color-gold)] z-10 animate-sparkle-border"
+          : ""
       } ${!canAfford && !isRowOrPopup ? "opacity-50" : ""} ${
         isTutorialHighlight && !isSelected
           ? "border-[var(--color-gold)] shadow-[0_0_12px_rgba(212,175,55,0.6)]"
@@ -239,7 +241,11 @@ export default function CardInHand({
           ? undefined
           : (e) => {
               setHovered(true);
-              setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: "hand" });
+              setHoveredCard(card, {
+                x: e.clientX,
+                y: e.clientY,
+                zone: "hand",
+              });
             }
       }
       onMouseMove={
@@ -259,14 +265,27 @@ export default function CardInHand({
       whileHover={
         animationsOff || isMobile
           ? undefined
-          : { y: -16, scale: 1.08, zIndex: 50, transition: { type: "spring", stiffness: 400, damping: 20 } }
+          : {
+              y: -16,
+              scale: 1.08,
+              zIndex: 50,
+              transition: { type: "spring", stiffness: 400, damping: 20 },
+            }
       }
       animate={
         animationsOff
           ? {}
           : isSelected
-            ? { y: isMobile ? -6 : -14, scale: isMobile ? 1.02 : 1.07, transition: { type: "spring", stiffness: 300, damping: 18 } }
-            : { y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 22 } }
+            ? {
+                y: isMobile ? -6 : -14,
+                scale: isMobile ? 1.02 : 1.07,
+                transition: { type: "spring", stiffness: 300, damping: 18 },
+              }
+            : {
+                y: 0,
+                scale: 1,
+                transition: { type: "spring", stiffness: 300, damping: 22 },
+              }
       }
     >
       {/* Shimmer overlay for hover effect */}

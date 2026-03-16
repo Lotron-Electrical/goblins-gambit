@@ -111,7 +111,10 @@ export default function CardHoverPreview() {
     >
       <div
         className={`w-full h-full rounded-xl border-2 ${TYPE_BORDER_COLOR[card.type] || "border-gray-600/80"} bg-gray-950 overflow-hidden flex flex-col`}
-        style={{ boxShadow: TYPE_GLOW_SHADOW[card.type] || "0 4px 24px rgba(0, 0, 0, 0.6)" }}
+        style={{
+          boxShadow:
+            TYPE_GLOW_SHADOW[card.type] || "0 4px 24px rgba(0, 0, 0, 0.6)",
+        }}
       >
         {/* Card art (top 50%) — cropped to artwork only */}
         <div className="relative h-[50%] overflow-hidden bg-gray-800">
@@ -124,7 +127,9 @@ export default function CardHoverPreview() {
             />
           )}
           {/* Art bottom gradient for blending into info area */}
-          <div className={`absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t ${TYPE_ACCENT_BG[card.type] || "from-gray-950/60"} to-transparent`} />
+          <div
+            className={`absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t ${TYPE_ACCENT_BG[card.type] || "from-gray-950/60"} to-transparent`}
+          />
           {/* Cost badge */}
           <div
             className={`absolute top-2 right-2 text-[12px] font-bold px-2 py-0.5 rounded shadow-md ${
@@ -178,7 +183,9 @@ export default function CardHoverPreview() {
 
           {card.abilityId && (
             <div className="text-yellow-400 text-[10px] text-center mt-auto flex items-center justify-center gap-1">
-              <span className="drop-shadow-[0_0_4px_rgba(250,204,21,0.4)]">{ICONS.lightning}</span>
+              <span className="drop-shadow-[0_0_4px_rgba(250,204,21,0.4)]">
+                {ICONS.lightning}
+              </span>
               Has Ability
             </div>
           )}

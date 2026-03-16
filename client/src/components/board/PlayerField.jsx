@@ -186,7 +186,9 @@ export default function PlayerField({
           ) : null;
         })()}
       {/* Player info bar */}
-      <div className={`flex items-center justify-between ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5 rounded-lg`}>
+      <div
+        className={`flex items-center justify-between ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5 rounded-lg`}
+      >
         <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
           {!(isMobile && isOpponent) && (
             <span
@@ -278,18 +280,21 @@ export default function PlayerField({
             }}
           />
           {/* Tick marks at 25%, 50%, 75% */}
-          {!isMobile && [25, 50, 75].map((pct) => (
-            <div
-              key={pct}
-              className="absolute top-0 bottom-0 w-px bg-gray-600/40"
-              style={{ left: `${pct}%` }}
-            />
-          ))}
+          {!isMobile &&
+            [25, 50, 75].map((pct) => (
+              <div
+                key={pct}
+                className="absolute top-0 bottom-0 w-px bg-gray-600/40"
+                style={{ left: `${pct}%` }}
+              />
+            ))}
         </div>
       )}
 
       {/* Gear zone -- horizontal strip */}
-      <div className={`flex gap-1 md:gap-1.5 ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5`}>
+      <div
+        className={`flex gap-1 md:gap-1.5 ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5`}
+      >
         <div
           className={`text-gray-600 flex items-center font-display ${isMobile ? "text-[9px] mr-0.5" : "text-[11px] mr-1"}`}
         >
@@ -297,7 +302,9 @@ export default function PlayerField({
         </div>
         {gearSlots.map((slot) => {
           const armour = player.gear[slot];
-          const turnsLeft = armour ? (armour._turnsRemaining ?? armour.durability) : 0;
+          const turnsLeft = armour
+            ? (armour._turnsRemaining ?? armour.durability)
+            : 0;
           return (
             <div
               key={slot}
@@ -342,7 +349,9 @@ export default function PlayerField({
         </div>
         <div
           className={`relative flex gap-0.5 justify-center bg-gradient-to-b from-[#141808]/60 to-[#0c1004]/70 rounded-lg border border-[#2a3018]/40 shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)] p-1 md:p-1.5 overflow-hidden ${
-            isMobile ? "min-h-[92px]" : `${isOpponent ? "min-h-[120px]" : "min-h-[140px]"} max-w-[620px] mx-auto`
+            isMobile
+              ? "min-h-[92px]"
+              : `${isOpponent ? "min-h-[120px]" : "min-h-[140px]"} max-w-[620px] mx-auto`
           }`}
         >
           {/* Fog overlay */}

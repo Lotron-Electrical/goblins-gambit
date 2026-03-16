@@ -3,7 +3,13 @@
  * Manages story runs, trophy cards, and achievement unlocks.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from "fs";
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+  renameSync,
+} from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -79,7 +85,10 @@ function loadData() {
         achievements: (parsed && parsed.achievements) || {},
       };
     } catch (err) {
-      console.error("[StoryPersistence] Failed to parse story data, resetting:", err.message);
+      console.error(
+        "[StoryPersistence] Failed to parse story data, resetting:",
+        err.message,
+      );
       data = { runs: {}, trophies: {}, achievements: {} };
     }
   }
@@ -183,7 +192,12 @@ async function saveTrophyCard(username, trophyCard, levelReached, nightmare) {
     );
   } else {
     if (!data.trophies[key]) data.trophies[key] = [];
-    data.trophies[key].push({ trophyCard, levelReached, nightmare: !!nightmare, completedAt });
+    data.trophies[key].push({
+      trophyCard,
+      levelReached,
+      nightmare: !!nightmare,
+      completedAt,
+    });
     writeData();
   }
 }
@@ -212,7 +226,8 @@ async function getTrophyCards(username) {
 
 async function unlockAchievement(username, achievementId) {
   if (!username) throw new Error("unlockAchievement: username is required");
-  if (!achievementId) throw new Error("unlockAchievement: achievementId is required");
+  if (!achievementId)
+    throw new Error("unlockAchievement: achievementId is required");
   const key = username.toLowerCase();
   const unlockedAt = Date.now();
 
