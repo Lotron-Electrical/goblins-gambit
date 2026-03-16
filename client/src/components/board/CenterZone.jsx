@@ -20,9 +20,9 @@ function getDeckRotations(count) {
   return rotations;
 }
 
-function CardFace({ card, className = "", style = {}, small }) {
-  const w = small ? "w-[60px]" : "w-[90px]";
-  const h = small ? "h-[84px]" : "h-[126px]";
+function CardFace({ card, className = "", style = {}, small, isMobile }) {
+  const w = small ? (isMobile ? "w-[63px]" : "w-[107px]") : "w-[90px]";
+  const h = small ? (isMobile ? "h-[88px]" : "h-[150px]") : "h-[126px]";
   return (
     <div
       className={`${w} ${h} rounded-lg border-2 overflow-hidden ${
@@ -44,9 +44,9 @@ function CardFace({ card, className = "", style = {}, small }) {
   );
 }
 
-function CardBack({ className = "", style = {}, small }) {
-  const w = small ? "w-[60px]" : "w-[90px]";
-  const h = small ? "h-[84px]" : "h-[126px]";
+function CardBack({ className = "", style = {}, small, isMobile }) {
+  const w = small ? (isMobile ? "w-[63px]" : "w-[107px]") : "w-[90px]";
+  const h = small ? (isMobile ? "h-[88px]" : "h-[150px]") : "h-[126px]";
   return (
     <div
       className={`${w} ${h} rounded-lg border-2 border-[var(--color-gold)] overflow-hidden shadow-lg ${className}`}
@@ -90,16 +90,12 @@ export default function CenterZone({
 
   const deckRotations = useMemo(() => getDeckRotations(deckCount), [deckCount]);
 
-  const cardW = isMobile ? 60 : 60;
-  const cardH = isMobile ? 84 : 84;
-  // Scale card stacks — doubled from original 0.65/0.85
-  const mobileScale = 1.3;
-  const desktopScale = 1.7;
-  const scale = isMobile ? mobileScale : desktopScale;
-  // Scaled dimensions for layout reservations
-  const layoutW = Math.round(cardW * scale);
-  const layoutH = Math.round(cardH * scale);
-  const zoneH = isMobile ? "h-[115px]" : "h-[150px]";
+  // Match creature card sizes in the swamp
+  const cardW = isMobile ? 63 : 107;
+  const cardH = isMobile ? 88 : 150;
+  const layoutW = cardW;
+  const layoutH = cardH;
+  const zoneH = isMobile ? "h-[115px]" : "h-[175px]";
 
   return (
     <div
@@ -111,55 +107,47 @@ export default function CenterZone({
       {/* Deck stack — left side */}
       <div className="flex flex-row items-center gap-1">
         <div className="relative" style={{ width: layoutW, height: layoutH }}>
-          <div
-            style={{
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-            }}
-          >
-            <div className="relative" style={{ width: cardW, height: cardH }}>
-              {deckCount > 0 ? (
-                <>
-                  {deckRotations.map((rot, i) => {
-                    if (i === deckRotations.length - 1) return null;
-                    return (
-                      <div
-                        key={i}
-                        className="absolute"
-                        style={{
-                          top: `${-i * 0.5}px`,
-                          left: `${i * 0.3}px`,
-                          transform: `rotate(${rot}deg)`,
-                        }}
-                      >
-                        <CardBack
-                          small
-                          className="border-[var(--color-gold)]/40 shadow-none"
-                        />
-                      </div>
-                    );
-                  })}
+          {deckCount > 0 ? (
+            <>
+              {deckRotations.map((rot, i) => {
+                if (i === deckRotations.length - 1) return null;
+                return (
                   <div
+                    key={i}
                     className="absolute"
                     style={{
-                      top: "0px",
-                      left: "0px",
-                      transform: `rotate(${deckRotations[deckRotations.length - 1] || 0}deg)`,
+                      top: `${-i * 0.5}px`,
+                      left: `${i * 0.3}px`,
+                      transform: `rotate(${rot}deg)`,
                     }}
                   >
-                    <CardBack small />
+                    <CardBack
+                      small
+                      isMobile={isMobile}
+                      className="border-[var(--color-gold)]/40 shadow-none"
+                    />
                   </div>
-                </>
-              ) : (
-                <div
-                  className="rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center"
-                  style={{ width: cardW, height: cardH }}
-                >
-                  <span className="text-gray-600 text-[11px]">Empty</span>
-                </div>
-              )}
+                );
+              })}
+              <div
+                className="absolute"
+                style={{
+                  top: "0px",
+                  left: "0px",
+                  transform: `rotate(${deckRotations[deckRotations.length - 1] || 0}deg)`,
+                }}
+              >
+                <CardBack small isMobile={isMobile} />
+              </div>
+            </>
+          ) : (
+            <div
+              className="rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center"
+              style={{ width: cardW, height: cardH }}
+            >
+              <span className="text-gray-600 text-[11px]">Empty</span>
             </div>
-          </div>
+          )}
         </div>
         <span
           className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
@@ -308,54 +296,45 @@ export default function CenterZone({
           style={{ width: layoutW, height: layoutH }}
           onClick={() => graveyardCount > 0 && setGraveyardOpen(true)}
         >
-          <div
-            style={{
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-            }}
-          >
-            <div className="relative" style={{ width: cardW, height: cardH }}>
-              {graveyard && graveyard.length > 0 ? (
-                <>
-                  {graveyard.slice(isMobile ? -3 : -5).map((card, i, arr) => {
-                    const isTop = i === arr.length - 1;
-                    const rot =
-                      graveyardRotations[graveyard.length - arr.length + i] ||
-                      0;
-                    return (
-                      <div
-                        key={card.uid || i}
-                        className="absolute"
-                        style={{
-                          top: `${-i * 0.5}px`,
-                          left: `${i * 0.3}px`,
-                          transform: `rotate(${rot}deg)`,
-                          zIndex: i,
-                        }}
-                      >
-                        <CardFace
-                          card={card}
-                          small
-                          className={isTop ? "shadow-md" : ""}
-                        />
-                      </div>
-                    );
-                  })}
-                  {/* Count badge */}
-                  <div className="absolute -top-2 -right-2 bg-red-700 text-white text-[14px] font-bold w-7 h-7 rounded-full flex items-center justify-center z-10">
-                    {graveyardCount}
+          {graveyard && graveyard.length > 0 ? (
+            <>
+              {graveyard.slice(isMobile ? -3 : -5).map((card, i, arr) => {
+                const isTop = i === arr.length - 1;
+                const rot =
+                  graveyardRotations[graveyard.length - arr.length + i] || 0;
+                return (
+                  <div
+                    key={card.uid || i}
+                    className="absolute"
+                    style={{
+                      top: `${-i * 0.5}px`,
+                      left: `${i * 0.3}px`,
+                      transform: `rotate(${rot}deg)`,
+                      zIndex: i,
+                    }}
+                  >
+                    <CardFace
+                      card={card}
+                      small
+                      isMobile={isMobile}
+                      className={isTop ? "shadow-md" : ""}
+                    />
                   </div>
-                </>
-              ) : (
-                <div
-                  className="rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center"
-                  style={{ width: cardW, height: cardH }}
-                >
-                  <span className="text-gray-600 text-[11px]">Empty</span>
-                </div>
-              )}
+                );
+              })}
+              {/* Count badge */}
+              <div className="absolute -top-2 -right-2 bg-red-700 text-white text-[14px] font-bold w-7 h-7 rounded-full flex items-center justify-center z-10">
+                {graveyardCount}
+              </div>
+            </>
+          ) : (
+            <div
+              className="rounded-lg border-2 border-dashed border-gray-700 flex items-center justify-center"
+              style={{ width: cardW, height: cardH }}
+            >
+              <span className="text-gray-600 text-[11px]">Empty</span>
             </div>
-          </div>
+          )}
         </div>
         <span
           className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
