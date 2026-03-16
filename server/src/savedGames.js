@@ -3,7 +3,7 @@
  * One save slot per player (overwrite on re-save).
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -60,12 +60,22 @@ function loadSaves() {
 }
 
 function writeSaves() {
-  writeFileSync(SAVES_FILE, JSON.stringify(saves, null, 2), "utf-8");
+  const tmpFile = SAVES_FILE + ".tmp";
+  try {
+    writeFileSync(tmpFile, JSON.stringify(saves, null, 2), "utf-8");
+    renameSync(tmpFile, SAVES_FILE);
+  } catch (err) {
+    console.error("[SavedGames] Failed to write saves file:", err.message);
+    throw err;
+  }
 }
 
 // ---------- Public API ----------
 
 async function saveGame(username, gameState, roomSettings) {
+  if (!username) throw new Error("saveGame: username is required");
+  if (!gameState) throw new Error("saveGame: gameState is required");
+  if (!roomSettings) throw new Error("saveGame: roomSettings is required");
   const key = username.toLowerCase();
   const savedAt = Date.now();
 
@@ -84,6 +94,7 @@ async function saveGame(username, gameState, roomSettings) {
 }
 
 async function loadGame(username) {
+  if (!username) return null;
   const key = username.toLowerCase();
 
   if (usePostgres) {
@@ -106,6 +117,7 @@ async function loadGame(username) {
 }
 
 async function deleteSavedGame(username) {
+  if (!username) return;
   const key = username.toLowerCase();
 
   if (usePostgres) {
@@ -117,6 +129,7 @@ async function deleteSavedGame(username) {
 }
 
 async function hasSavedGame(username) {
+  if (!username) return false;
   const key = username.toLowerCase();
 
   if (usePostgres) {
@@ -135,14 +148,13 @@ async function getSavedGameInfo(username) {
   if (!save) return { hasSave: false };
 
   const { gameState, roomSettings } = save;
-  const botCount = Object.values(gameState.players).filter(
-    (p) => p.isBot,
-  ).length;
+  const players = (gameState && gameState.players) ? Object.values(gameState.players) : [];
+  const botCount = players.filter((p) => p && p.isBot).length;
 
   return {
     hasSave: true,
-    turnNumber: gameState.turnNumber || 1,
-    theme: roomSettings.theme || "swamp",
+    turnNumber: (gameState && gameState.turnNumber) || 1,
+    theme: (roomSettings && roomSettings.theme) || "swamp",
     botCount,
     savedAt: save.savedAt,
   };

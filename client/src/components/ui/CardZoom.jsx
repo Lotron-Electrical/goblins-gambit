@@ -12,6 +12,20 @@ const TYPE_COLOR = {
   Tricks: "border-green-600 bg-green-950/90",
 };
 
+const TYPE_PANEL_BORDER = {
+  Creature: "border-red-800/60",
+  Magic: "border-blue-800/60",
+  Armour: "border-gray-700/60",
+  Tricks: "border-green-800/60",
+};
+
+const TYPE_PANEL_GLOW = {
+  Creature: "0 -4px 30px rgba(220, 38, 38, 0.12)",
+  Magic: "0 -4px 30px rgba(37, 99, 235, 0.12)",
+  Armour: "0 -4px 30px rgba(156, 163, 175, 0.08)",
+  Tricks: "0 -4px 30px rgba(22, 163, 74, 0.12)",
+};
+
 export default function CardZoom() {
   const {
     zoomedCard,
@@ -349,31 +363,36 @@ export default function CardZoom() {
   // Desktop: side panel
   return (
     <div
-      className={`fixed right-0 top-0 bottom-0 w-[260px] z-40 flex flex-col shadow-2xl border-l-2 bg-gray-950/95 animate-slide-in-right ${
+      className={`fixed right-0 top-0 bottom-0 w-[260px] z-40 flex flex-col border-l-2 bg-gray-950/95 animate-slide-in-right ${
         isTutorialHighlight
           ? "border-[var(--color-gold)] shadow-[0_0_20px_rgba(212,175,55,0.5)]"
-          : "border-gray-700"
+          : TYPE_PANEL_BORDER[card.type] || "border-gray-700"
       }`}
+      style={{ boxShadow: `${isTutorialHighlight ? "" : (TYPE_PANEL_GLOW[card.type] || "")}, -4px 0 24px rgba(0, 0, 0, 0.5)` }}
     >
       {/* Close button */}
       <button
         onClick={() => setZoomedCard(null)}
-        className="absolute top-2 right-2 w-11 h-11 flex items-center justify-center text-xl text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg z-50 transition"
+        className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center text-lg text-gray-400 hover:text-white bg-gray-800/80 hover:bg-gray-700 rounded-lg z-50 transition-all duration-200 backdrop-blur-sm"
         aria-label="Close"
       >
         X
       </button>
 
       {/* Card art — cropped to artwork only */}
-      {card.image && (
-        <img
-          src={`/cards/${card.image}`}
-          alt={card.name}
-          className="w-full shrink-0"
-          style={{ clipPath: "inset(0 0 32% 0)" }}
-          draggable={false}
-        />
-      )}
+      <div className="relative shrink-0">
+        {card.image && (
+          <img
+            src={`/cards/${card.image}`}
+            alt={card.name}
+            className="w-full"
+            style={{ clipPath: "inset(0 0 32% 0)" }}
+            draggable={false}
+          />
+        )}
+        {/* Art bottom gradient for seamless transition to info */}
+        <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-gray-950 to-transparent" />
+      </div>
 
       {/* Card info */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -620,7 +639,7 @@ function StatBar({ label, value, max, color, buffed, damaged, suffix }) {
       <div className="flex justify-between text-[14px] mb-0.5">
         <span className="text-gray-400">{label}</span>
         <span
-          className={`font-bold ${buffed ? "text-green-400" : damaged ? "text-red-400" : "text-white"}`}
+          className={`font-bold transition-colors duration-300 ${buffed ? "text-green-400 drop-shadow-[0_0_4px_rgba(74,222,128,0.4)]" : damaged ? "text-red-400 drop-shadow-[0_0_4px_rgba(248,113,113,0.4)]" : "text-white"}`}
         >
           {value}
           {suffix && (
@@ -628,9 +647,14 @@ function StatBar({ label, value, max, color, buffed, damaged, suffix }) {
           )}
         </span>
       </div>
-      <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+      <div className="h-2 bg-gray-800 rounded-full overflow-hidden relative">
         <div
-          className={`h-full ${color} rounded-full transition-all duration-300`}
+          className={`h-full ${color} rounded-full transition-all duration-500 ease-out`}
+          style={{ width: `${pct}%` }}
+        />
+        {/* Bright edge highlight on bar */}
+        <div
+          className="absolute top-0 h-[1px] bg-white/20 rounded-full transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>

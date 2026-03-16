@@ -14,6 +14,7 @@ export const useStore = create((set, get) => ({
   authUser: null,
   authLoading: false,
   authError: null,
+  guestAuthenticated: false,
 
   // Connection
   connected: false,
@@ -60,6 +61,9 @@ export const useStore = create((set, get) => ({
   // Saved game
   savedGameInfo: null,
 
+  // Story battle
+  storyBattle: false,
+
   // Tutorial
   tutorialMode: false,
   tutorialEngine: null,
@@ -75,7 +79,19 @@ export const useStore = create((set, get) => ({
   chatOpen: false,
 
   // Actions
-  setPlayerName: (name) => set({ playerName: name }),
+  setPlayerName: (name) => {
+    set({ playerName: name });
+    // Authenticate guests on the socket so story mode works
+    const { authToken } = get();
+    if (authToken === "guest" && name) {
+      socket.emit("authenticate_guest", { playerName: name }, (res) => {
+        if (res?.success) {
+          set({ guestAuthenticated: true });
+        }
+      });
+    }
+  },
+  setScreen: (screen) => set({ screen }),
 
   loginUser: async (username, password) => {
     set({ authLoading: true, authError: null });
@@ -118,19 +134,29 @@ export const useStore = create((set, get) => ({
     } catch {
       // Token invalid — clear it
       localStorage.removeItem("gg_token");
-      set({ authToken: null, authUser: null });
+      set({ authToken: null, authUser: null, screen: "lobby", currentRoom: null, gameState: null });
     }
   },
 
   logout: () => {
     localStorage.removeItem("gg_token");
-    set({ authToken: null, authUser: null, playerName: "", screen: "lobby" });
+    set({ authToken: null, authUser: null, playerName: "", screen: "lobby", guestAuthenticated: false });
   },
 
   clearAuthError: () => set({ authError: null }),
 
   skipAuth: () => {
-    set({ authToken: "guest" });
+    set({ authToken: "guest", guestAuthenticated: false });
+    // Pre-authenticate on the socket immediately so story mode works
+    // The name will be updated later via setPlayerName if the user sets one
+    const guestName = "Adventurer";
+    if (socket.connected) {
+      socket.emit("authenticate_guest", { playerName: guestName }, (res) => {
+        if (res?.success) {
+          set({ guestAuthenticated: true });
+        }
+      });
+    }
   },
 
   connect: () => {
@@ -158,10 +184,10 @@ export const useStore = create((set, get) => ({
   joinRoom: (roomId) => {
     const { playerName } = get();
     socket.emit(EVENTS.JOIN_ROOM, { roomId, name: playerName }, (res) => {
-      if (res.error) {
+      if (res?.error) {
         set({ error: res.error });
       } else {
-        sessionStorage.setItem("gg_roomId", res.room.id);
+        sessionStorage.setItem("gg_roomId", res?.room?.id);
         set({ currentRoom: res.room, screen: "room" });
       }
     });
@@ -179,6 +205,17 @@ export const useStore = create((set, get) => ({
       chatOpen: false,
       tutorialMode: false,
       tutorialEngine: null,
+      selectedCard: null,
+      targetMode: null,
+      error: null,
+      gameStats: null,
+      zoomedCard: null,
+      helpOpen: false,
+      menuOpen: false,
+      graveyardOpen: false,
+      hoveredCard: null,
+      hoverPosition: null,
+      storyBattle: false,
     });
   },
 
@@ -200,28 +237,26 @@ export const useStore = create((set, get) => ({
     });
   },
 
+  // Helper: emit game action to correct event (story vs normal)
+  _emitAction: (action, callback) => {
+    const event = get().storyBattle ? "story_game_action" : EVENTS.GAME_ACTION;
+    socket.emit(event, action, (res) => {
+      if (res?.error) set({ error: res.error });
+      callback?.(res);
+    });
+  },
+  setStoryBattle: (active) => set({ storyBattle: active }),
+
   // Game actions
   drawCard: () => {
     if (get().tutorialMode) return get().tutorialAction(ACTION.DRAW_CARD);
-    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.DRAW_CARD }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    get()._emitAction({ type: ACTION.DRAW_CARD });
   },
 
   playCard: (cardUid, targetInfo) => {
     if (get().tutorialMode)
       return get().tutorialAction(ACTION.PLAY_CARD, { cardUid });
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      {
-        type: ACTION.PLAY_CARD,
-        cardUid,
-        targetInfo,
-      },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({ type: ACTION.PLAY_CARD, cardUid, targetInfo });
     set({ selectedCard: null });
   },
 
@@ -232,18 +267,12 @@ export const useStore = create((set, get) => ({
         defenderOwnerId,
         defenderUid,
       });
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      {
-        type: ACTION.ATTACK,
-        attackerUid,
-        defenderOwnerId,
-        defenderUid,
-      },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({
+      type: ACTION.ATTACK,
+      attackerUid,
+      defenderOwnerId,
+      defenderUid,
+    });
     set({ selectedCard: null, targetMode: false });
   },
 
@@ -253,114 +282,53 @@ export const useStore = create((set, get) => ({
         targetOwnerId,
         targetUid,
       });
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      {
-        type: ACTION.SELECT_TARGET,
-        targetOwnerId,
-        targetUid,
-        targets,
-      },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({
+      type: ACTION.SELECT_TARGET,
+      targetOwnerId,
+      targetUid,
+      targets,
+    });
     set({ targetMode: false });
   },
 
   useAbility: (cardUid, targetInfo) => {
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      {
-        type: ACTION.USE_ABILITY,
-        cardUid,
-        targetInfo,
-      },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({ type: ACTION.USE_ABILITY, cardUid, targetInfo });
   },
 
   chooseCard: (cardUid) => {
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      {
-        type: ACTION.CHOOSE_CARD,
-        cardUid,
-      },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({ type: ACTION.CHOOSE_CARD, cardUid });
   },
 
   discardCard: (cardUid) => {
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      {
-        type: ACTION.DISCARD_CARD,
-        cardUid,
-      },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({ type: ACTION.DISCARD_CARD, cardUid });
     set({ selectedCard: null, zoomedCard: null });
   },
 
   recycleCreature: (cardUid) => {
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      {
-        type: ACTION.RECYCLE_CREATURE,
-        cardUid,
-      },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({ type: ACTION.RECYCLE_CREATURE, cardUid });
     set({ selectedCard: null, zoomedCard: null });
   },
 
   endTurn: () => {
     if (get().tutorialMode) return get().tutorialAction(ACTION.END_TURN);
-    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.END_TURN }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    get()._emitAction({ type: ACTION.END_TURN });
   },
 
   buyAP: () => {
-    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.BUY_AP }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    get()._emitAction({ type: ACTION.BUY_AP });
   },
 
   depositVolcano: (amount) => {
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      { type: ACTION.DEPOSIT_VOLCANO, amount },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({ type: ACTION.DEPOSIT_VOLCANO, amount });
   },
 
   attackEvent: (attackerUid) => {
-    socket.emit(
-      EVENTS.GAME_ACTION,
-      { type: ACTION.ATTACK_EVENT, attackerUid },
-      (res) => {
-        if (res?.error) set({ error: res.error });
-      },
-    );
+    get()._emitAction({ type: ACTION.ATTACK_EVENT, attackerUid });
     set({ selectedCard: null, targetMode: false });
   },
 
   buyFromJargon: () => {
-    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.BUY_FROM_JARGON }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    get()._emitAction({ type: ACTION.BUY_FROM_JARGON });
   },
 
   addBot: (difficulty = "medium") => {
@@ -576,37 +544,51 @@ export const useStore = create((set, get) => ({
 socket.on("connect", () => {
   useStore.setState({ connected: true });
 
-  // Re-authenticate if we have a token
-  const { authToken } = useStore.getState();
+  // Helper: attempt to rejoin a room/game after authentication completes
+  const attemptRejoin = () => {
+    const savedRoomId = sessionStorage.getItem("gg_roomId");
+    const { playerName } = useStore.getState();
+    if (savedRoomId && playerName) {
+      socket.emit(
+        EVENTS.REJOIN_ROOM,
+        { roomId: savedRoomId, name: playerName },
+        (res) => {
+          if (res?.error) {
+            // Room gone — reset to lobby
+            sessionStorage.removeItem("gg_roomId");
+            useStore.setState({
+              screen: "lobby",
+              currentRoom: null,
+              gameState: null,
+            });
+          }
+          // Success case handled by GAME_STATE / ROOM_UPDATE event listeners
+        },
+      );
+    } else {
+      useStore.getState().refreshRooms();
+    }
+  };
+
+  // Re-authenticate if we have a token, then rejoin
+  const { authToken, playerName: savedName } = useStore.getState();
   if (authToken && authToken !== "guest") {
-    socket.emit("authenticate", { token: authToken }, () => {
+    socket.emit("authenticate", { token: authToken }, (res) => {
       // After auth, check for saved games
       useStore.getState().fetchSavedGameInfo();
+      // Now it's safe to rejoin — server knows who we are
+      attemptRejoin();
     });
-  }
-
-  // Attempt to rejoin if we were in a room/game before disconnect
-  const savedRoomId = sessionStorage.getItem("gg_roomId");
-  const { playerName, screen } = useStore.getState();
-  if (savedRoomId && playerName && (screen === "game" || screen === "room")) {
-    socket.emit(
-      EVENTS.REJOIN_ROOM,
-      { roomId: savedRoomId, name: playerName },
-      (res) => {
-        if (res?.error) {
-          // Room gone — reset to lobby
-          sessionStorage.removeItem("gg_roomId");
-          useStore.setState({
-            screen: "lobby",
-            currentRoom: null,
-            gameState: null,
-          });
-        }
-        // Success case handled by GAME_STATE / ROOM_UPDATE event listeners
-      },
-    );
+  } else if (authToken === "guest") {
+    // Authenticate guests with their player name so story mode works
+    const guestName = savedName || "Adventurer";
+    socket.emit("authenticate_guest", { playerName: guestName }, () => {
+      useStore.setState({ guestAuthenticated: true });
+      attemptRejoin();
+    });
   } else {
-    useStore.getState().refreshRooms();
+    // No auth needed — just rejoin or refresh
+    attemptRejoin();
   }
 });
 
@@ -644,9 +626,14 @@ socket.on(EVENTS.GAME_STATE, (state) => {
 
   useStore.setState({
     gameState: state,
-    screen: "game",
+    // Don't switch screen during story battles — StoryScreen handles its own routing
+    ...(current.storyBattle ? {} : { screen: "game" }),
     ...(clearHover ? { hoveredCard: null, hoverPosition: null } : {}),
-    ...(state.stats ? { gameStats: state.stats } : {}),
+    ...(state.stats
+      ? { gameStats: state.stats }
+      : state.turnNumber <= 1
+        ? { gameStats: null }
+        : {}),
   });
 });
 

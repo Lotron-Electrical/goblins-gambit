@@ -39,7 +39,7 @@ export function getEffectiveStats(state, ownerId, card) {
     defence += card._defenceBuff || 0;
   }
 
-  // King Goblin: +100 ATK per Lesser Goblin on same field
+  // King Goblin: +100 ATK and +200 DEF per Lesser Goblin on same field
   if (card.abilityId === "king_goblin_buff") {
     const player = state.players[ownerId];
     if (player) {
@@ -47,6 +47,7 @@ export function getEffectiveStats(state, ownerId, card) {
         (c) => c.id === "lesser_goblin",
       ).length;
       attack += lesserCount * 100;
+      defence += lesserCount * 200;
     }
   }
 

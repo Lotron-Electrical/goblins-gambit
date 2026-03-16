@@ -10,11 +10,13 @@ import {
   initDatabase,
   register,
   login,
+  logout,
   getProfile,
   getLeaderboard,
   validateToken,
 } from "./accounts.js";
 import { initSavedGames } from "./savedGames.js";
+import { initStoryPersistence } from "./story/storyPersistence.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
@@ -40,13 +42,33 @@ setupSocketHandlers(io, lobby);
 
 app.use(express.json({ limit: "5mb" }));
 
+// --- Rate limiter for login/register ---
+const rateLimitMap = new Map(); // ip -> { count, resetTime }
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+
+function rateLimiter(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  let entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetTime) {
+    entry = { count: 0, resetTime: now + RATE_LIMIT_WINDOW };
+    rateLimitMap.set(ip, entry);
+  }
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX) {
+    return res.status(429).json({ error: "Too many requests. Try again later." });
+  }
+  next();
+}
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", rooms: lobby.getRoomList().length });
 });
 
 // --- Player Accounts ---
 
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", rateLimiter, async (req, res) => {
   const { username, password } = req.body;
   const result = await register(username, password);
   if (result.error) return res.status(400).json({ error: result.error });
@@ -54,12 +76,21 @@ app.post("/api/register", async (req, res) => {
   res.json({ token: result.token, user: profile });
 });
 
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", rateLimiter, async (req, res) => {
   const { username, password } = req.body;
   const result = await login(username, password);
   if (result.error) return res.status(401).json({ error: result.error });
   const profile = await getProfile(result.username);
   res.json({ token: result.token, user: profile });
+});
+
+app.post("/api/logout", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const username = await validateToken(token);
+  if (!username) return res.status(401).json({ error: "Not authenticated" });
+  await logout(token);
+  res.json({ success: true });
 });
 
 app.get("/api/profile", async (req, res) => {
@@ -84,11 +115,16 @@ app.get("/api/leaderboard", async (req, res) => {
 
 // In-game feedback -> create GitHub issue (with optional screenshot)
 app.post("/api/feedback", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const username = await validateToken(token);
+  if (!username) return res.status(401).json({ error: "Not authenticated" });
+
   const { title, body, labels, screenshot } = req.body;
   if (!title) return res.status(400).json({ error: "Title required" });
 
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) {
+  const ghToken = process.env.GITHUB_TOKEN;
+  if (!ghToken) {
     return res.status(500).json({ error: "GitHub token not configured" });
   }
 
@@ -103,7 +139,7 @@ app.post("/api/feedback", async (req, res) => {
         {
           method: "PUT",
           headers: {
-            Authorization: `token ${token}`,
+            Authorization: `token ${ghToken}`,
             "Content-Type": "application/json",
             Accept: "application/vnd.github.v3+json",
           },
@@ -136,7 +172,7 @@ app.post("/api/feedback", async (req, res) => {
       {
         method: "POST",
         headers: {
-          Authorization: `token ${token}`,
+          Authorization: `token ${ghToken}`,
           "Content-Type": "application/json",
           Accept: "application/vnd.github.v3+json",
         },
@@ -187,6 +223,7 @@ const PORT = process.env.PORT || 3001;
 
 await initDatabase();
 await initSavedGames();
+await initStoryPersistence();
 
 httpServer.listen(PORT, () => {
   console.log(`Goblin's Gambit server running on port ${PORT}`);

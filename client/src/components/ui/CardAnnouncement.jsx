@@ -17,10 +17,17 @@ const TYPE_BORDER = {
 };
 
 const TYPE_BG = {
-  Creature: "bg-red-950/80",
-  Magic: "bg-blue-950/80",
-  Armour: "bg-gray-900/80",
-  Tricks: "bg-green-950/80",
+  Creature: "bg-red-950/85",
+  Magic: "bg-blue-950/85",
+  Armour: "bg-gray-900/85",
+  Tricks: "bg-green-950/85",
+};
+
+const TYPE_GLOW_SHADOW = {
+  Creature: "0 0 30px rgba(220, 38, 38, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5)",
+  Magic: "0 0 30px rgba(37, 99, 235, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5)",
+  Armour: "0 0 30px rgba(156, 163, 175, 0.2), 0 4px 20px rgba(0, 0, 0, 0.5)",
+  Tricks: "0 0 30px rgba(22, 163, 74, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5)",
 };
 
 // Major events get the big centered treatment
@@ -53,20 +60,22 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
               : "inset-0 !left-auto !top-auto !translate-x-0 !translate-y-0 flex items-center justify-center"
           }`}
           style={isMobile ? { top: centerTop } : undefined}
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 1.2 }}
-          transition={{ duration: dur }}
+          initial={{ opacity: 0, scale: 0.4, filter: "blur(8px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, scale: 1.15, filter: "blur(4px)" }}
+          transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="text-center">
             <div
-              className={`font-display text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] ${isMobile ? "text-2xl" : "text-4xl"}`}
+              className={`font-display text-white animate-announce-burst ${isMobile ? "text-2xl" : "text-4xl"}`}
+              style={{ textShadow: "0 0 30px rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5)" }}
             >
               {announcement.name}
             </div>
             {announcement.flavor && (
               <div
-                className={`text-[var(--color-gold)] font-display mt-2 drop-shadow-md ${isMobile ? "text-base" : "text-xl"}`}
+                className={`text-[var(--color-gold)] font-display mt-2 ${isMobile ? "text-base" : "text-xl"}`}
+                style={{ textShadow: "0 0 12px rgba(212, 175, 55, 0.4)" }}
               >
                 {announcement.flavor}
               </div>
@@ -79,25 +88,28 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
           key="toast"
           className="fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{ top: centerTop }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: dur }}
+          initial={{ opacity: 0, scale: 0.85, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: -4 }}
+          transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
           <div
-            className={`flex items-center gap-2 border rounded-lg shadow-lg backdrop-blur-sm text-center ${
+            className={`flex items-center gap-2 border rounded-lg backdrop-blur-md text-center ${
               isMobile ? "px-4 py-2.5" : "px-5 py-3"
-            } ${TYPE_BORDER[announcement.type] || "border-gray-600/60"} ${TYPE_BG[announcement.type] || "bg-gray-900/80"}`}
+            } ${TYPE_BORDER[announcement.type] || "border-gray-600/60"} ${TYPE_BG[announcement.type] || "bg-gray-900/85"}`}
+            style={{ boxShadow: TYPE_GLOW_SHADOW[announcement.type] || "0 4px 20px rgba(0, 0, 0, 0.5)" }}
           >
             <div>
               <div
                 className={`font-display ${isMobile ? "text-lg" : "text-xl"} ${TYPE_COLOR[announcement.type] || "text-white"}`}
+                style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)" }}
               >
                 {announcement.name}
               </div>
               {announcement.flavor && (
                 <div
                   className={`text-[var(--color-gold)] font-display ${isMobile ? "text-[12px]" : "text-base"}`}
+                  style={{ textShadow: "0 0 8px rgba(212, 175, 55, 0.3)" }}
                 >
                   {announcement.flavor}
                 </div>

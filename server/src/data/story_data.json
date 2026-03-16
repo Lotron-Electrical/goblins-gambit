@@ -1,0 +1,339 @@
+{
+  "runs": {
+    "poat": {
+      "runState": {
+        "runId": "5441ce2e-c3e2-4415-8f8c-de40e49011fd",
+        "username": "POAT",
+        "customCard": {
+          "id": "custom_creature",
+          "name": "Shet",
+          "type": "Creature",
+          "cost": 1,
+          "attack": 100,
+          "defence": 100,
+          "sp": 100,
+          "copies": 1,
+          "image": "player_card_3.jpg",
+          "abilityId": null,
+          "effect": "Your custom creature",
+          "isCustomCard": true,
+          "_drawChanceBoost": 0
+        },
+        "currentLevelIndex": 0,
+        "lives": 2,
+        "nightmare": false,
+        "currentMap": {
+          "levelIndex": 0,
+          "levelName": "The Tavern",
+          "rows": [
+            [
+              {
+                "id": "node_0_0",
+                "row": 0,
+                "col": 0,
+                "type": "battle",
+                "connections": [
+                  "node_1_0",
+                  "node_1_1",
+                  "node_1_2"
+                ],
+                "revealed": true,
+                "completed": true,
+                "characterId": "tavern_1"
+              }
+            ],
+            [
+              {
+                "id": "node_1_0",
+                "row": 1,
+                "col": 0,
+                "type": "enhancement",
+                "connections": [
+                  "node_2_0"
+                ],
+                "revealed": true,
+                "completed": false,
+                "characterId": null
+              },
+              {
+                "id": "node_1_1",
+                "row": 1,
+                "col": 1,
+                "type": "battle",
+                "connections": [
+                  "node_2_1",
+                  "node_2_0"
+                ],
+                "revealed": true,
+                "completed": false,
+                "characterId": null
+              },
+              {
+                "id": "node_1_2",
+                "row": 1,
+                "col": 2,
+                "type": "enhancement",
+                "connections": [
+                  "node_2_0"
+                ],
+                "revealed": true,
+                "completed": false,
+                "characterId": null
+              }
+            ],
+            [
+              {
+                "id": "node_2_0",
+                "row": 2,
+                "col": 0,
+                "type": "enhancement",
+                "connections": [
+                  "node_3_0",
+                  "node_3_1"
+                ],
+                "revealed": false,
+                "completed": false,
+                "characterId": null
+              },
+              {
+                "id": "node_2_1",
+                "row": 2,
+                "col": 1,
+                "type": "battle",
+                "connections": [
+                  "node_3_2"
+                ],
+                "revealed": false,
+                "completed": false,
+                "characterId": null
+              }
+            ],
+            [
+              {
+                "id": "node_3_0",
+                "row": 3,
+                "col": 0,
+                "type": "battle",
+                "connections": [
+                  "node_4_0"
+                ],
+                "revealed": false,
+                "completed": false,
+                "characterId": null
+              },
+              {
+                "id": "node_3_1",
+                "row": 3,
+                "col": 1,
+                "type": "battle",
+                "connections": [
+                  "node_4_0"
+                ],
+                "revealed": false,
+                "completed": false,
+                "characterId": null
+              },
+              {
+                "id": "node_3_2",
+                "row": 3,
+                "col": 2,
+                "type": "battle",
+                "connections": [
+                  "node_4_0"
+                ],
+                "revealed": false,
+                "completed": false,
+                "characterId": null
+              }
+            ],
+            [
+              {
+                "id": "node_4_0",
+                "row": 4,
+                "col": 0,
+                "type": "boss",
+                "connections": [],
+                "revealed": false,
+                "completed": false,
+                "characterId": null
+              }
+            ]
+          ],
+          "nodes": {
+            "node_0_0": {
+              "id": "node_0_0",
+              "row": 0,
+              "col": 0,
+              "type": "battle",
+              "connections": [
+                "node_1_0",
+                "node_1_1",
+                "node_1_2"
+              ],
+              "revealed": true,
+              "completed": true,
+              "characterId": "tavern_1"
+            },
+            "node_1_0": {
+              "id": "node_1_0",
+              "row": 1,
+              "col": 0,
+              "type": "enhancement",
+              "connections": [
+                "node_2_0"
+              ],
+              "revealed": true,
+              "completed": false,
+              "characterId": null
+            },
+            "node_1_1": {
+              "id": "node_1_1",
+              "row": 1,
+              "col": 1,
+              "type": "battle",
+              "connections": [
+                "node_2_1",
+                "node_2_0"
+              ],
+              "revealed": true,
+              "completed": false,
+              "characterId": null
+            },
+            "node_1_2": {
+              "id": "node_1_2",
+              "row": 1,
+              "col": 2,
+              "type": "enhancement",
+              "connections": [
+                "node_2_0"
+              ],
+              "revealed": true,
+              "completed": false,
+              "characterId": null
+            },
+            "node_2_0": {
+              "id": "node_2_0",
+              "row": 2,
+              "col": 0,
+              "type": "enhancement",
+              "connections": [
+                "node_3_0",
+                "node_3_1"
+              ],
+              "revealed": false,
+              "completed": false,
+              "characterId": null
+            },
+            "node_2_1": {
+              "id": "node_2_1",
+              "row": 2,
+              "col": 1,
+              "type": "battle",
+              "connections": [
+                "node_3_2"
+              ],
+              "revealed": false,
+              "completed": false,
+              "characterId": null
+            },
+            "node_3_0": {
+              "id": "node_3_0",
+              "row": 3,
+              "col": 0,
+              "type": "battle",
+              "connections": [
+                "node_4_0"
+              ],
+              "revealed": false,
+              "completed": false,
+              "characterId": null
+            },
+            "node_3_1": {
+              "id": "node_3_1",
+              "row": 3,
+              "col": 1,
+              "type": "battle",
+              "connections": [
+                "node_4_0"
+              ],
+              "revealed": false,
+              "completed": false,
+              "characterId": null
+            },
+            "node_3_2": {
+              "id": "node_3_2",
+              "row": 3,
+              "col": 2,
+              "type": "battle",
+              "connections": [
+                "node_4_0"
+              ],
+              "revealed": false,
+              "completed": false,
+              "characterId": null
+            },
+            "node_4_0": {
+              "id": "node_4_0",
+              "row": 4,
+              "col": 0,
+              "type": "boss",
+              "connections": [],
+              "revealed": false,
+              "completed": false,
+              "characterId": null
+            }
+          }
+        },
+        "currentNodeId": "node_0_0",
+        "items": [],
+        "completedNodes": [
+          "node_0_0"
+        ],
+        "stats": {
+          "battlesWon": 0,
+          "battlesLost": 1,
+          "enhancementsPicked": 0,
+          "totalSPEarned": 0,
+          "creaturesKilled": 0,
+          "levelsCompleted": 0
+        },
+        "startedAt": 1773685300599
+      },
+      "savedAt": 1773685395167
+    }
+  },
+  "trophies": {
+    "poat": [
+      {
+        "trophyCard": {
+          "id": "custom_creature",
+          "name": "Shneef",
+          "type": "Creature",
+          "cost": 1,
+          "attack": 400,
+          "defence": 350,
+          "sp": 100,
+          "copies": 1,
+          "image": "custom_creature.jpg",
+          "abilityId": "streamer_draw",
+          "effect": "Streamer — draw 1 card when played",
+          "isCustomCard": true,
+          "_drawChanceBoost": 0
+        },
+        "levelReached": "tundra",
+        "nightmare": false,
+        "completedAt": 1773680013909
+      }
+    ]
+  },
+  "achievements": {
+    "poat": {
+      "first_blood": {
+        "unlockedAt": 1773678182457
+      },
+      "tavern_regular": {
+        "unlockedAt": 1773679297718
+      }
+    }
+  }
+}

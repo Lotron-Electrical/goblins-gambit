@@ -89,6 +89,24 @@ export function resolveAttack(
     return { defenderKilled: true, attackerKilled: true, spGained, events };
   }
 
+  // --- Dodge: attack bypasses creature, damages owner SP instead ---
+  if (defenderCard.abilityId === "dodge_evade" && !defenderCard._silenced) {
+    const dodgeDamage = 200;
+    defender.sp = Math.max(0, defender.sp - dodgeDamage);
+    events.push({
+      type: "buff",
+      cardUid: defenderUid,
+      text: "Dodge! Attack bypassed — 200 SP damage to owner",
+    });
+    events.push({
+      type: "sp_change",
+      playerId: defenderOwnerId,
+      amount: -dodgeDamage,
+      reason: "Dodge bypass",
+    });
+    return { defenderKilled: false, attackerKilled: false, spGained: 0, events };
+  }
+
   // --- Catfish mimic: first attack copies attacker's stats ---
   if (
     defenderCard.abilityId === "catfish_mimic" &&
@@ -237,18 +255,19 @@ function resolveAttackDamage(
       }
     }
 
-    // Wood Elf burn: additional 100 SP on kill
-    if (attackerCard.abilityId === "wood_elf_burn" && !attackerCard._silenced) {
-      attacker.sp += 100;
-      events.push({
-        type: "sp_change",
-        playerId: attackerId,
-        amount: 100,
-        reason: "Wood Elf burn",
-      });
-    }
   } else {
     defenderCard._defenceDamage = (defenderCard._defenceDamage || 0) + damage;
+  }
+
+  // Wood Elf burn: additional 100 SP on every attack (not just kills)
+  if (attackerCard.abilityId === "wood_elf_burn" && !attackerCard._silenced) {
+    attacker.sp += 100;
+    events.push({
+      type: "sp_change",
+      playerId: attackerId,
+      amount: 100,
+      reason: "Wood Elf burn",
+    });
   }
 
   // Gabber splash: adjacent cards lose 100 DEF (fires regardless of whether defender died)

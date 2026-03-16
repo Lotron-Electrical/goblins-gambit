@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useStore } from "../../store.js";
 import CardOnField from "./CardOnField.jsx";
 import { hasActivatedAbility } from "../ui/abilityInfo.js";
+import { ICONS } from "../ui/icons.js";
 import { useIsMobile } from "../../hooks/useIsMobile.js";
 import { THEME_EFFECTS } from "../../../../shared/src/constants.js";
 
@@ -155,13 +156,13 @@ export default function PlayerField({
 
   return (
     <div
-      className={`rounded-lg ${isMobile ? "p-1" : "p-2"} transition ${
+      className={`relative rounded-xl ${isMobile ? "p-1.5" : "p-2.5"} transition-all duration-300 border ${
         isCurrentTurn
-          ? "bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40"
-          : "bg-gray-900/40"
+          ? "bg-[var(--color-swamp)]/70 border-[var(--color-gold)]/30 animate-turn-glow"
+          : "bg-gray-900/50 border-gray-800/40"
       } ${gameState?.berserkPlayerIds?.includes(playerId) ? "ring-1 ring-red-600/60 shadow-[0_0_12px_rgba(220,38,38,0.3)]" : ""} ${
         canDirectAttack
-          ? "cursor-pointer ring-2 ring-red-500 animate-[pulse_1s_ease-in-out_infinite] bg-red-950/20"
+          ? "cursor-pointer border-red-500 animate-direct-attack bg-red-950/20"
           : ""
       }`}
       onClick={canDirectAttack ? handleDirectAttack : undefined}
@@ -185,11 +186,11 @@ export default function PlayerField({
           ) : null;
         })()}
       {/* Player info bar */}
-      <div className="flex items-center justify-between mb-1 px-1 rounded">
-        <div className="flex items-center gap-1 md:gap-2 min-w-0">
+      <div className="flex items-center justify-between mb-1.5 px-1.5 rounded-lg">
+        <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
           {!(isMobile && isOpponent) && (
             <span
-              className={`font-bold truncate ${isMobile ? "text-[11px] max-w-[140px]" : "text-[13px] max-w-[200px]"} ${isOpponent ? "text-red-400" : "text-green-400"}`}
+              className={`font-display font-bold truncate ${isMobile ? "text-[12px] max-w-[140px]" : "text-[14px] max-w-[200px]"} ${isOpponent ? "text-red-400 drop-shadow-[0_0_4px_rgba(248,113,113,0.3)]" : "text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.3)]"}`}
               title={player.name}
             >
               {player.name}
@@ -197,18 +198,18 @@ export default function PlayerField({
           )}
           {gameState?.berserkPlayerIds?.includes(playerId) && (
             <span
-              className={`text-red-500 font-bold animate-pulse ${isMobile ? "text-[8px]" : "text-[10px]"}`}
-              title="Berserk — 2x damage!"
+              className={`text-red-500 font-bold animate-pulse uppercase tracking-wider ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+              title="Berserk -- 2x damage!"
             >
               BERSERK
             </span>
           )}
           {isCurrentTurn && !isOpponent && (
             <span
-              className={`bg-[var(--color-gold)]/90 text-black font-display rounded shadow animate-[pulse_0.6s_ease-in-out_2] ${
+              className={`bg-gradient-to-r from-[var(--color-gold)] to-[var(--color-gold-bright)] text-black font-display rounded-md shadow-lg shadow-[var(--color-gold)]/20 animate-[pulse_0.6s_ease-in-out_2] ${
                 isMobile
-                  ? "text-[9px] px-1.5 py-0.5"
-                  : "text-[11px] px-2 py-0.5"
+                  ? "text-[9px] px-2 py-0.5"
+                  : "text-[11px] px-2.5 py-0.5"
               }`}
             >
               YOUR TURN
@@ -216,23 +217,24 @@ export default function PlayerField({
           )}
           {isCurrentTurn && isOpponent && (
             <span
-              className={`text-[var(--color-gold)] ${isMobile ? "text-[9px]" : "text-[11px]"}`}
+              className={`text-[var(--color-gold)] font-display tracking-wide ${isMobile ? "text-[9px]" : "text-[11px]"}`}
             >
-              TURN
+              THEIR TURN
             </span>
           )}
           {canDirectAttack && !isMobile && (
-            <span className="text-[10px] text-red-400 font-bold">
+            <span className="text-[10px] text-red-400 font-bold tracking-wide animate-pulse">
               ATTACK DIRECTLY
             </span>
           )}
         </div>
         <div
-          className={`flex items-center gap-1.5 md:gap-3 ${isMobile ? "text-[10px]" : "text-[13px]"}`}
+          className={`flex items-center gap-2 md:gap-3 ${isMobile ? "text-[10px]" : "text-[13px]"}`}
         >
           {player.playerShield > 0 && (
-            <span className="text-cyan-400 font-bold">
-              {player.playerShield} Sh
+            <span className="text-cyan-400 font-bold flex items-center gap-0.5">
+              <span className="opacity-70">{ICONS.shield}</span>
+              {player.playerShield}
             </span>
           )}
           <span
@@ -241,15 +243,15 @@ export default function PlayerField({
           >
             {player.sp}/{gameState.winSP} SP
           </span>
-          <span className="text-blue-300">{player.ap} AP</span>
+          <span className="text-blue-300 font-medium">{player.ap} AP</span>
           <span
-            className={`font-bold ${(player.handCount ?? player.hand?.length ?? 0) >= 10 ? "text-orange-400" : "text-gray-400"}`}
+            className={`font-medium ${(player.handCount ?? player.hand?.length ?? 0) >= 10 ? "text-orange-400" : "text-gray-500"}`}
           >
             {player.handCount ?? player.hand?.length ?? 0} cards
           </span>
           {(player.handCount ?? player.hand?.length ?? 0) >= 10 && (
             <span
-              className={`text-orange-400 font-bold ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+              className={`text-orange-400 font-bold uppercase tracking-wider ${isMobile ? "text-[7px]" : "text-[9px]"}`}
             >
               ENCUMBERED
             </span>
@@ -260,53 +262,68 @@ export default function PlayerField({
       {/* SP progress bar */}
       {gameState?.winSP && (
         <div
-          className={`${isMobile ? "h-1.5" : "h-1"} rounded-full bg-gray-800 mx-1 mb-1`}
+          className={`${isMobile ? "h-2" : "h-1.5"} rounded-full bg-gray-800/80 mx-1.5 mb-1.5 overflow-hidden relative`}
         >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-500"
+            className={`h-full rounded-full transition-all duration-700 ease-out relative ${
+              spPct >= 0.9
+                ? "bg-gradient-to-r from-yellow-500 via-amber-300 to-yellow-500 animate-sp-shimmer"
+                : spPct >= 0.7
+                  ? "bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 animate-sp-shimmer"
+                  : "bg-gradient-to-r from-yellow-700 to-yellow-500"
+            }`}
             style={{
               width: `${Math.min(100, (player.sp / gameState.winSP) * 100)}%`,
-              minWidth: player.sp > 0 ? "4px" : undefined,
+              minWidth: player.sp > 0 ? "6px" : undefined,
             }}
           />
+          {/* Tick marks at 25%, 50%, 75% */}
+          {!isMobile && [25, 50, 75].map((pct) => (
+            <div
+              key={pct}
+              className="absolute top-0 bottom-0 w-px bg-gray-600/40"
+              style={{ left: `${pct}%` }}
+            />
+          ))}
         </div>
       )}
 
-      {/* Gear zone — horizontal strip */}
-      <div className="flex gap-0.5 md:gap-1 mb-1 px-1">
+      {/* Gear zone -- horizontal strip */}
+      <div className="flex gap-1 md:gap-1.5 mb-1.5 px-1.5">
         <div
-          className={`text-gray-500 flex items-center ${isMobile ? "text-[9px] mr-1" : "text-[11px] mr-1.5"}`}
+          className={`text-gray-600 flex items-center font-display ${isMobile ? "text-[9px] mr-0.5" : "text-[11px] mr-1"}`}
         >
           Gear
         </div>
         {gearSlots.map((slot) => {
           const armour = player.gear[slot];
+          const turnsLeft = armour ? (armour._turnsRemaining ?? armour.durability) : 0;
           return (
             <div
               key={slot}
-              className={`flex-1 ${isMobile ? "h-6" : "h-7"} rounded border cursor-pointer ${
+              className={`flex-1 ${isMobile ? "h-7" : "h-8"} rounded-lg border cursor-pointer transition-all duration-200 ${
                 armour
-                  ? "border-purple-600 bg-purple-950/40 hover:border-purple-400"
-                  : "border-gray-800 bg-gray-900/40"
+                  ? `border-purple-500/60 bg-purple-950/50 hover:border-purple-400 hover:bg-purple-950/70 ${turnsLeft > 1 ? "animate-gear-shimmer" : ""}`
+                  : "border-gray-800/60 bg-gray-900/30 border-dashed"
               } flex items-center justify-center`}
               onClick={() => handleArmourClick(armour)}
             >
               {armour ? (
-                <div className="flex items-center gap-1 px-1">
+                <div className="flex items-center gap-1 px-1.5">
                   <span
                     className={`text-purple-300 font-medium truncate ${isMobile ? "text-[7px]" : "text-[10px]"}`}
                   >
                     {armour.name}
                   </span>
                   <span
-                    className={`font-bold ${(armour._turnsRemaining ?? armour.durability) <= 1 ? "text-red-400 animate-pulse" : "text-gray-400"} ${isMobile ? "text-[6px]" : "text-[9px]"}`}
+                    className={`font-bold rounded-full px-1 ${turnsLeft <= 1 ? "text-red-400 bg-red-900/40 animate-pulse" : "text-purple-400/80 bg-purple-900/30"} ${isMobile ? "text-[6px]" : "text-[8px]"}`}
                   >
-                    {armour._turnsRemaining ?? armour.durability}T
+                    {turnsLeft}T
                   </span>
                 </div>
               ) : (
                 <span
-                  className={`text-gray-700 ${isMobile ? "text-[7px]" : "text-[10px]"}`}
+                  className={`text-gray-700 capitalize italic ${isMobile ? "text-[7px]" : "text-[10px]"}`}
                 >
                   {slot}
                 </span>
@@ -316,18 +333,20 @@ export default function PlayerField({
         })}
       </div>
 
-      {/* Swamp zone — full width */}
+      {/* Swamp zone -- full width */}
       <div>
         <div
-          className={`text-gray-500 text-center mb-0.5 ${isMobile ? "text-[9px]" : "text-[11px] mb-1"}`}
+          className={`text-gray-600 text-center font-display tracking-wider uppercase ${isMobile ? "text-[8px] mb-0.5" : "text-[10px] mb-1"}`}
         >
           {THEME_FIELD_NAME[theme] || "The Swamp"}
         </div>
         <div
-          className={`flex gap-0.5 justify-center bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-0.5 md:p-1 overflow-hidden ${
-            isMobile ? "min-h-[92px]" : "min-h-[156px] max-w-[600px] mx-auto"
+          className={`relative flex gap-0.5 justify-center bg-gradient-to-b from-[#141808]/60 to-[#0c1004]/70 rounded-lg border border-[#2a3018]/40 shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)] p-1 md:p-1.5 overflow-hidden ${
+            isMobile ? "min-h-[92px]" : "min-h-[156px] max-w-[620px] mx-auto"
           }`}
         >
+          {/* Fog overlay */}
+          <div className="absolute inset-0 pointer-events-none animate-fog-drift bg-gradient-to-r from-transparent via-[#1a2410]/8 to-transparent rounded-lg" />
           {Array.from({ length: 5 }).map((_, slotIdx) => {
             const creature =
               player.swamp.find((c) => c._slot === slotIdx) || null;
@@ -348,15 +367,15 @@ export default function PlayerField({
               <div
                 key={slotIdx}
                 data-drop-slot={!isOpponent && !creature ? slotIdx : undefined}
-                className={`relative flex-1 min-w-0 rounded border overflow-hidden ${
+                className={`relative flex-1 min-w-0 rounded-lg border overflow-hidden ${
                   creature
                     ? "border-transparent"
                     : canDrop
-                      ? "border-dashed border-[var(--color-gold)] bg-[var(--color-gold)]/20 animate-pulse"
+                      ? "border-dashed border-[var(--color-gold)] bg-[var(--color-gold)]/20 animate-pulse shadow-[inset_0_0_12px_rgba(212,160,23,0.15)]"
                       : canPlace
-                        ? "border-dashed border-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15"
-                        : "border-dashed border-gray-700/50 bg-gray-900/20"
-                } ${isMobile ? "min-h-[56px]" : "min-h-[90px]"} flex items-center justify-center transition`}
+                        ? "border-dashed border-[var(--color-gold)]/50 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15 hover:border-[var(--color-gold)]/70 hover:shadow-[inset_0_0_8px_rgba(212,160,23,0.1)]"
+                        : "border-dashed border-gray-700/30 bg-gray-900/15"
+                } ${isMobile ? "min-h-[56px]" : "min-h-[90px]"} flex items-center justify-center transition-all duration-200`}
                 onClick={() => {
                   if (canPlace) {
                     playCard(selectedCard.uid, { slotIndex: slotIdx });
@@ -393,10 +412,10 @@ export default function PlayerField({
                             e.stopPropagation();
                             handleAbilityClick(creature);
                           }}
-                          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded shadow z-10 ${
+                          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 to-amber-500 hover:from-yellow-500 hover:to-amber-400 text-black font-bold rounded-md shadow-lg shadow-yellow-600/30 z-10 transition-all duration-150 hover:scale-105 ${
                             isMobile
-                              ? "text-[7px] px-1 py-0"
-                              : "text-[9px] px-1.5 py-0.5"
+                              ? "text-[7px] px-1.5 py-0"
+                              : "text-[9px] px-2 py-0.5"
                           }`}
                           title="Use ability"
                         >
@@ -406,7 +425,7 @@ export default function PlayerField({
                   </div>
                 ) : (
                   <span
-                    className={`${canDrop ? "text-[var(--color-gold)] font-bold" : "text-gray-700"} ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+                    className={`${canDrop ? "text-[var(--color-gold)] font-display font-bold" : canPlace ? "text-[var(--color-gold)]/60 font-display" : "text-gray-700/40"} ${isMobile ? "text-[8px]" : "text-[10px]"}`}
                   >
                     {canDrop ? "Drop" : canPlace ? "Place" : ""}
                   </span>

@@ -5,6 +5,7 @@ import LobbyScreen from "./screens/LobbyScreen.jsx";
 import RoomScreen from "./screens/RoomScreen.jsx";
 import GameScreen from "./screens/GameScreen.jsx";
 import TutorialScreen from "./screens/TutorialScreen.jsx";
+import StoryScreen from "./screens/StoryScreen.jsx";
 
 // Error boundary to catch React render crashes and show the error instead of blank screen
 class ErrorBoundary extends Component {
@@ -105,18 +106,27 @@ function AppInner() {
 
   return (
     <div className="min-h-screen">
-      {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-900/90 border border-amber-500 text-amber-100 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
-          <span className="text-amber-300 text-lg">!</span>
-          <span>{error}</span>
-          <button
-            onClick={clearError}
-            className="text-amber-400 hover:text-white font-bold"
-          >
-            X
-          </button>
-        </div>
-      )}
+      {error && (() => {
+        const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
+        return (
+          <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
+            isInfo
+              ? "bg-blue-900/90 border border-blue-500 text-blue-100"
+              : "bg-amber-900/90 border border-amber-500 text-amber-100"
+          }`}>
+            <span className={`text-lg ${isInfo ? "text-blue-300" : "text-amber-300"}`}>
+              {isInfo ? "\u2139" : "!"}
+            </span>
+            <span>{error}</span>
+            <button
+              onClick={clearError}
+              className={`font-bold ${isInfo ? "text-blue-400 hover:text-white" : "text-amber-400 hover:text-white"}`}
+            >
+              X
+            </button>
+          </div>
+        );
+      })()}
 
       {!connected && screen !== "tutorial" && (
         <div className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center">
@@ -130,7 +140,8 @@ function AppInner() {
       {screen === "room" && <RoomScreen />}
       {screen === "game" && <GameScreen />}
       {screen === "tutorial" && <TutorialScreen />}
-      {!["lobby", "room", "game", "tutorial"].includes(screen) && (
+      {screen === "story" && <StoryScreen />}
+      {!["lobby", "room", "game", "tutorial", "story"].includes(screen) && (
         <LobbyScreen />
       )}
     </div>

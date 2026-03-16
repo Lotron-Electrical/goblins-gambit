@@ -28,6 +28,8 @@ import {
   rhy_bear_split,
   catfish_mimic,
   gamblid_dynamic,
+  sweep_attack,
+  dodge_evade,
 } from "./creatures.js";
 
 // On-play: Magic
@@ -56,6 +58,7 @@ import {
   activate_saving_grace,
   activate_rhy_bear_split,
   activate_crack_head_multi,
+  activate_sweep_attack,
 } from "./activated.js";
 
 /**
@@ -84,6 +87,8 @@ export const onPlayRegistry = {
   rhy_bear_split,
   catfish_mimic,
   gamblid_dynamic,
+  sweep_attack,
+  dodge_evade,
 
   // Magic
   smesh_damage,
@@ -114,6 +119,7 @@ export const activatedRegistry = {
   saving_grace_multi: activate_saving_grace,
   rhy_bear_split: activate_rhy_bear_split,
   crack_head_multi: activate_crack_head_multi,
+  sweep_attack: activate_sweep_attack,
 };
 
 /**

@@ -72,6 +72,7 @@ export function releaseBotName(name) {
  */
 export function decideBotAction(state, difficulty = "medium") {
   const me = state.players[state.myId];
+  if (!me) return null; // Bot was removed from game mid-turn
   const isMyTurn = state.currentPlayerId === state.myId;
 
   // Handle pending target selection
@@ -88,12 +89,16 @@ export function decideBotAction(state, difficulty = "medium") {
   if (me.ap <= 0) return { type: ACTION.END_TURN };
 
   // Easy: randomly skip good plays 40% of the time (plays dumber)
-  const skip = difficulty === "easy" ? () => Math.random() < 0.4 : () => false;
+  const skip = difficulty === "easy"
+    ? () => Math.random() < 0.4
+    : difficulty === "easy+"
+      ? () => Math.random() < 0.2
+      : () => false;
 
   // --- Decision priority ---
 
   // 0. Lethal detection — hard only
-  if (difficulty === "hard") {
+  if (difficulty === "hard" || difficulty === "hard-" || difficulty === "medium+") {
     const lethalAction = checkLethal(state, me);
     if (lethalAction) return lethalAction;
   }
@@ -122,7 +127,7 @@ export function decideBotAction(state, difficulty = "medium") {
   // 5. Buy AP if we have lots of SP and useful cards/attacks remaining — hard only
   if (difficulty === "hard" && me.sp >= 2000 && me.ap <= 1) {
     // Buy AP more aggressively: if hand has playable cards or creatures can still attack
-    const hasPlayable = me.hand.some((c) => !c.hidden && c.cost <= 2);
+    const hasPlayable = me.hand.some((c) => !c.hidden && effectiveCost(c, state.theme) <= 2);
     const hasUnattacked = me.swamp.some(
       (c) => !c._hasAttacked && !c._harambeOwner,
     );
@@ -161,11 +166,13 @@ function checkLethal(state, me) {
     if (visibleCreatures.length > 0) continue;
 
     // Calculate total available damage from creatures that haven't attacked
+    // Limited by available AP (each attack costs 1 AP)
     let totalDamage = 0;
     const attackers = [];
     for (const creature of me.swamp) {
       if (creature._hasAttacked || creature._harambeOwner) continue;
-      const atk = (creature.attack || 0) + (creature._attackBuff || 0);
+      if (attackers.length >= me.ap) break;
+      const atk = effectiveAtk(creature, state.theme);
       if (atk > 0) {
         totalDamage += atk;
         attackers.push(creature);
@@ -195,7 +202,7 @@ function pickCardToPlay(state, me) {
   if (me.ap < 1) return null;
 
   const playable = me.hand
-    .filter((c) => !c.hidden && c.cost <= me.ap)
+    .filter((c) => !c.hidden && effectiveCost(c, state.theme) <= me.ap)
     .map((c) => ({ card: c, score: scoreCard(state, me, c) }))
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -438,7 +445,7 @@ function pickAttack(state, me) {
   // Gather all available attackers, sorted by ATK descending (strongest first)
   const attackers = me.swamp
     .filter((c) => !c._hasAttacked && !c._harambeOwner)
-    .map((c) => ({ card: c, atk: (c.attack || 0) + (c._attackBuff || 0) }))
+    .map((c) => ({ card: c, atk: effectiveAtk(c, state.theme) }))
     .filter((a) => a.atk > 0)
     .sort((a, b) => b.atk - a.atk);
 
@@ -753,6 +760,7 @@ function handleTargetSelection(state) {
 
   if (pending.maxTargets && pending.maxTargets > 1) {
     // Multi-target: pick up to maxTargets
+    if (validTargets.length === 0) return { type: ACTION.END_TURN };
     const targets = validTargets.slice(0, pending.maxTargets).map((t) => ({
       targetOwnerId: t.ownerId,
       targetUid: t.uid,
@@ -769,7 +777,7 @@ function handleTargetSelection(state) {
     let best;
     if (isOffensive) {
       best = [...validTargets].sort(
-        (a, b) => (b.attack || b.sp || 0) - (a.attack || a.sp || 0),
+        (a, b) => ((b.attack || 0) + (b.sp || 0)) - ((a.attack || 0) + (a.sp || 0)),
       )[0];
     } else {
       best = [...validTargets].sort(
@@ -836,10 +844,7 @@ function pickEventAction(state, me, difficulty) {
       const attacker = me.swamp
         .filter((c) => !c._hasAttacked && !c._harambeOwner)
         .sort(
-          (a, b) =>
-            (b.attack || 0) +
-            (b._attackBuff || 0) -
-            ((a.attack || 0) + (a._attackBuff || 0)),
+          (a, b) => effectiveAtk(b, state.theme) - effectiveAtk(a, state.theme),
         )[0];
       if (attacker) {
         return { type: ACTION.ATTACK_EVENT, attackerUid: attacker.uid };
@@ -933,6 +938,25 @@ function effectiveHP(t, theme) {
     def = Math.floor(def * themeEffects.defMultiplier);
   }
   return def;
+}
+
+/** Get theme-adjusted spell cost for a card */
+function effectiveCost(card, theme) {
+  const themeEffects = theme ? THEME_EFFECTS[theme] : null;
+  if (card.type === CARD_TYPE.MAGIC && themeEffects?.spellCostMultiplier !== undefined) {
+    return Math.floor(card.cost * themeEffects.spellCostMultiplier);
+  }
+  return card.cost;
+}
+
+/** Get theme-adjusted attack value for a creature */
+function effectiveAtk(creature, theme) {
+  let atk = (creature.attack || 0) + (creature._attackBuff || 0);
+  const themeEffects = theme ? THEME_EFFECTS[theme] : null;
+  if (themeEffects?.atkMultiplier && themeEffects.atkMultiplier !== 1) {
+    atk = Math.floor(atk * themeEffects.atkMultiplier);
+  }
+  return atk;
 }
 
 function countArmourSet(me, setName) {

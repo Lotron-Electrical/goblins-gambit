@@ -76,11 +76,24 @@ export default function DragOverlay() {
     <div
       className="fixed pointer-events-none z-[100]"
       style={{
-        left: dragPosition.x - 45,
-        top: dragPosition.y - 63,
+        left: dragPosition.x - 50,
+        top: dragPosition.y - 70,
+        transition: "left 0.04s linear, top 0.04s linear",
       }}
     >
-      <div className="w-[90px] h-[126px] rounded-lg border-2 border-[var(--color-gold)] bg-gray-900 overflow-hidden opacity-80 shadow-[0_0_20px_rgba(212,175,55,0.5)] rotate-[-3deg]">
+      {/* Glow trail behind the card */}
+      <div
+        className="absolute inset-0 rounded-lg animate-drag-glow"
+        style={{ margin: "-4px" }}
+      />
+      <div
+        className="w-[100px] h-[140px] rounded-lg border-2 border-[var(--color-gold)] bg-gray-900 overflow-hidden relative"
+        style={{
+          opacity: 0.9,
+          transform: "rotate(-4deg) scale(1.05)",
+          boxShadow: "0 0 24px rgba(212, 175, 55, 0.5), 0 8px 32px rgba(0, 0, 0, 0.5)",
+        }}
+      >
         {draggingCard.image && (
           <img
             src={`/cards/${draggingCard.image}`}
@@ -89,8 +102,10 @@ export default function DragOverlay() {
             draggable={false}
           />
         )}
-        <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-center py-0.5">
-          <span className="text-[9px] text-white font-bold truncate block px-1">
+        {/* Bottom gradient for name readability */}
+        <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/90 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 text-center py-1">
+          <span className="text-[10px] text-white font-bold truncate block px-1 drop-shadow-md">
             {draggingCard.name}
           </span>
         </div>

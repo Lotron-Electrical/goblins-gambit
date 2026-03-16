@@ -24,6 +24,7 @@ import {
   getSavedGameInfo,
 } from "../savedGames.js";
 import { GameEngine } from "../game/GameEngine.js";
+import { setupStoryHandlers, cleanupStoryEngine } from "../story/storySocketHandler.js";
 
 export function setupSocketHandlers(io, lobby) {
   // Track which rooms have bots and bot IDs + difficulty
@@ -318,6 +319,21 @@ export function setupSocketHandlers(io, lobby) {
       }
     });
 
+    // Authenticate guest players (for story mode)
+    socket.on("authenticate_guest", ({ playerName }, callback) => {
+      // Validate guest name: trim, limit length, reject empty
+      const trimmedName = typeof playerName === "string" ? playerName.trim().slice(0, 20) : "";
+      if (!trimmedName) {
+        callback?.({ error: "Player name is required" });
+        return;
+      }
+      socketAccounts.set(socket.id, `guest_${trimmedName}`);
+      callback?.({ success: true, username: `guest_${trimmedName}` });
+    });
+
+    // Story mode handlers
+    setupStoryHandlers(socket, io, () => socketAccounts.get(socket.id));
+
     socket.on(EVENTS.CREATE_ROOM, ({ name, options }, callback) => {
       playerName = name || "Player";
       const room = lobby.createRoom(socket.id, playerName, options);
@@ -355,6 +371,16 @@ export function setupSocketHandlers(io, lobby) {
       if (!oldPlayer) {
         callback?.({ error: "Player not found in room" });
         return;
+      }
+
+      // If this socket is authenticated, verify account matches the original player
+      if (socketAccounts.has(socket.id)) {
+        const game = lobby.getGame(roomId);
+        const originalUsername = game?.state.players[oldPlayer.id]?._accountUsername;
+        if (originalUsername && originalUsername !== socketAccounts.get(socket.id)) {
+          callback?.({ error: "Account mismatch — cannot rejoin as another player" });
+          return;
+        }
       }
 
       const oldId = oldPlayer.id;
@@ -450,6 +476,27 @@ export function setupSocketHandlers(io, lobby) {
     socket.on(EVENTS.LEAVE_ROOM, () => {
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) return;
+
+      // Cancel any pending disconnect timer for this player
+      if (disconnectTimers.has(socket.id)) {
+        clearTimeout(disconnectTimers.get(socket.id));
+        disconnectTimers.delete(socket.id);
+      }
+
+      // If there's an active game, mark player as disconnected and force end their turn
+      const game = lobby.getGame(roomId);
+      if (game) {
+        const player = game.state.players[socket.id];
+        if (player) {
+          player.connected = false;
+          if (game.getCurrentPlayerId() === socket.id) {
+            game.handleAction(socket.id, { type: ACTION.END_TURN });
+            broadcastState(roomId, game);
+            runBotTurn(roomId, game);
+          }
+        }
+      }
+
       socket.leave(roomId);
       const result = lobby.leaveRoom(socket.id);
       if (result && !result.deleted) {
@@ -561,7 +608,7 @@ export function setupSocketHandlers(io, lobby) {
         );
       if (settings.maxPlayers != null)
         room.maxPlayers = Math.max(
-          2,
+          Math.max(2, room.players.length),
           Math.min(6, Number(settings.maxPlayers) || 6),
         );
       if (settings.startingHandSize != null)
@@ -668,7 +715,7 @@ export function setupSocketHandlers(io, lobby) {
         await updateStatsAfterGame(engine.state, result.winner);
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
-          winnerName: engine.state.players[result.winner].name,
+          winnerName: engine.state.players[result.winner]?.name || "Unknown",
           stats: engine.state.stats,
         });
         cleanupFinishedGame(roomId);
@@ -973,6 +1020,9 @@ export function setupSocketHandlers(io, lobby) {
 
     socket.on("disconnect", () => {
       lastChatTime.delete(socket.id);
+      // Clean up story engine if player had one
+      const storyUsername = socketAccounts.get(socket.id);
+      if (storyUsername) cleanupStoryEngine(storyUsername);
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) {
         socketAccounts.delete(socket.id);
@@ -1002,16 +1052,19 @@ export function setupSocketHandlers(io, lobby) {
           if (game.getCurrentPlayerId() === socket.id) {
             const timer = setTimeout(() => {
               disconnectTimers.delete(socket.id);
+              // Verify game/room still exists before acting
+              const currentGame = lobby.getGame(roomId);
+              if (!currentGame) return;
               // Only force end turn if still this player's turn and still disconnected
-              const p = game.state.players[socket.id];
+              const p = currentGame.state.players[socket.id];
               if (
                 p &&
                 !p.connected &&
-                game.getCurrentPlayerId() === socket.id
+                currentGame.getCurrentPlayerId() === socket.id
               ) {
-                game.handleAction(socket.id, { type: ACTION.END_TURN });
-                broadcastState(roomId, game);
-                runBotTurn(roomId, game);
+                currentGame.handleAction(socket.id, { type: ACTION.END_TURN });
+                broadcastState(roomId, currentGame);
+                runBotTurn(roomId, currentGame);
               }
             }, 15000);
             disconnectTimers.set(socket.id, timer);

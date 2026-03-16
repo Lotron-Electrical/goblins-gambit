@@ -3,14 +3,37 @@
 @theme {
   --font-display: "MedievalSharp", cursive;
   --font-body: "Inter", sans-serif;
+
+  /* Core swamp palette */
   --color-swamp: #1c2410;
   --color-swamp-dark: #0e1206;
+  --color-swamp-light: #2a3518;
+
+  /* Card suit colors */
   --color-card-red: #b91c1c;
   --color-card-blue: #1d4ed8;
   --color-card-green: #15803d;
   --color-card-black: #374151;
+
+  /* Gold accent ramp */
+  --color-gold-dim: #8b6914;
   --color-gold: #d4a017;
   --color-gold-bright: #fbbf24;
+
+  /* UI surface tokens */
+  --color-surface: #111a08;
+  --color-surface-raised: #1a2410;
+  --color-border: #2a3a1a;
+  --color-border-strong: #3d5226;
+
+  /* Semantic */
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+  --color-info: #2563eb;
+
+  /* Glow tokens (used in animations & box-shadows) */
+  --color-gold-glow: rgba(212, 160, 23, 0.4);
+  --color-gold-glow-strong: rgba(251, 191, 36, 0.6);
 }
 
 html,
@@ -35,6 +58,7 @@ html.game-active body {
 
 body {
   font-family: var(--font-body);
+  color: #e2e0d8;
   background: linear-gradient(
     180deg,
     #080a04 0%,
@@ -49,6 +73,86 @@ body {
 
 #root {
   min-height: 100dvh;
+}
+
+/* ================================================================
+   GLOBAL TRANSITION EASING
+   ================================================================ */
+
+*,
+*::before,
+*::after {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================================================================
+   TEXT SELECTION — gold tinted
+   ================================================================ */
+
+::selection {
+  background: rgba(212, 160, 23, 0.35);
+  color: #fff;
+}
+
+::-moz-selection {
+  background: rgba(212, 160, 23, 0.35);
+  color: #fff;
+}
+
+/* ================================================================
+   FOCUS RING — accessible gold outline for keyboard navigation
+   ================================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+::-moz-focus-inner {
+  border: 0;
+}
+
+/* ================================================================
+   SCROLLBAR — thin dark track, gold thumb
+   ================================================================ */
+
+/* Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(14, 18, 6, 0.6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(212, 160, 23, 0.4) 0%,
+    rgba(139, 105, 20, 0.5) 100%
+  );
+  border-radius: 4px;
+  border: 1px solid rgba(42, 53, 24, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(212, 160, 23, 0.6) 0%,
+    rgba(139, 105, 20, 0.7) 100%
+  );
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 160, 23, 0.35) rgba(14, 18, 6, 0.6);
 }
 
 /* Mud blob texture overlay */
@@ -129,9 +233,17 @@ body::after {
 [data-theme="blood"] {
   --color-swamp: #2a0a0a;
   --color-swamp-dark: #150505;
+  --color-swamp-light: #3d1212;
+  --color-gold-dim: #8a2020;
   --color-gold: #c44040;
   --color-gold-bright: #f05050;
   --color-card-green: #991b1b;
+  --color-surface: #1a0808;
+  --color-surface-raised: #240c0c;
+  --color-border: #3a1515;
+  --color-border-strong: #551e1e;
+  --color-gold-glow: rgba(196, 64, 64, 0.4);
+  --color-gold-glow-strong: rgba(240, 80, 80, 0.6);
 }
 [data-theme="blood"] body {
   background: linear-gradient(
@@ -171,14 +283,31 @@ body::after {
     ),
     radial-gradient(circle at 10% 90%, rgba(60, 5, 5, 0.16) 0%, transparent 45%);
 }
+[data-theme="blood"] ::selection {
+  background: rgba(196, 64, 64, 0.35);
+}
+[data-theme="blood"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(196, 64, 64, 0.4) 0%, rgba(138, 32, 32, 0.5) 100%);
+}
+[data-theme="blood"] {
+  scrollbar-color: rgba(196, 64, 64, 0.35) rgba(14, 4, 4, 0.6);
+}
 
 /* Theme: Frost */
 [data-theme="frost"] {
   --color-swamp: #0a1a2a;
   --color-swamp-dark: #050d15;
+  --color-swamp-light: #122a42;
+  --color-gold-dim: #2a7090;
   --color-gold: #40a0c4;
   --color-gold-bright: #50d0f0;
   --color-card-green: #1d4ed8;
+  --color-surface: #081018;
+  --color-surface-raised: #0c1822;
+  --color-border: #152a3e;
+  --color-border-strong: #1e3d58;
+  --color-gold-glow: rgba(64, 160, 196, 0.4);
+  --color-gold-glow-strong: rgba(80, 208, 240, 0.6);
 }
 [data-theme="frost"] body {
   background: linear-gradient(
@@ -222,18 +351,27 @@ body::after {
       transparent 45%
     );
 }
+[data-theme="frost"] ::selection {
+  background: rgba(64, 160, 196, 0.35);
+}
+[data-theme="frost"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(64, 160, 196, 0.4) 0%, rgba(42, 112, 144, 0.5) 100%);
+}
+[data-theme="frost"] {
+  scrollbar-color: rgba(64, 160, 196, 0.35) rgba(4, 8, 16, 0.6);
+}
 
 /* Sparkle border for selected cards */
 @keyframes sparkle-border {
   0%,
   100% {
     box-shadow:
-      0 0 6px 2px rgba(212, 160, 23, 0.4),
+      0 0 6px 2px var(--color-gold-glow),
       0 0 12px 4px rgba(212, 160, 23, 0.15);
   }
   50% {
     box-shadow:
-      0 0 10px 4px rgba(251, 191, 36, 0.6),
+      0 0 10px 4px var(--color-gold-glow-strong),
       0 0 20px 8px rgba(251, 191, 36, 0.25);
   }
 }
@@ -241,12 +379,204 @@ body::after {
   animation: sparkle-border 1.2s ease-in-out infinite;
 }
 
+/* Glowing turn indicator pulse */
+@keyframes turn-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 8px 2px rgba(212, 160, 23, 0.3),
+      inset 0 0 6px 1px rgba(212, 160, 23, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 16px 6px rgba(251, 191, 36, 0.45),
+      inset 0 0 12px 2px rgba(251, 191, 36, 0.12);
+  }
+}
+.animate-turn-glow {
+  animation: turn-glow 2s ease-in-out infinite;
+}
+
+/* SP bar shimmer effect */
+@keyframes sp-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.animate-sp-shimmer {
+  background-size: 200% 100%;
+  animation: sp-shimmer 3s linear infinite;
+}
+
+/* Swamp zone fog drift */
+@keyframes fog-drift {
+  0%, 100% { opacity: 0.03; transform: translateX(0); }
+  50% { opacity: 0.06; transform: translateX(8px); }
+}
+.animate-fog-drift {
+  animation: fog-drift 8s ease-in-out infinite;
+}
+
+/* Gear slot equipped shimmer */
+@keyframes gear-shimmer {
+  0%, 100% { border-color: rgba(147, 51, 234, 0.5); }
+  50% { border-color: rgba(192, 132, 252, 0.7); }
+}
+.animate-gear-shimmer {
+  animation: gear-shimmer 2.5s ease-in-out infinite;
+}
+
+/* Creature enter animation */
+@keyframes creature-enter {
+  0% { transform: scale(0.6) translateY(12px); opacity: 0; }
+  60% { transform: scale(1.06) translateY(-2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.animate-creature-enter {
+  animation: creature-enter 0.35s ease-out;
+}
+
+/* Direct attack target pulsing border */
+@keyframes direct-attack-pulse {
+  0%, 100% {
+    box-shadow: 0 0 6px 2px rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 18px 6px rgba(239, 68, 68, 0.5);
+    border-color: rgba(239, 68, 68, 1);
+  }
+}
+.animate-direct-attack {
+  animation: direct-attack-pulse 1.2s ease-in-out infinite;
+}
+
+/* Type-colored ambient glow for card hover in hand */
+@keyframes glow-red {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(220, 38, 38, 0.3), 0 0 20px 6px rgba(220, 38, 38, 0.1), inset 0 0 8px 1px rgba(220, 38, 38, 0.1); }
+  50% { box-shadow: 0 0 16px 5px rgba(248, 113, 113, 0.5), 0 0 32px 10px rgba(220, 38, 38, 0.2), inset 0 0 12px 2px rgba(248, 113, 113, 0.15); }
+}
+@keyframes glow-blue {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(37, 99, 235, 0.3), 0 0 20px 6px rgba(37, 99, 235, 0.1), inset 0 0 8px 1px rgba(37, 99, 235, 0.1); }
+  50% { box-shadow: 0 0 16px 5px rgba(96, 165, 250, 0.5), 0 0 32px 10px rgba(37, 99, 235, 0.2), inset 0 0 12px 2px rgba(96, 165, 250, 0.15); }
+}
+@keyframes glow-gray {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(156, 163, 175, 0.25), 0 0 20px 6px rgba(156, 163, 175, 0.08), inset 0 0 8px 1px rgba(156, 163, 175, 0.08); }
+  50% { box-shadow: 0 0 16px 5px rgba(209, 213, 219, 0.4), 0 0 32px 10px rgba(156, 163, 175, 0.15), inset 0 0 12px 2px rgba(209, 213, 219, 0.12); }
+}
+@keyframes glow-green {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(22, 163, 74, 0.3), 0 0 20px 6px rgba(22, 163, 74, 0.1), inset 0 0 8px 1px rgba(22, 163, 74, 0.1); }
+  50% { box-shadow: 0 0 16px 5px rgba(74, 222, 128, 0.5), 0 0 32px 10px rgba(22, 163, 74, 0.2), inset 0 0 12px 2px rgba(74, 222, 128, 0.15); }
+}
+.animate-glow-red { animation: glow-red 2s ease-in-out infinite; }
+.animate-glow-blue { animation: glow-blue 2s ease-in-out infinite; }
+.animate-glow-gray { animation: glow-gray 2s ease-in-out infinite; }
+.animate-glow-green { animation: glow-green 2s ease-in-out infinite; }
+
+/* Card shimmer — diagonal light sweep on hover */
+@keyframes card-shimmer {
+  0% { transform: translateX(-120%) rotate(25deg); }
+  100% { transform: translateX(220%) rotate(25deg); }
+}
+.card-shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.card-shimmer-overlay::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.06) 42%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.06) 58%,
+    transparent 65%
+  );
+  transform: translateX(-120%) rotate(25deg);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.card-shimmer-active .card-shimmer-overlay::after {
+  opacity: 1;
+  animation: card-shimmer 0.7s ease-out forwards;
+}
+
+/* Hover preview entrance */
+@keyframes preview-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.93) translateY(6px);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+.animate-preview-appear {
+  animation: preview-appear 0.18s ease-out forwards;
+}
+
+/* Drag ghost glow pulse */
+@keyframes drag-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 0 40px rgba(212, 175, 55, 0.15); }
+  50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.7), 0 0 60px rgba(212, 175, 55, 0.25); }
+}
+.animate-drag-glow {
+  animation: drag-glow 0.8s ease-in-out infinite;
+}
+
+/* Card announcement text burst */
+@keyframes announce-burst {
+  0% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.8); }
+  50% { text-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 0 60px rgba(212, 175, 55, 0.3); }
+  100% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.2); }
+}
+.animate-announce-burst {
+  animation: announce-burst 0.6s ease-out forwards;
+}
+
+/* Card announcement background flash */
+@keyframes announce-bg-flash {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+.animate-announce-bg-flash {
+  animation: announce-bg-flash 0.8s ease-out forwards;
+}
+
 /* Reduced motion: disable animations */
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse,
   .animate-slide-in-right,
-  .animate-sparkle-border {
+  .animate-sparkle-border,
+  .animate-turn-glow,
+  .animate-sp-shimmer,
+  .animate-fog-drift,
+  .animate-gear-shimmer,
+  .animate-creature-enter,
+  .animate-direct-attack,
+  .animate-glow-red,
+  .animate-glow-blue,
+  .animate-glow-gray,
+  .animate-glow-green,
+  .animate-preview-appear,
+  .animate-drag-glow,
+  .animate-announce-burst,
+  .animate-announce-bg-flash {
     animation: none !important;
+  }
+  .card-shimmer-overlay::after {
+    display: none !important;
   }
   * {
     transition-duration: 0.01ms !important;

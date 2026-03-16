@@ -414,6 +414,9 @@ export class GameEngine {
 
       // Safety timeout: auto-pick first card after 20s to prevent permanent softlock
       this._pendingChoiceTimeout = setTimeout(() => {
+        if (this.state.phase !== GAME_PHASE.PLAYING || this.state.pendingChoice === null) {
+          return;
+        }
         if (this.state.pendingChoice?.type === "dead_meme") {
           const cards = this.state.pendingChoice.cards;
           if (cards.length > 0) {
@@ -504,11 +507,25 @@ export class GameEngine {
             reason: "Snacc returned",
           });
         } else {
-          killCreature(this.state, playerId, creature.uid);
+          // Creature was already spliced from player.swamp, so send directly to graveyard
+          delete creature._snaccReturn;
+          delete creature._controller;
+          delete creature._originalOwner;
+          delete creature._hasAttacked;
+          delete creature._defenceDamage;
+          delete creature._attackBuff;
+          delete creature._defenceBuff;
+          delete creature._tempShield;
+          delete creature._invisible;
+          delete creature._stonerShield;
+          delete creature._silenced;
+          delete creature._hasMimicked;
+          delete creature._swapped;
+          this.state.graveyard.push(creature);
           events.push({
             type: "destroy",
             cardUid: creature.uid,
-            owner: playerId,
+            owner: origOwnerId,
             reason: "No room to return",
           });
         }
@@ -527,6 +544,27 @@ export class GameEngine {
     this.state.currentTurnIndex =
       (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
     this.state.turnNumber++;
+
+    // Story mode hook: call _onTurnEnd if set (e.g. Berserk Charm countdown)
+    if (this.state._onTurnEnd) {
+      this.state._onTurnEnd();
+    }
+
+    // Berserk Charm countdown
+    if (this.state._berserkCharmActive) {
+      this.state._berserkCharmTurnsLeft--;
+      if (this.state._berserkCharmTurnsLeft <= 0) {
+        this.state._berserkCharmActive = false;
+        // Remove the attack buff that was added by berserk charm
+        const storyPlayer = this.state.players["story_player"];
+        if (storyPlayer) {
+          for (const creature of storyPlayer.swamp) {
+            creature._attackBuff = Math.max(0, (creature._attackBuff || 0) - (creature.attack || 0));
+          }
+        }
+      }
+    }
+
     this.state.turnPhase = TURN_PHASE.MAIN;
     this.state.pendingTarget = null;
     // Only clear pendingChoice if it belongs to the player ending their turn
@@ -612,6 +650,12 @@ export class GameEngine {
       if (themeAP?.apPenalty) {
         np.ap = Math.max(1, np.ap - themeAP.apPenalty);
       }
+      // Hessian set bonus: extra AP
+      const hessianSkipCount = ["head", "body", "feet"].filter(
+        (s) => np.gear[s]?.set === "hessian",
+      ).length;
+      if (hessianSkipCount >= 2)
+        np.ap = Math.max(np.ap, hessianSkipCount);
       for (const c of np.swamp) {
         delete c._silenced;
       }
@@ -1001,8 +1045,10 @@ export class GameEngine {
 
   /** Run end-of-turn effects for a player (Harambe, armour durability, Swapeewee, Digital Artist, Crystal income) */
   tickEndOfTurnEffects(player, playerId, events) {
-    // Harambe round countdown — check ALL players' swamps
-    for (const [pid, p] of Object.entries(this.state.players)) {
+    // Harambe round countdown — only tick for the current player's swamp
+    {
+      const pid = playerId;
+      const p = player;
       const harambes = p.swamp.filter(
         (c) =>
           c.abilityId === "harambe_plant" && c._roundsRemaining !== undefined,
@@ -1336,6 +1382,12 @@ export class GameEngine {
       };
     }
 
+    // Block 0-ATK creatures from attacking the Dragon (wastes AP for nothing)
+    const preCheckStats = getEffectiveStats(state, playerId, attackerCard);
+    if (preCheckStats.attack <= 0) {
+      return { success: false, error: "This creature has no attack power" };
+    }
+
     player.ap -= 1;
     attackerCard._hasAttacked = true;
 
@@ -1449,6 +1501,9 @@ export class GameEngine {
     if (!state.eventsEnabled || !state.jargon.active) {
       return { success: false, error: "Jargon is not available" };
     }
+    if (player.ap < 1) {
+      return { success: false, error: "Not enough AP to buy from Jargon" };
+    }
     if (state.graveyard.length === 0) {
       return { success: false, error: "Graveyard is empty" };
     }
@@ -1468,6 +1523,7 @@ export class GameEngine {
       };
     }
 
+    player.ap -= 1;
     player.sp -= cost;
     state.graveyard.splice(randomIdx, 1);
     player.hand.push(card);

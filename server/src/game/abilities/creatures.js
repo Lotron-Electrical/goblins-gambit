@@ -279,3 +279,13 @@ export function gamblid_dynamic(state, playerId, card, cardIdx, targetInfo) {
 export function catfish_mimic(state, playerId, card, cardIdx, targetInfo) {
   return { success: true, events: [] };
 }
+
+// --- Sweep: activated ability (1 AP -> split ATK across all enemy creatures) ---
+export function sweep_attack(state, playerId, card, cardIdx, targetInfo) {
+  return { success: true, events: [] };
+}
+
+// --- Dodge: passive ability (attacks bypass creature, hit player SP instead) ---
+export function dodge_evade(state, playerId, card, cardIdx, targetInfo) {
+  return { success: true, events: [] };
+}

@@ -1,0 +1,17 @@
+{
+  "poat": {
+    "username": "POAT",
+    "passwordHash": "70e1df24b71b5640c8f3210e8ba33afb5240b23e480d01d07add0293392929a4",
+    "salt": "eca7bb3957be0ce62f6b1c8742e289fd",
+    "createdAt": 1773670641156,
+    "stats": {
+      "gamesPlayed": 0,
+      "gamesWon": 0,
+      "totalSP": 0,
+      "cardsPlayed": 0,
+      "creaturesKilled": 0,
+      "favouriteCard": null
+    },
+    "sessionToken": "5381dd8ac47403efc0054956c8b0e3b873f3d79b93b60ebdf6c8e5dcdf75d813"
+  }
+}

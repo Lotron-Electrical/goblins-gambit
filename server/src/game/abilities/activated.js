@@ -414,3 +414,65 @@ export function activate_crack_head_multi(state, playerId, card, targetInfo) {
   });
   return { success: true, events };
 }
+
+/**
+ * Sweep Attack: spend 1 AP -> split ATK across all visible enemy creatures equally.
+ */
+export function activate_sweep_attack(state, playerId, card, targetInfo) {
+  const player = state.players[playerId];
+  const events = [];
+
+  if (player.ap < 1) return { success: false, error: "Need 1 AP" };
+  if (card._hasAttacked)
+    return { success: false, error: "Already attacked this turn" };
+
+  // Gather all visible enemy creatures
+  const targets = [];
+  for (const [pid, p] of Object.entries(state.players)) {
+    if (pid === playerId) continue;
+    for (const c of p.swamp) {
+      if (!c._invisible) targets.push({ ownerId: pid, card: c });
+    }
+  }
+
+  if (targets.length === 0) {
+    return { success: false, error: "No enemy creatures to sweep" };
+  }
+
+  const aStats = getEffectiveStats(state, playerId, card);
+  const damageEach = Math.floor(aStats.attack / targets.length);
+
+  if (damageEach <= 0) {
+    return { success: false, error: "Not enough ATK to sweep" };
+  }
+
+  player.ap -= 1;
+  card._hasAttacked = true;
+
+  for (const t of targets) {
+    t.card._defenceDamage = (t.card._defenceDamage || 0) + damageEach;
+    events.push({
+      type: "damage",
+      cardUid: t.card.uid,
+      amount: damageEach,
+      reason: "Sweep attack",
+    });
+
+    // Check if target died
+    const tStats = getEffectiveStats(state, t.ownerId, t.card);
+    if (tStats.defence <= 0) {
+      player.sp += tStats.sp;
+      events.push({ type: "destroy", cardUid: t.card.uid, owner: t.ownerId });
+      events.push({ type: "sp_change", playerId, amount: tStats.sp, reason: "Sweep kill" });
+      killCreature(state, t.ownerId, t.card.uid);
+    }
+  }
+
+  events.unshift({ type: "buff", cardUid: card.uid, text: `Sweep! ${damageEach} damage to ${targets.length} creatures` });
+  events.push({
+    type: "ability_used",
+    cardUid: card.uid,
+    ability: "sweep_attack",
+  });
+  return { success: true, events };
+}

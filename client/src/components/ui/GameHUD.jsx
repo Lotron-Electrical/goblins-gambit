@@ -54,7 +54,7 @@ export default function GameHUD({
     <div className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
       {/* Top bar */}
       {isMobile ? (
-        <div className="flex items-center justify-evenly px-1 py-1.5 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
+        <div className="flex items-center justify-evenly px-1.5 py-1.5 bg-gradient-to-b from-gray-950/95 to-gray-900/90 border-b border-gray-700/40 pointer-events-auto backdrop-blur-sm">
           <button
             onClick={() => setThemeExpanded(!themeExpanded)}
             className="text-[10px] hover:opacity-80 transition"
@@ -118,10 +118,10 @@ export default function GameHUD({
           )}
         </div>
       ) : (
-        <div className="relative flex items-center px-4 py-2 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
-          {/* LEFT — brand */}
+        <div className="relative flex items-center px-4 py-2 bg-gradient-to-b from-gray-950/95 to-gray-900/90 border-b border-gray-700/40 pointer-events-auto backdrop-blur-sm">
+          {/* LEFT -- brand */}
           <div className="flex items-center gap-2 shrink-0">
-            <span className="font-display text-[var(--color-gold)] text-lg leading-none">
+            <span className="font-display text-[var(--color-gold)] text-lg leading-none drop-shadow-[0_0_6px_rgba(212,160,23,0.3)]">
               Goblin's Gambit
             </span>
             <span className="text-gray-600 text-[10px]">
@@ -129,7 +129,7 @@ export default function GameHUD({
             </span>
           </div>
 
-          {/* CENTER — game stats */}
+          {/* CENTER -- game stats */}
           <div className="absolute inset-x-0 flex items-center justify-center pointer-events-none">
             <div className="flex items-center gap-3 pointer-events-auto">
               <button
@@ -142,8 +142,8 @@ export default function GameHUD({
                   {themeInfo.name}
                 </span>
               </button>
-              <span className="text-gray-600">|</span>
-              <span className="text-gray-500 text-[12px]">
+              <span className="text-gray-700/60">|</span>
+              <span className="text-gray-400 text-[12px] font-medium">
                 Turn {gameState.turnNumber}
               </span>
               <span className="text-gray-500 text-[12px]">
@@ -158,17 +158,17 @@ export default function GameHUD({
             </div>
           </div>
 
-          {/* RIGHT — buttons */}
-          <div className="flex items-center gap-2 ml-auto shrink-0">
+          {/* RIGHT -- buttons */}
+          <div className="flex items-center gap-1.5 ml-auto shrink-0">
             {setChatOpen && (
               <button
                 onClick={() => setChatOpen(!chatOpen)}
-                className={`relative flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px] ${chatOpen ? "text-white" : "text-gray-400"}`}
+                className={`relative flex items-center justify-center rounded-lg transition-all duration-150 w-8 h-8 text-[14px] ${chatOpen ? "text-white bg-gray-700 ring-1 ring-gray-600" : "text-gray-400 bg-gray-800/80 hover:bg-gray-700 hover:text-gray-200"}`}
                 title="Chat"
               >
                 {"\u{1F4AC}"}
                 {chatUnread > 0 && !chatOpen && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5 shadow-lg shadow-red-500/30">
                     {chatUnread > 9 ? "9+" : chatUnread}
                   </span>
                 )}
@@ -177,7 +177,7 @@ export default function GameHUD({
             {!tutorialMode && (
               <button
                 onClick={() => setHelpOpen(true)}
-                className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
+                className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800/80 hover:bg-gray-700 rounded-lg transition-all duration-150 w-8 h-8 text-[14px] font-display"
                 title="Help"
               >
                 ?
@@ -186,7 +186,7 @@ export default function GameHUD({
             {!tutorialMode && (
               <button
                 onClick={() => setMenuOpen(true)}
-                className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px]"
+                className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800/80 hover:bg-gray-700 rounded-lg transition-all duration-150 w-8 h-8 text-[14px]"
                 title="Settings"
               >
                 {ICONS.gear}
@@ -199,7 +199,7 @@ export default function GameHUD({
       {/* Theme effects expandable */}
       {themeExpanded && gameState.theme !== "swamp" && (
         <div
-          className={`bg-gray-900/95 border-b border-gray-700 pointer-events-auto ${isMobile ? "px-2 py-1.5 text-[10px]" : "px-4 py-1.5 text-[12px]"}`}
+          className={`bg-gradient-to-r from-gray-900/95 via-gray-900/98 to-gray-900/95 border-b border-gray-700/40 pointer-events-auto backdrop-blur-sm ${isMobile ? "px-3 py-2 text-[10px]" : "px-4 py-2 text-[12px]"}`}
           onClick={() => setThemeExpanded(false)}
         >
           <span className="text-gray-300">

@@ -13,6 +13,14 @@ const TYPE_BORDER = {
   Tricks: "border-green-600 hover:border-green-400",
 };
 
+// Type-colored glow class for hover state
+const TYPE_HOVER_GLOW = {
+  Creature: "animate-glow-red",
+  Magic: "animate-glow-blue",
+  Armour: "animate-glow-gray",
+  Tricks: "animate-glow-green",
+};
+
 // Border style by type (visual differentiation beyond colour)
 const TYPE_BORDER_STYLE = {
   Creature: "border-solid",
@@ -63,6 +71,7 @@ export default function CardInHand({
   // Tutorial wrong-card toast state (must be before early returns for hook rules)
   const [showWrongToast, setShowWrongToast] = useState(false);
   const wrongToastTimer = useRef(null);
+  const [hovered, setHovered] = useState(false);
 
   // Desktop drag-to-field for creatures
   const dragStartPos = useRef(null);
@@ -207,15 +216,15 @@ export default function CardInHand({
 
   return (
     <motion.div
-      className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden bg-gray-900 ${
+      className={`relative ${w} ${h} rounded-lg border-2 cursor-pointer shrink-0 overflow-hidden bg-gray-900 transition-[border-color] duration-200 ${
         TYPE_BORDER[card.type] || "border-gray-600"
       } ${TYPE_BORDER_STYLE[card.type] || ""} ${
-        isSelected ? "ring-2 ring-[var(--color-gold)] z-10" : ""
+        isSelected ? "ring-2 ring-[var(--color-gold)] z-10 animate-sparkle-border" : ""
       } ${!canAfford && !isRowOrPopup ? "opacity-50" : ""} ${
         isTutorialHighlight && !isSelected
           ? "border-[var(--color-gold)] shadow-[0_0_12px_rgba(212,175,55,0.6)]"
           : ""
-      }`}
+      } ${hovered && !isMobile && !animationsOff ? `${TYPE_HOVER_GLOW[card.type] || ""} card-shimmer-active` : ""}`}
       data-card-hover
       data-card-uid={card.uid}
       onClick={handleClick}
@@ -228,8 +237,10 @@ export default function CardInHand({
       onMouseEnter={
         isMobile
           ? undefined
-          : (e) =>
-              setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: "hand" })
+          : (e) => {
+              setHovered(true);
+              setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: "hand" });
+            }
       }
       onMouseMove={
         isMobile
@@ -237,20 +248,30 @@ export default function CardInHand({
           : (e) =>
               setHoveredCard(card, { x: e.clientX, y: e.clientY, zone: "hand" })
       }
-      onMouseLeave={isMobile ? undefined : clearHoveredCard}
+      onMouseLeave={
+        isMobile
+          ? undefined
+          : () => {
+              setHovered(false);
+              clearHoveredCard();
+            }
+      }
       whileHover={
         animationsOff || isMobile
           ? undefined
-          : { y: -12, scale: 1.05, zIndex: 50 }
+          : { y: -16, scale: 1.08, zIndex: 50, transition: { type: "spring", stiffness: 400, damping: 20 } }
       }
       animate={
         animationsOff
           ? {}
           : isSelected
-            ? { y: isMobile ? -6 : -12, scale: isMobile ? 1.02 : 1.05 }
-            : {}
+            ? { y: isMobile ? -6 : -14, scale: isMobile ? 1.02 : 1.07, transition: { type: "spring", stiffness: 300, damping: 18 } }
+            : { y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 22 } }
       }
     >
+      {/* Shimmer overlay for hover effect */}
+      <div className="card-shimmer-overlay" />
+
       {/* Card art — cropped to artwork only, hiding text portion */}
       {card.image && (
         <img
@@ -259,6 +280,11 @@ export default function CardInHand({
           className="absolute inset-0 w-full h-[155%] object-cover object-top"
           draggable={false}
         />
+      )}
+
+      {/* Bottom vignette for stat readability */}
+      {card.type === "Creature" && (
+        <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-[1]" />
       )}
 
       {/* Badge stack — left side for row/popup to avoid overlap bleed, right side for desktop */}

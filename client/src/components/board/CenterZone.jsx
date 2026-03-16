@@ -103,6 +103,9 @@ export default function CenterZone({
     <div
       className={`flex-shrink-0 ${zoneH} flex items-center justify-between px-4 md:px-12 lg:px-24 relative`}
     >
+      {/* Subtle divider line */}
+      <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 top-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
+      <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
       {/* Deck stack — left side */}
       <div
         className={`flex ${isMobile ? "flex-row items-center gap-1" : "flex-col items-center gap-1"}`}
@@ -163,9 +166,9 @@ export default function CenterZone({
           </div>
         </div>
         <span
-          className={`text-gray-400 ${isMobile ? "text-[9px]" : "text-[11px]"}`}
+          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[11px]"}`}
         >
-          {deckCount}
+          Deck {deckCount}
         </span>
       </div>
 
@@ -366,7 +369,7 @@ export default function CenterZone({
           </div>
         </div>
         <span
-          className={`text-gray-400 ${isMobile ? "text-[9px]" : "text-[11px]"}`}
+          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[11px]"}`}
         >
           Grave
         </span>

@@ -159,6 +159,8 @@ async function register(username, password) {
 
   const token = generateToken();
   sessions.set(token, username);
+  accounts[key].sessionToken = token;
+  saveAccounts();
   return { success: true, token, username };
 }
 
@@ -200,7 +202,31 @@ async function login(username, password) {
 
   const token = generateToken();
   sessions.set(token, account.username);
+  account.sessionToken = token;
+  saveAccounts();
   return { success: true, token, username: account.username };
+}
+
+async function logout(token) {
+  if (!token) return;
+  const username = sessions.get(token);
+  sessions.delete(token);
+
+  if (username) {
+    const key = username.toLowerCase();
+    if (usePostgres) {
+      await pool.query(
+        "UPDATE gg_accounts SET session_token = NULL WHERE username = $1 AND session_token = $2",
+        [key, token],
+      );
+    } else {
+      const account = accounts[key];
+      if (account && account.sessionToken === token) {
+        account.sessionToken = null;
+        saveAccounts();
+      }
+    }
+  }
 }
 
 async function getProfile(username) {
@@ -306,6 +332,17 @@ async function validateToken(token) {
       return username;
     }
   }
+  // Check JSON accounts file (survives server restarts in dev)
+  if (!usePostgres) {
+    // Re-read from disk in case accounts changed since last load
+    loadAccounts();
+    for (const account of Object.values(accounts)) {
+      if (account.sessionToken === token) {
+        sessions.set(token, account.username); // Re-cache
+        return account.username;
+      }
+    }
+  }
   return null;
 }
 
@@ -403,6 +440,7 @@ export {
   initDatabase,
   register,
   login,
+  logout,
   getProfile,
   getLeaderboard,
   validateToken,

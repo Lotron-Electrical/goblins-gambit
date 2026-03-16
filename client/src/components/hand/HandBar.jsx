@@ -644,6 +644,33 @@ export default function HandBar() {
   const handArc = useStore((s) => s.handArc);
   const isMobile = useIsMobile();
 
+  // Double-click protection for action buttons
+  const [actionPending, setActionPending] = useState(false);
+  const actionPendingRef = useRef(false);
+
+  // Reset actionPending when gameState updates (turn changed, etc.)
+  useEffect(() => {
+    setActionPending(false);
+    actionPendingRef.current = false;
+  }, [gameState?.currentPlayerId, gameState?.turnNumber]);
+
+  const guardedEndTurn = useCallback(() => {
+    if (actionPendingRef.current) return;
+    actionPendingRef.current = true;
+    setActionPending(true);
+    endTurn();
+    // Fallback reset in case gameState doesn't update quickly
+    setTimeout(() => { actionPendingRef.current = false; setActionPending(false); }, 2000);
+  }, [endTurn]);
+
+  const guardedBuyAP = useCallback(() => {
+    if (actionPendingRef.current) return;
+    actionPendingRef.current = true;
+    setActionPending(true);
+    buyAP();
+    setTimeout(() => { actionPendingRef.current = false; setActionPending(false); }, 1000);
+  }, [buyAP]);
+
   if (!gameState) return null;
 
   const myPlayer = gameState.players[gameState.myId];
@@ -967,9 +994,9 @@ export default function HandBar() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    buyAP();
+                    guardedBuyAP();
                   }}
-                  disabled={!isMyTurn || !canBuyAP}
+                  disabled={!isMyTurn || !canBuyAP || actionPending}
                   data-tutorial="buy-ap-btn"
                   className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-3 py-1.5 rounded text-[11px] transition"
                 >
@@ -978,9 +1005,9 @@ export default function HandBar() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    endTurn();
+                    guardedEndTurn();
                   }}
-                  disabled={!isMyTurn}
+                  disabled={!isMyTurn || actionPending}
                   data-tutorial="end-turn-btn"
                   className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-3 py-1.5 rounded text-[11px] transition"
                 >
@@ -1066,8 +1093,8 @@ export default function HandBar() {
                   Draw
                 </button>
                 <button
-                  onClick={buyAP}
-                  disabled={!isMyTurn || !canBuyAP}
+                  onClick={guardedBuyAP}
+                  disabled={!isMyTurn || !canBuyAP || actionPending}
                   data-tutorial="buy-ap-btn"
                   className="bg-purple-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-bold px-4 py-2 rounded text-[12px] transition"
                 >
@@ -1075,11 +1102,11 @@ export default function HandBar() {
                 </button>
                 <button
                   onClick={() => {
-                    endTurn();
+                    guardedEndTurn();
                     setHandExpanded(false);
                     setMobileSelectedCard(null);
                   }}
-                  disabled={!isMyTurn}
+                  disabled={!isMyTurn || actionPending}
                   data-tutorial="end-turn-btn"
                   className="bg-[var(--color-gold)] disabled:bg-gray-800 disabled:text-gray-600 text-black font-bold px-4 py-2 rounded text-[12px] transition"
                 >
@@ -1219,17 +1246,18 @@ export default function HandBar() {
             Draw (1 AP)
           </button>
           <button
-            onClick={buyAP}
-            disabled={!canBuyAP}
+            onClick={guardedBuyAP}
+            disabled={!canBuyAP || actionPending}
             data-tutorial="buy-ap-btn"
             className="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition text-[13px] whitespace-nowrap"
           >
             Buy AP ({buyAPCost} SP)
           </button>
           <button
-            onClick={endTurn}
+            onClick={guardedEndTurn}
+            disabled={actionPending}
             data-tutorial="end-turn-btn"
-            className="bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg shadow-lg transition text-[14px] whitespace-nowrap"
+            className="bg-[var(--color-gold)] hover:bg-yellow-400 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-3 px-6 rounded-lg shadow-lg transition text-[14px] whitespace-nowrap"
           >
             End Turn
           </button>

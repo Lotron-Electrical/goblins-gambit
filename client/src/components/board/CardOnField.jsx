@@ -14,10 +14,10 @@ const TYPE_BORDER = {
 const TYPE_LETTER = { Creature: "C", Magic: "M", Armour: "A", Tricks: "T" };
 
 const TYPE_GLOW = {
-  Creature: "0 0 20px rgba(220, 38, 38, 0.5)",
-  Magic: "0 0 20px rgba(37, 99, 235, 0.5)",
-  Armour: "0 0 20px rgba(107, 114, 128, 0.5)",
-  Tricks: "0 0 20px rgba(22, 163, 74, 0.5)",
+  Creature: "0 0 12px rgba(220, 38, 38, 0.4), 0 0 28px rgba(220, 38, 38, 0.15), inset 0 0 8px rgba(220, 38, 38, 0.1)",
+  Magic: "0 0 12px rgba(37, 99, 235, 0.4), 0 0 28px rgba(37, 99, 235, 0.15), inset 0 0 8px rgba(37, 99, 235, 0.1)",
+  Armour: "0 0 12px rgba(156, 163, 175, 0.3), 0 0 28px rgba(156, 163, 175, 0.1), inset 0 0 8px rgba(156, 163, 175, 0.08)",
+  Tricks: "0 0 12px rgba(22, 163, 74, 0.4), 0 0 28px rgba(22, 163, 74, 0.15), inset 0 0 8px rgba(22, 163, 74, 0.1)",
 };
 
 export default function CardOnField({
@@ -219,7 +219,7 @@ export default function CardOnField({
         TYPE_BORDER[card.type] || "border-gray-600"
       } ${isSelected ? "ring-2 ring-[var(--color-gold)] animate-sparkle-border" : ""} ${
         isValidTarget ? "ring-2 ring-red-400 animate-pulse" : ""
-      } ${invisible ? "opacity-40" : card._hasAttacked && !isOpponent ? "opacity-50" : ""}`}
+      } ${invisible ? "opacity-40" : card._hasAttacked && !isOpponent ? "grayscale-[20%]" : ""}`}
       style={
         hovered && !invisible ? { boxShadow: TYPE_GLOW[card.type] } : undefined
       }
@@ -261,26 +261,39 @@ export default function CardOnField({
               clearHoveredCard();
             }
       }
-      whileHover={animationsOff || isMobile ? undefined : { scale: 1.05 }}
+      whileHover={animationsOff || isMobile ? undefined : { scale: 1.06, transition: { type: "spring", stiffness: 400, damping: 22 } }}
       animate={
         animationsOff
           ? {}
           : isAttacking
-            ? { x: [0, 30, 0], transition: { duration: 0.35 } }
+            ? {
+                x: [0, 6, 35, -4, 0],
+                scale: [1, 1.08, 1.02, 0.98, 1],
+                filter: [
+                  "brightness(1)",
+                  "brightness(1.3)",
+                  "brightness(1.6)",
+                  "brightness(1.1)",
+                  "brightness(1)",
+                ],
+                transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+              }
             : isDefending
               ? {
-                  x: [0, -3, 3, -2, 2, 0],
+                  x: [0, -5, 5, -3, 3, -1, 0],
+                  scale: [1, 0.97, 1.01, 0.99, 1],
                   filter: [
                     "brightness(1)",
-                    "brightness(1.8)",
-                    "brightness(1.4)",
+                    "brightness(2)",
+                    "brightness(1.5)",
+                    "brightness(1.2)",
                     "brightness(1)",
                   ],
-                  transition: { duration: 0.3 },
+                  transition: { duration: 0.35, ease: "easeOut" },
                 }
               : isSelected
-                ? { scale: 1.05 }
-                : {}
+                ? { scale: 1.06, transition: { type: "spring", stiffness: 300, damping: 18 } }
+                : { scale: 1, transition: { type: "spring", stiffness: 300, damping: 22 } }
       }
       layout
     >
@@ -292,6 +305,16 @@ export default function CardOnField({
           className="absolute inset-0 w-full h-[155%] object-cover object-top"
           draggable={false}
         />
+      )}
+
+      {/* Bottom vignette for stat/name readability */}
+      {!invisible && card.type === "Creature" && (
+        <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none z-[1]" />
+      )}
+
+      {/* Has-attacked exhaustion overlay — subtle darkening with cross-hatch */}
+      {card._hasAttacked && !isOpponent && !invisible && (
+        <div className="absolute inset-0 bg-black/25 pointer-events-none z-[2]" />
       )}
 
       {/* Invisible overlay */}
@@ -365,12 +388,14 @@ export default function CardOnField({
         </div>
       )}
 
-      {/* Creature name — always visible at bottom above stats */}
+      {/* Creature name -- always visible at bottom above stats */}
       {!invisible && card.type === "Creature" && (
         <div
-          className={`absolute left-0 right-0 bg-black/60 text-center font-bold truncate px-0.5 ${
-            isSelected ? "text-[var(--color-gold-bright)]" : "text-gray-200"
-          } ${isMobile ? "text-[7px] py-0 bottom-[30px]" : "text-[9px] py-0.5 bottom-[36px]"}`}
+          className={`absolute left-0 right-0 text-center font-bold truncate px-1 ${
+            isSelected
+              ? "bg-[var(--color-gold)]/20 text-[var(--color-gold-bright)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              : "bg-gradient-to-r from-black/50 via-black/70 to-black/50 text-gray-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+          } ${isMobile ? "text-[7px] py-0 bottom-[32px]" : "text-[9px] py-0.5 bottom-[38px]"}`}
         >
           {card.name}
         </div>
@@ -404,18 +429,28 @@ export default function CardOnField({
       {/* Stats + health bar at bottom */}
       {!invisible && card.type === "Creature" && (
         <div className="absolute bottom-0 left-0 right-0">
+          {/* Health bar above stats */}
+          <div className={`${isMobile ? "h-[3px]" : "h-[4px]"} bg-gray-900/60`}>
+            <div
+              className={`h-full ${defColor} transition-all duration-500 ease-out relative`}
+              style={{ width: `${defPct}%` }}
+            >
+              {/* Bright edge on health bar */}
+              <div className="absolute top-0 right-0 w-1 h-full bg-white/20 rounded-r" />
+            </div>
+          </div>
           <div
-            className={`bg-black/80 grid grid-cols-3 ${isMobile ? (effectiveAtk >= 1000 || currentDef >= 1000 || (card.sp ?? 0) >= 1000 ? "text-[7px]" : "text-[9px]") + " py-0.5" : "text-[12px] py-0.5"}`}
+            className={`bg-gradient-to-t from-black/90 to-black/75 grid grid-cols-3 ${isMobile ? (effectiveAtk >= 1000 || currentDef >= 1000 || (card.sp ?? 0) >= 1000 ? "text-[7px]" : "text-[9px]") + " py-0.5" : "text-[12px] py-0.5"}`}
           >
             <span
-              className={`font-bold text-center ${atkGlow ? "text-yellow-300 animate-pulse drop-shadow-[0_0_6px_rgba(253,224,71,0.8)]" : "text-red-400"}`}
+              className={`font-bold text-center transition-all duration-300 ${atkGlow ? "text-yellow-300 animate-pulse drop-shadow-[0_0_6px_rgba(253,224,71,0.8)] scale-110" : card._attackBuff ? "text-orange-400" : "text-red-400"}`}
             >
               {ICONS.swords}
               <br />
               {effectiveAtk}
             </span>
             <span
-              className={`font-bold text-center ${defGlow ? "text-cyan-300 animate-pulse drop-shadow-[0_0_6px_rgba(103,232,249,0.8)]" : card._defenceDamage ? "text-red-400" : "text-blue-400"}`}
+              className={`font-bold text-center transition-all duration-300 ${defGlow ? "text-cyan-300 animate-pulse drop-shadow-[0_0_6px_rgba(103,232,249,0.8)] scale-110" : card._defenceDamage ? "text-red-400" : isBuffed ? "text-cyan-400" : "text-blue-400"}`}
             >
               {ICONS.shield}
               <br />
@@ -426,12 +461,6 @@ export default function CardOnField({
               <br />
               {card.sp ?? 0}
             </span>
-          </div>
-          <div className="h-[3px]">
-            <div
-              className={`h-full ${defColor} transition-all duration-300`}
-              style={{ width: `${defPct}%` }}
-            />
           </div>
         </div>
       )}

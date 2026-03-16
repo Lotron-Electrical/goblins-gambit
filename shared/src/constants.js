@@ -48,6 +48,88 @@ export const THEME_EFFECTS = {
     apPenalty: 1,
     description: "1.5x DEF, spells are free, -1 AP per turn",
   },
+  inferno: {
+    name: "The Inferno",
+    atkMultiplier: 1.5,
+    defMultiplier: 1.5,
+    spellCostMultiplier: 0,
+    apPenalty: 0,
+    berserkMultiplier: 2,
+    description: "1.5x ATK, 1.5x DEF, spells are free, Berserk active",
+  },
+};
+
+// Story Mode constants
+export const STORY_LEVELS = ['tavern', 'hills', 'swamp', 'tundra', 'cliffs', 'volcano'];
+
+export const STORY_LEVEL_CONFIG = {
+  tavern: {
+    name: "The Tavern",
+    theme: "swamp",
+    difficulty: "easy",
+    bonusAP: 1,
+    winSPRange: [2000, 3000],
+    cardPool: "limited",
+  },
+  hills: {
+    name: "The Hills",
+    theme: "swamp",
+    difficulty: "easy+",
+    bonusAP: 1,
+    winSPRange: [2000, 4000],
+    cardPool: "expanded",
+  },
+  swamp: {
+    name: "The Swamp",
+    theme: "swamp",
+    difficulty: "medium",
+    bonusAP: 0,
+    winSPRange: [3000, 4000],
+    cardPool: "all",
+  },
+  tundra: {
+    name: "The Tundra",
+    theme: "frost",
+    difficulty: "medium+",
+    bonusAP: 0,
+    winSPRange: [3000, 5000],
+    cardPool: "all",
+  },
+  cliffs: {
+    name: "The Cliffs",
+    theme: "blood",
+    difficulty: "hard-",
+    bonusAP: 0,
+    winSPRange: [4000, 6000],
+    cardPool: "all",
+  },
+  volcano: {
+    name: "The Volcano",
+    theme: "inferno",
+    difficulty: "hard",
+    bonusAP: 0,
+    winSPRange: [6000, 10000],
+    cardPool: "all",
+  },
+};
+
+// Story Mode socket events
+export const STORY_EVENTS = {
+  STORY_START_RUN: "story_start_run",
+  STORY_LOAD_RUN: "story_load_run",
+  STORY_SELECT_NODE: "story_select_node",
+  STORY_PICK_ENHANCEMENT: "story_pick_enhancement",
+  STORY_USE_ITEM: "story_use_item",
+  STORY_SAVE_RUN: "story_save_run",
+  STORY_GET_TROPHIES: "story_get_trophies",
+  STORY_RUN_STATE: "story_run_state",
+  STORY_MAP_STATE: "story_map_state",
+  STORY_ENHANCEMENT_OPTIONS: "story_enhancement_options",
+  STORY_BATTLE_START: "story_battle_start",
+  STORY_BATTLE_RESULT: "story_battle_result",
+  STORY_DIALOGUE: "story_dialogue",
+  STORY_RUN_OVER: "story_run_over",
+  STORY_SELECT_TROPHY: "story_select_trophy",
 };
 
 // Card types

@@ -511,7 +511,7 @@ export function snacc_control(state, playerId, card, cardIdx, targetInfo) {
   return { success: true, events };
 }
 
-// --- Lerker: roll 2D6, draw that many cards (cap at hand limit) ---
+// --- Lerker: roll 1D6, draw that many cards (cap at hand limit) ---
 export function lerker_draw(state, playerId, card, cardIdx, targetInfo) {
   const player = state.players[playerId];
   const events = [];

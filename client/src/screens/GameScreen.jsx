@@ -42,11 +42,11 @@ function OpponentBar({
   return (
     <div
       onClick={onTap}
-      className={`flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer transition ${
+      className={`flex items-center justify-between px-2.5 py-2 rounded-xl cursor-pointer transition-all duration-200 border ${
         isCurrentTurn
-          ? "bg-[var(--color-swamp)]/60 ring-1 ring-[var(--color-gold)]/40"
-          : "bg-gray-900/60"
-      } ${isExpanded ? "ring-1 ring-blue-500" : ""}`}
+          ? "bg-[var(--color-swamp)]/60 border-[var(--color-gold)]/30 shadow-sm shadow-[var(--color-gold)]/10"
+          : "bg-gray-900/50 border-gray-800/40"
+      } ${isExpanded ? "border-blue-500/40 bg-gray-900/70" : ""}`}
     >
       <div className="flex items-center gap-1.5 min-w-0">
         {player.playerShield > 0 && (
@@ -54,20 +54,27 @@ function OpponentBar({
             {player.playerShield}Sh
           </span>
         )}
-        <span className="text-red-400 font-bold text-[11px] truncate max-w-[100px]">
+        <span className="text-red-400 font-display font-bold text-[11px] truncate max-w-[100px]">
           {player.name}
         </span>
         {isCurrentTurn && (
-          <span className="text-[var(--color-gold)] text-[9px] shrink-0">
+          <span className="text-[var(--color-gold)] text-[9px] font-display shrink-0">
             TURN
           </span>
         )}
       </div>
       <div className="flex items-center gap-2 text-[10px]">
-        <span className="text-gray-400">{creatureCount} creat.</span>
+        <span className="text-gray-500">{creatureCount} creat.</span>
         <span className="text-yellow-400 font-bold">{player.sp} SP</span>
-        <span className="text-blue-300">{player.ap} AP</span>
-        <span className="text-gray-500 text-[8px]">
+        <span className="text-blue-300 font-medium">{player.ap} AP</span>
+        {/* SP mini progress */}
+        <div className="w-8 h-1 bg-gray-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-yellow-500 rounded-full transition-all duration-500"
+            style={{ width: `${spPct}%` }}
+          />
+        </div>
+        <span className="text-gray-600 text-[8px]">
           {isExpanded ? "\u25B2" : "\u25BC"}
         </span>
       </div>
@@ -269,7 +276,7 @@ export default function GameScreen() {
       });
     };
     update();
-  });
+  }, [gameState]);
 
   const { setAttackAnimation, clearAttackAnimation } = useStore();
   const attackDrag = useStore((s) => s.attackDrag);
@@ -461,7 +468,7 @@ export default function GameScreen() {
   return (
     <motion.div
       ref={boardRef}
-      className="h-dvh flex flex-col overflow-hidden select-none relative"
+      className="h-dvh flex flex-col overflow-hidden select-none relative bg-gradient-to-b from-gray-950/40 via-transparent to-gray-950/40"
       animate={
         isShaking || isScreenShake
           ? {
@@ -516,9 +523,9 @@ export default function GameScreen() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto p-2 pt-14 min-h-0">
+        <div className="flex-1 overflow-auto p-2.5 pt-14 min-h-0">
           <div
-            className="grid gap-2"
+            className="grid gap-2.5"
             style={{
               gridTemplateColumns:
                 opponents.length <= 3
@@ -555,7 +562,7 @@ export default function GameScreen() {
       </div>
 
       {/* My field */}
-      <div className="p-1 md:p-2 shrink-0">
+      <div className="p-1.5 md:p-2.5 shrink-0">
         <PlayerField
           player={myPlayer}
           playerId={myId}
