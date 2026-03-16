@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ICONS, TYPE_ICON } from '../ui/icons.js';
 import { useIsMobile } from '../../hooks/useIsMobile.js';
 import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
+import { soundManager } from '../../audio/SoundManager.js';
 
 const TYPE_BORDER = {
   Creature: 'border-red-600 hover:border-red-400',
@@ -69,6 +70,7 @@ export default function CardInHand({ card, isSelected, variant, onSelect, disabl
     if (!isMyTurn && !isReaction) return;
     // Row variant: tap to select (calls onSelect), not the store selectCard
     if (isMobile && variant === 'row') {
+      soundManager.play('card_tick');
       onSelect?.(card);
       return;
     }
@@ -83,6 +85,7 @@ export default function CardInHand({ card, isSelected, variant, onSelect, disabl
       if (card.type === 'Creature') return;
       playCard(card.uid);
     } else {
+      soundManager.play('card_tick');
       selectCard(card);
     }
   };
