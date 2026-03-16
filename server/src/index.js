@@ -37,7 +37,7 @@ const lobby = new LobbyManager();
 
 setupSocketHandlers(io, lobby);
 
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", rooms: lobby.getRoomList().length });
@@ -81,9 +81,9 @@ app.get("/api/leaderboard", async (req, res) => {
   res.json(await getLeaderboard());
 });
 
-// In-game feedback -> create GitHub issue
+// In-game feedback -> create GitHub issue (with optional screenshot)
 app.post("/api/feedback", async (req, res) => {
-  const { title, body, labels } = req.body;
+  const { title, body, labels, screenshot } = req.body;
   if (!title) return res.status(400).json({ error: "Title required" });
 
   const token = process.env.GITHUB_TOKEN;
@@ -92,6 +92,44 @@ app.post("/api/feedback", async (req, res) => {
   }
 
   try {
+    let screenshotUrl = null;
+
+    // Upload screenshot to repo if provided
+    if (screenshot) {
+      const filename = `screenshots/feedback-${Date.now()}.png`;
+      const uploadRes = await fetch(
+        `https://api.github.com/repos/Lotron-Electrical/goblins-gambit/contents/${filename}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `token ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/vnd.github.v3+json",
+          },
+          body: JSON.stringify({
+            message: `Screenshot for feedback: ${title}`,
+            content: screenshot,
+            branch: "master",
+          }),
+        },
+      );
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        screenshotUrl = uploadData.content?.download_url;
+      } else {
+        console.error(
+          "[Feedback] Screenshot upload failed:",
+          await uploadRes.text(),
+        );
+      }
+    }
+
+    // Build issue body with screenshot if available
+    let issueBody = body;
+    if (screenshotUrl) {
+      issueBody += `\n\n## Screenshot\n![Screenshot](${screenshotUrl})`;
+    }
+
     const response = await fetch(
       "https://api.github.com/repos/Lotron-Electrical/goblins-gambit/issues",
       {
@@ -103,7 +141,7 @@ app.post("/api/feedback", async (req, res) => {
         },
         body: JSON.stringify({
           title,
-          body,
+          body: issueBody,
           labels: labels ? [labels] : [],
         }),
       },

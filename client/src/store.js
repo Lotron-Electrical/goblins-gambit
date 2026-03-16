@@ -37,6 +37,10 @@ export const useStore = create((set, get) => ({
 
   // Drag and drop
   draggingCard: null,
+  dragPosition: null,
+
+  // Attack line drag
+  attackDrag: null, // { attackerUid, from: {x,y}, to: {x,y} }
 
   // UI
   zoomedCard: null,
@@ -490,7 +494,10 @@ export const useStore = create((set, get) => ({
   clearAttackAnimation: () =>
     set({ attackingCardUid: null, defendingCardUid: null }),
   setDraggingCard: (card) => set({ draggingCard: card }),
-  clearDraggingCard: () => set({ draggingCard: null }),
+  clearDraggingCard: () => set({ draggingCard: null, dragPosition: null }),
+  setDragPosition: (pos) => set({ dragPosition: pos }),
+  setAttackDrag: (drag) => set({ attackDrag: drag }),
+  clearAttackDrag: () => set({ attackDrag: null }),
   setGraveyardOpen: (open) => set({ graveyardOpen: open }),
   clearError: () => set({ error: null }),
   setRoomSettings: (settings) => {

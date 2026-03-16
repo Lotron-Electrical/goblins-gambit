@@ -176,6 +176,34 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [screenshot, setScreenshot] = useState(null); // base64 data URL
+  const [capturing, setCapturing] = useState(false);
+
+  const captureScreenshot = async () => {
+    setCapturing(true);
+    try {
+      // Temporarily hide the modal overlay so it doesn't appear in screenshot
+      const modalEl = document.querySelector("[data-feedback-modal]");
+      if (modalEl) modalEl.style.display = "none";
+
+      const { default: html2canvas } = await import("html2canvas");
+      const canvas = await html2canvas(document.body, {
+        backgroundColor: "#000",
+        scale: 1,
+        logging: false,
+        useCORS: true,
+      });
+
+      if (modalEl) modalEl.style.display = "";
+      const dataUrl = canvas.toDataURL("image/png", 0.8);
+      setScreenshot(dataUrl);
+    } catch (e) {
+      console.error("Screenshot capture failed:", e);
+      setSubmitError("Failed to capture screenshot");
+    } finally {
+      setCapturing(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || submitting) return;
@@ -192,11 +220,21 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
     ].join("\n");
     const body = `## Description\n${description || "_No description provided_"}\n\n## Game Context\n${gameContext}\n\n---\n_Submitted from in-game feedback_`;
 
+    // Extract base64 data without the data URL prefix
+    const screenshotBase64 = screenshot
+      ? screenshot.replace(/^data:image\/png;base64,/, "")
+      : null;
+
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body, labels: label }),
+        body: JSON.stringify({
+          title,
+          body,
+          labels: label,
+          screenshot: screenshotBase64,
+        }),
       });
       if (!res.ok) throw new Error("Failed to submit");
       setSubmitted(true);
@@ -209,11 +247,12 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
 
   return (
     <div
+      data-feedback-modal
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-auto"
       onClick={onClose}
     >
       <div
-        className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl"
+        className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {submitted ? (
@@ -273,6 +312,34 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
               rows={4}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm mb-3 focus:outline-none focus:border-[var(--color-gold)] resize-none"
             />
+            {/* Screenshot capture */}
+            <div className="mb-3">
+              {screenshot ? (
+                <div className="relative">
+                  <img
+                    src={screenshot}
+                    alt="Screenshot"
+                    className="w-full rounded-lg border border-gray-700"
+                  />
+                  <button
+                    onClick={() => setScreenshot(null)}
+                    className="absolute top-1 right-1 bg-red-800 text-white text-[10px] px-1.5 py-0.5 rounded hover:bg-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={captureScreenshot}
+                  disabled={capturing}
+                  className="w-full bg-gray-800 border border-gray-700 hover:border-gray-500 text-gray-300 text-sm py-2 rounded-lg transition flex items-center justify-center gap-2"
+                >
+                  {capturing
+                    ? "Capturing..."
+                    : `${ICONS.camera || "📸"} Attach Screenshot`}
+                </button>
+              )}
+            </div>
             <p className="text-gray-500 text-[11px] mb-4">
               Your game context will be automatically attached.
             </p>

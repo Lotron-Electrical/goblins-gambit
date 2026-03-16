@@ -37,6 +37,9 @@ export default function CardOnField({
     clearHoveredCard,
     animationsOff,
     tutorialEngine,
+    setAttackDrag,
+    gameState,
+    attack,
   } = useStore();
   const [hovered, setHovered] = useState(false);
   const isSelected = selectedCard?.uid === card.uid;
@@ -47,6 +50,9 @@ export default function CardOnField({
   const isTutorialAttackTarget =
     isOpponent && tutConfig?.expectedAction === "attack";
   const longPressTimer = useRef(null);
+  const attackDragStart = useRef(null);
+  const attackDragging = useRef(false);
+  const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
 
   const handleClick = () => {
     if (isOpponent) {
@@ -61,20 +67,100 @@ export default function CardOnField({
     setZoomedCard(card);
   };
 
-  // Long-press to zoom on mobile
-  const handleTouchStart = useCallback(() => {
-    longPressTimer.current = setTimeout(() => {
-      setZoomedCard(card);
-      longPressTimer.current = null;
-    }, 400);
-  }, [card, setZoomedCard]);
+  // Touch handlers — own creatures support drag-to-attack
+  const handleTouchStart = useCallback(
+    (e) => {
+      if (!isOpponent && isMyTurn && !card._hasAttacked) {
+        // Track potential attack drag
+        const t = e.touches[0];
+        attackDragStart.current = { x: t.clientX, y: t.clientY };
+        attackDragging.current = false;
+      }
+      longPressTimer.current = setTimeout(() => {
+        if (!attackDragging.current) {
+          setZoomedCard(card);
+        }
+        longPressTimer.current = null;
+      }, 400);
+    },
+    [card, setZoomedCard, isOpponent, isMyTurn],
+  );
 
-  const handleTouchEnd = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
+  const handleTouchMove = useCallback(
+    (e) => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      if (!attackDragStart.current || isOpponent) return;
+      const t = e.touches[0];
+      const dx = t.clientX - attackDragStart.current.x;
+      const dy = t.clientY - attackDragStart.current.y;
+      if (!attackDragging.current && Math.abs(dx) + Math.abs(dy) > 15) {
+        attackDragging.current = true;
+        selectCard({ ...card, _zone: "swamp" });
+      }
+      if (attackDragging.current) {
+        e.preventDefault();
+        const el = e.currentTarget;
+        const rect = el.getBoundingClientRect();
+        setAttackDrag({
+          attackerUid: card.uid,
+          from: {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          },
+          to: { x: t.clientX, y: t.clientY },
+        });
+      }
+    },
+    [card, isOpponent, setAttackDrag, selectCard],
+  );
+
+  const handleTouchEnd = useCallback(
+    (e) => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      if (attackDragging.current) {
+        // Check if finger is over an opponent creature
+        const t = e.changedTouches[0];
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        const targetCard = el?.closest("[data-card-uid]");
+        if (targetCard) {
+          const targetUid = targetCard.getAttribute("data-card-uid");
+          // Find which opponent owns this creature
+          if (gameState?.players) {
+            for (const [pid, p] of Object.entries(gameState.players)) {
+              if (pid === gameState.myId) continue;
+              const creature = p.swamp?.find((c) => c.uid === targetUid);
+              if (creature) {
+                attack(card.uid, pid, creature.uid);
+                break;
+              }
+            }
+          }
+        }
+        // Also check for direct attack on opponent field
+        const fieldEl = el?.closest("[data-opponent-field]");
+        if (fieldEl && !targetCard) {
+          const opponentId = fieldEl.getAttribute("data-opponent-field");
+          const opponent = gameState?.players[opponentId];
+          const visibleCreatures = opponent?.swamp?.filter(
+            (c) => !c._invisible,
+          );
+          if (visibleCreatures?.length === 0) {
+            attack(card.uid, opponentId, opponentId);
+          }
+        }
+        setAttackDrag(null);
+        attackDragging.current = false;
+      }
+      attackDragStart.current = null;
+    },
+    [card, gameState, attack, setAttackDrag],
+  );
 
   // Swapeewee: when _swapped, ATK and DEF base values are flipped
   const isSwapped = card.abilityId === "swapeewee_swap" && card._swapped;
@@ -142,6 +228,7 @@ export default function CardOnField({
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onTouchStart={isMobile ? handleTouchStart : undefined}
+      onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
       onTouchCancel={isMobile ? handleTouchEnd : undefined}
       onMouseEnter={

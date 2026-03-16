@@ -17,9 +17,11 @@ function MobileCardInfoPanel({
   onClose,
   onPlaceCreature,
   onPlayNonCreature,
+  onDragStart,
 }) {
   const { playCard, discardCard, gameState, tutorialEngine } = useStore();
   const [confirmAction, setConfirmAction] = useState(null);
+  const dragTouchStart = useRef(null);
 
   const myId = gameState?.myId;
   const myPlayer = myId ? gameState.players[myId] : null;
@@ -60,14 +62,40 @@ function MobileCardInfoPanel({
       transition={{ duration: 0.1, ease: "easeOut" }}
     >
       <div className="flex gap-2 p-2">
-        {/* Card image thumbnail */}
+        {/* Card image thumbnail — draggable for creatures */}
         {card.image && (
           <div
             className={`w-[80px] h-[112px] rounded-lg overflow-hidden shrink-0 border ${
               isTutorialHighlighted
                 ? "border-[var(--color-gold)]/60 shadow-[0_0_8px_rgba(212,175,55,0.4)]"
                 : "border-gray-700"
-            }`}
+            } ${card.type === "Creature" && canPlay && canAfford ? "cursor-grab" : ""}`}
+            onTouchStart={
+              card.type === "Creature" && canPlay && canAfford
+                ? (e) => {
+                    dragTouchStart.current = {
+                      x: e.touches[0].clientX,
+                      y: e.touches[0].clientY,
+                    };
+                  }
+                : undefined
+            }
+            onTouchMove={
+              card.type === "Creature" && canPlay && canAfford
+                ? (e) => {
+                    if (!dragTouchStart.current) return;
+                    const dy = e.touches[0].clientY - dragTouchStart.current.y;
+                    if (dy < -30) {
+                      // Upward drag threshold met — initiate drag to field
+                      dragTouchStart.current = null;
+                      onDragStart?.(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                  }
+                : undefined
+            }
+            onTouchEnd={() => {
+              dragTouchStart.current = null;
+            }}
           >
             <img
               src={`/cards/${card.image}`}
@@ -80,6 +108,11 @@ function MobileCardInfoPanel({
               }
               draggable={false}
             />
+            {card.type === "Creature" && canPlay && canAfford && (
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black/70 text-[7px] text-gray-300 px-1 rounded whitespace-nowrap pointer-events-none">
+                drag up to place
+              </div>
+            )}
           </div>
         )}
 
@@ -865,7 +898,9 @@ export default function HandBar() {
           <div
             className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mb-0.5 text-center animate-[pulse_0.6s_ease-in-out_2] cursor-pointer"
             onClick={() => {
-              const reactionCard = sortedHand.find((c) => REACTION_ABILITIES.includes(c.abilityId));
+              const reactionCard = sortedHand.find((c) =>
+                REACTION_ABILITIES.includes(c.abilityId),
+              );
               if (reactionCard) {
                 const idx = sortedHand.indexOf(reactionCard);
                 if (idx >= 0) scrollToIndex(idx);
@@ -1010,6 +1045,14 @@ export default function HandBar() {
                         setMobileSelectedCard(null);
                         setHandExpanded(false);
                       }}
+                      onDragStart={(x, y) => {
+                        const { setDraggingCard, setDragPosition } =
+                          useStore.getState();
+                        setDraggingCard(mobileSelectedCard);
+                        setDragPosition({ x, y });
+                        setMobileSelectedCard(null);
+                        setHandExpanded(false);
+                      }}
                     />
                   )}
               </AnimatePresence>
@@ -1121,7 +1164,9 @@ export default function HandBar() {
         <div
           className="bg-orange-600/20 border border-orange-500/40 rounded px-3 py-1.5 mb-2 text-center animate-[pulse_0.6s_ease-in-out_2] shadow-[0_0_8px_rgba(234,88,12,0.3)] cursor-pointer"
           onClick={() => {
-            const reactionCard = hand.find((c) => REACTION_ABILITIES.includes(c.abilityId));
+            const reactionCard = hand.find((c) =>
+              REACTION_ABILITIES.includes(c.abilityId),
+            );
             if (reactionCard) selectCard(reactionCard);
           }}
         >

@@ -5,6 +5,12 @@ import {
   releaseBotName,
   decideBotAction,
 } from "../bot/BotPlayer.js";
+import {
+  generateBotChat,
+  generateBotReply,
+  generateBotReaction,
+  clearBotChat,
+} from "../bot/BotChat.js";
 import { validateToken, updateStatsAfterGame } from "../accounts.js";
 
 export function setupSocketHandlers(io, lobby) {
@@ -56,6 +62,7 @@ export function setupSocketHandlers(io, lobby) {
       for (const p of room.players) {
         if (botIds.has(p.id)) {
           releaseBotName(p.name);
+          clearBotChat(p.id);
           botIds.delete(p.id);
           botDifficulty.delete(p.id);
           pendingBotTicks.delete(p.id);
@@ -128,6 +135,23 @@ export function setupSocketHandlers(io, lobby) {
       }
 
       broadcastState(roomId, engine);
+
+      // Bot chat — send a message based on action
+      const room = lobby.getRoom(roomId);
+      const botPlayer = room?.players.find((p) => p.id === botId);
+      if (botPlayer) {
+        const chatMsg = generateBotChat(botId, action, result);
+        if (chatMsg) {
+          const msg = {
+            id: `${botId}-${Date.now()}`,
+            playerId: botId,
+            playerName: botPlayer.name,
+            timestamp: Date.now(),
+            ...chatMsg,
+          };
+          io.to(roomId).emit(EVENTS.CHAT_MESSAGE, msg);
+        }
+      }
 
       // Check if another bot needs to respond (e.g. Dead Meme graveyard pick)
       const pendingBotRespondId =
@@ -411,7 +435,10 @@ export function setupSocketHandlers(io, lobby) {
       }
 
       const bot = room.players.find((p) => p.id === botId);
-      if (bot) releaseBotName(bot.name);
+      if (bot) {
+        releaseBotName(bot.name);
+        clearBotChat(botId);
+      }
       room.players = room.players.filter((p) => p.id !== botId);
       lobby.playerRooms.delete(botId);
       botIds.delete(botId);
@@ -601,6 +628,29 @@ export function setupSocketHandlers(io, lobby) {
       }
 
       io.to(roomId).emit(EVENTS.CHAT_MESSAGE, msg);
+
+      // Bot replies to player messages
+      const room = lobby.getRoom(roomId);
+      if (room) {
+        for (const p of room.players) {
+          if (!botIds.has(p.id)) continue;
+          const reply = generateBotReply(p.id);
+          if (reply) {
+            // Delay bot reply 1-3 seconds for realism
+            const delay = 1000 + Math.random() * 2000;
+            setTimeout(() => {
+              const botMsg = {
+                id: `${p.id}-${Date.now()}`,
+                playerId: p.id,
+                playerName: p.name,
+                timestamp: Date.now(),
+                ...reply,
+              };
+              io.to(roomId).emit(EVENTS.CHAT_MESSAGE, botMsg);
+            }, delay);
+          }
+        }
+      }
     });
 
     socket.on(EVENTS.ROOM_LIST, (_, callback) => {
@@ -640,7 +690,11 @@ export function setupSocketHandlers(io, lobby) {
               disconnectTimers.delete(socket.id);
               // Only force end turn if still this player's turn and still disconnected
               const p = game.state.players[socket.id];
-              if (p && !p.connected && game.getCurrentPlayerId() === socket.id) {
+              if (
+                p &&
+                !p.connected &&
+                game.getCurrentPlayerId() === socket.id
+              ) {
                 game.handleAction(socket.id, { type: ACTION.END_TURN });
                 broadcastState(roomId, game);
                 runBotTurn(roomId, game);

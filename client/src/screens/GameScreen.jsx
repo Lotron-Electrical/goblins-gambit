@@ -23,6 +23,7 @@ import FieldParticles from "../components/ui/FieldParticles.jsx";
 import SPParticles from "../components/ui/SPParticles.jsx";
 import MobileActivityLog from "../components/ui/MobileActivityLog.jsx";
 import ChatPanel from "../components/ui/ChatPanel.jsx";
+import DragOverlay from "../components/ui/DragOverlay.jsx";
 import { motion } from "framer-motion";
 
 // Compact opponent bar for mobile — shows key info, tap to expand
@@ -271,6 +272,7 @@ export default function GameScreen() {
   });
 
   const { setAttackAnimation, clearAttackAnimation } = useStore();
+  const attackDrag = useStore((s) => s.attackDrag);
 
   // Wire damage numbers to animation events
   useEffect(() => {
@@ -322,7 +324,9 @@ export default function GameScreen() {
         // The attacker creature belongs to whichever player's swamp it's in
         for (const [pid, p] of Object.entries(gameState.players)) {
           if (p.swamp?.some((c) => c.uid === currentAnimation.attacker)) {
-            const ownerSpEl = document.querySelector(`[data-player-sp="${pid}"]`);
+            const ownerSpEl = document.querySelector(
+              `[data-player-sp="${pid}"]`,
+            );
             if (ownerSpEl) {
               const r = ownerSpEl.getBoundingClientRect();
               ownerSpPos = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
@@ -494,7 +498,10 @@ export default function GameScreen() {
                     />
                   )}
                   {(is1v1 || isExpanded) && (
-                    <div className={is1v1 ? "" : "mt-1"}>
+                    <div
+                      className={is1v1 ? "" : "mt-1"}
+                      data-opponent-field={id}
+                    >
                       <PlayerField
                         player={player}
                         playerId={id}
@@ -520,7 +527,7 @@ export default function GameScreen() {
             }}
           >
             {opponents.map(({ id, player }) => (
-              <div key={id} className="min-w-0">
+              <div key={id} className="min-w-0" data-opponent-field={id}>
                 <PlayerField
                   player={player}
                   playerId={id}
@@ -621,6 +628,84 @@ export default function GameScreen() {
           onComplete={handleDiceComplete}
           mobileCenterY={isMobile ? centerZoneY : null}
         />
+      )}
+
+      {/* Drag and drop overlay */}
+      <DragOverlay />
+
+      {/* Attack drag line (draw-a-line to attack) */}
+      {attackDrag && (
+        <svg
+          style={{
+            position: "fixed",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+            zIndex: 45,
+          }}
+        >
+          <defs>
+            <linearGradient
+              id="attack-drag-grad"
+              x1={attackDrag.from.x}
+              y1={attackDrag.from.y}
+              x2={attackDrag.to.x}
+              y2={attackDrag.to.y}
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+            <filter id="attack-drag-glow">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {/* Glow line */}
+          <line
+            x1={attackDrag.from.x}
+            y1={attackDrag.from.y}
+            x2={attackDrag.to.x}
+            y2={attackDrag.to.y}
+            stroke="url(#attack-drag-grad)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            filter="url(#attack-drag-glow)"
+            opacity="0.4"
+          />
+          {/* Main line */}
+          <line
+            x1={attackDrag.from.x}
+            y1={attackDrag.from.y}
+            x2={attackDrag.to.x}
+            y2={attackDrag.to.y}
+            stroke="url(#attack-drag-grad)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          {/* Endpoint circle */}
+          <circle
+            cx={attackDrag.to.x}
+            cy={attackDrag.to.y}
+            r="8"
+            fill="#ef4444"
+            opacity="0.6"
+          />
+          {/* Crosshair at endpoint */}
+          <circle
+            cx={attackDrag.to.x}
+            cy={attackDrag.to.y}
+            r="12"
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth="1.5"
+            opacity="0.5"
+          />
+        </svg>
       )}
 
       {/* Attack line SVG overlay */}
@@ -859,88 +944,89 @@ export default function GameScreen() {
                   </circle>
                 ))}
               {/* Direct attack: SP return line (white-to-yellow, defender SP to attacker's owner SP) */}
-              {d && (() => {
-                const retTarget = attackLine.ownerPos || attackLine.from;
-                const rdx = retTarget.x - attackLine.to.x;
-                const rdy = retTarget.y - attackLine.to.y;
-                const retLen = Math.sqrt(rdx * rdx + rdy * rdy);
-                return (
-                  <>
-                    {/* Return glow line */}
-                    <line
-                      x1={attackLine.to.x}
-                      y1={attackLine.to.y}
-                      x2={retTarget.x}
-                      y2={retTarget.y}
-                      stroke="url(#return-grad)"
-                      strokeWidth="10"
-                      strokeLinecap="round"
-                      filter="url(#return-glow)"
-                      opacity="0"
-                    >
-                      <animate
-                        attributeName="opacity"
-                        values="0;0.5;0"
-                        dur="0.4s"
-                        begin="0.35s"
-                        fill="freeze"
-                      />
-                    </line>
-                    {/* Return main line */}
-                    <line
-                      x1={attackLine.to.x}
-                      y1={attackLine.to.y}
-                      x2={retTarget.x}
-                      y2={retTarget.y}
-                      stroke="url(#return-grad)"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeDasharray={`${retLen}`}
-                      strokeDashoffset={retLen}
-                    >
-                      <animate
-                        attributeName="stroke-dashoffset"
-                        from={retLen}
-                        to="0"
-                        dur="0.2s"
-                        begin="0.35s"
-                        fill="freeze"
-                      />
-                      <animate
-                        attributeName="opacity"
-                        values="0;1;1;0"
-                        keyTimes="0;0.1;0.5;1"
-                        dur="0.45s"
-                        begin="0.35s"
-                        fill="freeze"
-                      />
-                    </line>
-                    {/* SP burst at owner SP counter (gold) */}
-                    <circle
-                      cx={retTarget.x}
-                      cy={retTarget.y}
-                      r="0"
-                      fill="#fbbf24"
-                      opacity="0"
-                    >
-                      <animate
-                        attributeName="r"
-                        values="0;18;0"
-                        dur="0.35s"
-                        begin="0.5s"
-                        fill="freeze"
-                      />
-                      <animate
-                        attributeName="opacity"
-                        values="0;0.8;0"
-                        dur="0.35s"
-                        begin="0.5s"
-                        fill="freeze"
-                      />
-                    </circle>
-                  </>
-                );
-              })()}
+              {d &&
+                (() => {
+                  const retTarget = attackLine.ownerPos || attackLine.from;
+                  const rdx = retTarget.x - attackLine.to.x;
+                  const rdy = retTarget.y - attackLine.to.y;
+                  const retLen = Math.sqrt(rdx * rdx + rdy * rdy);
+                  return (
+                    <>
+                      {/* Return glow line */}
+                      <line
+                        x1={attackLine.to.x}
+                        y1={attackLine.to.y}
+                        x2={retTarget.x}
+                        y2={retTarget.y}
+                        stroke="url(#return-grad)"
+                        strokeWidth="10"
+                        strokeLinecap="round"
+                        filter="url(#return-glow)"
+                        opacity="0"
+                      >
+                        <animate
+                          attributeName="opacity"
+                          values="0;0.5;0"
+                          dur="0.4s"
+                          begin="0.35s"
+                          fill="freeze"
+                        />
+                      </line>
+                      {/* Return main line */}
+                      <line
+                        x1={attackLine.to.x}
+                        y1={attackLine.to.y}
+                        x2={retTarget.x}
+                        y2={retTarget.y}
+                        stroke="url(#return-grad)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeDasharray={`${retLen}`}
+                        strokeDashoffset={retLen}
+                      >
+                        <animate
+                          attributeName="stroke-dashoffset"
+                          from={retLen}
+                          to="0"
+                          dur="0.2s"
+                          begin="0.35s"
+                          fill="freeze"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          values="0;1;1;0"
+                          keyTimes="0;0.1;0.5;1"
+                          dur="0.45s"
+                          begin="0.35s"
+                          fill="freeze"
+                        />
+                      </line>
+                      {/* SP burst at owner SP counter (gold) */}
+                      <circle
+                        cx={retTarget.x}
+                        cy={retTarget.y}
+                        r="0"
+                        fill="#fbbf24"
+                        opacity="0"
+                      >
+                        <animate
+                          attributeName="r"
+                          values="0;18;0"
+                          dur="0.35s"
+                          begin="0.5s"
+                          fill="freeze"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          values="0;0.8;0"
+                          dur="0.35s"
+                          begin="0.5s"
+                          fill="freeze"
+                        />
+                      </circle>
+                    </>
+                  );
+                })()}
             </svg>
           );
         })()}

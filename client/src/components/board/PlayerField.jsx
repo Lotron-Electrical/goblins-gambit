@@ -40,6 +40,7 @@ export default function PlayerField({
     attackingCardUid,
     defendingCardUid,
     tutorialMode,
+    draggingCard,
   } = useStore();
   const isMobile = useIsMobile();
   const isCompact = compact || isMobile;
@@ -258,7 +259,9 @@ export default function PlayerField({
 
       {/* SP progress bar */}
       {gameState?.winSP && (
-        <div className={`${isMobile ? "h-1.5" : "h-1"} rounded-full bg-gray-800 mx-1 mb-1`}>
+        <div
+          className={`${isMobile ? "h-1.5" : "h-1"} rounded-full bg-gray-800 mx-1 mb-1`}
+        >
           <div
             className="h-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-500"
             style={{
@@ -335,15 +338,24 @@ export default function PlayerField({
               selectedCard &&
               selectedCard._zone !== "swamp" &&
               selectedCard.type === "Creature";
+            const canDrop =
+              !isOpponent &&
+              isMyTurn &&
+              !creature &&
+              draggingCard &&
+              draggingCard.type === "Creature";
             return (
               <div
                 key={slotIdx}
+                data-drop-slot={!isOpponent && !creature ? slotIdx : undefined}
                 className={`relative flex-1 min-w-0 rounded border overflow-hidden ${
                   creature
                     ? "border-transparent"
-                    : canPlace
-                      ? "border-dashed border-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15"
-                      : "border-dashed border-gray-700/50 bg-gray-900/20"
+                    : canDrop
+                      ? "border-dashed border-[var(--color-gold)] bg-[var(--color-gold)]/20 animate-pulse"
+                      : canPlace
+                        ? "border-dashed border-[var(--color-gold)]/60 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15"
+                        : "border-dashed border-gray-700/50 bg-gray-900/20"
                 } ${isMobile ? "min-h-[56px]" : "min-h-[90px]"} flex items-center justify-center transition`}
                 onClick={() => {
                   if (canPlace) {
@@ -394,9 +406,9 @@ export default function PlayerField({
                   </div>
                 ) : (
                   <span
-                    className={`text-gray-700 ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+                    className={`${canDrop ? "text-[var(--color-gold)] font-bold" : "text-gray-700"} ${isMobile ? "text-[8px]" : "text-[10px]"}`}
                   >
-                    {canPlace ? "Place" : ""}
+                    {canDrop ? "Drop" : canPlace ? "Place" : ""}
                   </span>
                 )}
               </div>

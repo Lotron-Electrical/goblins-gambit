@@ -48,6 +48,8 @@ export default function CardInHand({
     clearHoveredCard,
     animationsOff,
     tutorialEngine,
+    setDraggingCard,
+    setDragPosition,
   } = useStore();
   const tutStepConfig = tutorialEngine ? tutorialEngine.getStepConfig() : null;
   const isTutorialHighlight = tutStepConfig?.highlightCardUid === card.uid;
@@ -61,6 +63,39 @@ export default function CardInHand({
   // Tutorial wrong-card toast state (must be before early returns for hook rules)
   const [showWrongToast, setShowWrongToast] = useState(false);
   const wrongToastTimer = useRef(null);
+
+  // Desktop drag-to-field for creatures
+  const dragStartPos = useRef(null);
+  const handleMouseDown = useCallback(
+    (e) => {
+      if (isMobile || card.type !== "Creature") return;
+      if (!isMyTurn && !isReaction) return;
+      dragStartPos.current = { x: e.clientX, y: e.clientY };
+
+      const onMouseMove = (me) => {
+        if (!dragStartPos.current) return;
+        const dx = me.clientX - dragStartPos.current.x;
+        const dy = me.clientY - dragStartPos.current.y;
+        if (Math.abs(dx) + Math.abs(dy) > 10) {
+          setDraggingCard(card);
+          setDragPosition({ x: me.clientX, y: me.clientY });
+          dragStartPos.current = null;
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", onMouseUp);
+        }
+      };
+
+      const onMouseUp = () => {
+        dragStartPos.current = null;
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    },
+    [isMobile, card, isMyTurn, isReaction, setDraggingCard, setDragPosition],
+  );
 
   // Collapsed variant — minimal strip card, no interaction
   if (isMobile && variant === "collapsed") {
@@ -185,6 +220,7 @@ export default function CardInHand({
       data-card-uid={card.uid}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      onMouseDown={!isMobile ? handleMouseDown : undefined}
       onTouchStart={isMobile && !disableTouch ? handleTouchStart : undefined}
       onTouchMove={isMobile && !disableTouch ? handleTouchMove : undefined}
       onTouchEnd={isMobile && !disableTouch ? handleTouchEnd : undefined}
