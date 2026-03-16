@@ -24,7 +24,7 @@ import SPParticles from "../components/ui/SPParticles.jsx";
 import MobileActivityLog from "../components/ui/MobileActivityLog.jsx";
 import ChatPanel from "../components/ui/ChatPanel.jsx";
 import DragOverlay from "../components/ui/DragOverlay.jsx";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Compact opponent bar for mobile — shows key info, tap to expand
 function OpponentBar({
@@ -252,6 +252,9 @@ export default function GameScreen() {
   const [stagedCards, setStagedCards] = useState([]);
   const stagedIdRef = useRef(0);
 
+  // Draw card reveal animation
+  const [drawnCard, setDrawnCard] = useState(null); // { card, phase: 'reveal'|'fly' }
+
   // VFX state
   const [activeDamages, setActiveDamages] = useState([]);
   const [spEvents, setSPEvents] = useState([]);
@@ -363,6 +366,21 @@ export default function GameScreen() {
       }
 
       setTimeout(() => clearAttackAnimation(), 350);
+    }
+
+    // Draw card reveal: show card in center then fly to hand
+    if (
+      currentAnimation.type === "draw_card" &&
+      currentAnimation.card &&
+      currentAnimation.playerId === gameState?.myId &&
+      !animationsOff
+    ) {
+      setDrawnCard({ card: currentAnimation.card, phase: "reveal" });
+      setTimeout(
+        () => setDrawnCard((prev) => (prev ? { ...prev, phase: "fly" } : null)),
+        600,
+      );
+      setTimeout(() => setDrawnCard(null), 1100);
     }
 
     // Stage played cards briefly in center
@@ -833,7 +851,7 @@ export default function GameScreen() {
                 <animate
                   attributeName="opacity"
                   values={d ? "0;0.6;0" : k ? "0;0.7;0" : "0;0.5;0"}
-                  dur={dur}
+                  dur={d ? "0.3s" : dur}
                   fill="freeze"
                 />
               </line>
@@ -859,8 +877,8 @@ export default function GameScreen() {
                 <animate
                   attributeName="opacity"
                   values="1;1;0"
-                  keyTimes="0;0.5;1"
-                  dur={dur}
+                  keyTimes={d ? "0;0.8;1" : "0;0.5;1"}
+                  dur={d ? "0.3s" : dur}
                   fill="freeze"
                 />
               </line>
@@ -1037,6 +1055,85 @@ export default function GameScreen() {
             </svg>
           );
         })()}
+      {/* Draw card reveal overlay */}
+      <AnimatePresence>
+        {drawnCard && (
+          <motion.div
+            key="drawn-card-reveal"
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 50,
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: drawnCard.phase === "fly" ? "flex-end" : "center",
+              justifyContent: "center",
+              paddingBottom: drawnCard.phase === "fly" ? "60px" : 0,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <motion.div
+              className={`rounded-xl border-2 overflow-hidden shadow-2xl ${
+                {
+                  Creature: "border-red-500",
+                  Magic: "border-blue-500",
+                  Armour: "border-gray-400",
+                  Tricks: "border-green-500",
+                }[drawnCard.card.type] || "border-gray-500"
+              }`}
+              initial={{ scale: 0.3, opacity: 0, y: 40 }}
+              animate={
+                drawnCard.phase === "reveal"
+                  ? { scale: 1, opacity: 1, y: 0 }
+                  : { scale: 0.25, opacity: 0.6, y: 0 }
+              }
+              transition={
+                drawnCard.phase === "reveal"
+                  ? {
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 20,
+                      duration: 0.4,
+                    }
+                  : { duration: 0.4, ease: "easeInOut" }
+              }
+              style={{
+                width: isMobile ? 120 : 160,
+                height: isMobile ? 168 : 224,
+              }}
+            >
+              {drawnCard.card.image ? (
+                <img
+                  src={`/cards/${drawnCard.card.image}`}
+                  alt={drawnCard.card.name}
+                  className="w-full h-[155%] object-cover object-top"
+                  draggable={false}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white text-sm">
+                  {drawnCard.card.name}
+                </div>
+              )}
+            </motion.div>
+            {drawnCard.phase === "reveal" && (
+              <motion.div
+                className="absolute text-white font-display text-lg drop-shadow-lg"
+                style={{
+                  bottom: isMobile ? "calc(50% - 110px)" : "calc(50% - 140px)",
+                }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+              >
+                {drawnCard.card.name}
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -173,7 +173,7 @@ export class GameEngine {
     const card = drawCardRaw(this.state, playerId);
     if (!card) return { success: false, error: "No cards to draw" };
 
-    const events = [{ type: "draw_card", playerId, count: 1 }];
+    const events = [{ type: "draw_card", playerId, count: 1, card }];
 
     // Nerd/Nerdet draw buffs
     for (const c of player.swamp) {

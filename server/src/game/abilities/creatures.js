@@ -20,7 +20,7 @@ export function streamer_draw(state, playerId, card, cardIdx, targetInfo) {
   const events = [];
   const drawn = drawCardRaw(state, playerId);
   if (drawn) {
-    events.push({ type: "draw_card", playerId, count: 1 });
+    events.push({ type: "draw_card", playerId, count: 1, card: drawn });
   }
   return { success: true, events };
 }

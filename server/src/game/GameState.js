@@ -208,6 +208,10 @@ export function getClientState(state, playerId) {
       if (evt.type === "hand_revealed" && evt.viewerId !== playerId) {
         return { ...evt, hand: undefined };
       }
+      // Strip drawn card data for non-drawing players
+      if (evt.type === "draw_card" && evt.playerId !== playerId) {
+        return { ...evt, card: undefined };
+      }
       return evt;
     }),
     myId: playerId,
