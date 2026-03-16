@@ -1,16 +1,22 @@
-import { useEffect } from 'react';
-import { useStore } from '../../store.js';
-import { ICONS, TYPE_ICON } from './icons.js';
+import { useEffect } from "react";
+import { useStore } from "../../store.js";
+import { ICONS, TYPE_ICON } from "./icons.js";
 
 const TYPE_BORDER = {
-  Creature: 'border-red-600',
-  Magic: 'border-blue-600',
-  Armour: 'border-gray-500',
-  Tricks: 'border-green-600',
+  Creature: "border-red-600",
+  Magic: "border-blue-600",
+  Armour: "border-gray-500",
+  Tricks: "border-green-600",
 };
 
 export default function GraveyardModal() {
-  const { gameState, graveyardOpen, setGraveyardOpen, setZoomedCard, clearHoveredCard } = useStore();
+  const {
+    gameState,
+    graveyardOpen,
+    setGraveyardOpen,
+    setZoomedCard,
+    clearHoveredCard,
+  } = useStore();
 
   // Clear any lingering hover preview when modal opens
   useEffect(() => {
@@ -20,9 +26,11 @@ export default function GraveyardModal() {
   // Escape to close
   useEffect(() => {
     if (!graveyardOpen) return;
-    const handler = (e) => { if (e.key === 'Escape') setGraveyardOpen(false); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    const handler = (e) => {
+      if (e.key === "Escape") setGraveyardOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [graveyardOpen, setGraveyardOpen]);
 
   if (!graveyardOpen || !gameState) return null;
@@ -51,14 +59,16 @@ export default function GraveyardModal() {
         </div>
 
         {graveyard.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">No cards in the graveyard</div>
+          <div className="text-gray-500 text-center py-8">
+            No cards in the graveyard
+          </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {[...graveyard].reverse().map((card, idx) => (
               <div
                 key={`${card.uid}-${idx}`}
                 className={`relative w-full aspect-[5/7] rounded-lg border-2 cursor-pointer overflow-hidden ${
-                  TYPE_BORDER[card.type] || 'border-gray-600'
+                  TYPE_BORDER[card.type] || "border-gray-600"
                 } hover:ring-2 hover:ring-[var(--color-gold)]`}
                 onContextMenu={(e) => {
                   e.preventDefault();
@@ -88,15 +98,26 @@ export default function GraveyardModal() {
                   <div className="text-white text-[11px] font-bold truncate text-center leading-tight">
                     {card.name}
                   </div>
-                  {card.type === 'Creature' && (
+                  {card.type === "Creature" && (
                     <div className="flex justify-between text-[10px] px-1 mt-0.5">
-                      <span className="text-red-400 font-bold">{ICONS.swords}{card.attack}</span>
-                      <span className="text-blue-400 font-bold">{ICONS.shield}{card.defence}</span>
-                      <span className="text-yellow-400 font-bold">{ICONS.coin}{card.sp}</span>
+                      <span className="text-red-400 font-bold">
+                        {ICONS.swords}
+                        {card.attack}
+                      </span>
+                      <span className="text-blue-400 font-bold">
+                        {ICONS.shield}
+                        {card.defence}
+                      </span>
+                      <span className="text-yellow-400 font-bold">
+                        {ICONS.coin}
+                        {card.sp}
+                      </span>
                     </div>
                   )}
-                  {card.type !== 'Creature' && (
-                    <div className="text-gray-400 text-[9px] text-center mt-0.5">{card.type}</div>
+                  {card.type !== "Creature" && (
+                    <div className="text-gray-400 text-[9px] text-center mt-0.5">
+                      {card.type}
+                    </div>
                   )}
                 </div>
 

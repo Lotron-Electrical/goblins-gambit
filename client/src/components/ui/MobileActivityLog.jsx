@@ -1,4 +1,4 @@
-import ActivityLog from './ActivityLog.jsx';
+import ActivityLog from "./ActivityLog.jsx";
 
 export default function MobileActivityLog({ expanded, onClose }) {
   if (!expanded) return null;

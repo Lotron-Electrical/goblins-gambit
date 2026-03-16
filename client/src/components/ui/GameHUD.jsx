@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
-import { useStore } from '../../store.js';
-import { ICONS } from './icons.js';
-import { useIsMobile } from '../../hooks/useIsMobile.js';
-import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
+import { useState, useEffect } from "react";
+import { useStore } from "../../store.js";
+import { ICONS } from "./icons.js";
+import { useIsMobile } from "../../hooks/useIsMobile.js";
+import { THEME_EFFECTS } from "../../../../shared/src/constants.js";
 
 const THEME_ICON = {
-  swamp: '\u{1F33F}',
-  blood: '\u{1F319}',
-  frost: '\u{2744}\u{FE0F}',
+  swamp: "\u{1F33F}",
+  blood: "\u{1F319}",
+  frost: "\u{2744}\u{FE0F}",
 };
 
-const FIRST_GAME_KEY = 'gg_seen_rules_prompt';
+const FIRST_GAME_KEY = "gg_seen_rules_prompt";
 
-export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, setChatOpen }) {
-  const { gameState, setHelpOpen, setMenuOpen, chatUnread, tutorialMode } = useStore();
+export default function GameHUD({
+  mobileLogOpen,
+  setMobileLogOpen,
+  chatOpen,
+  setChatOpen,
+}) {
+  const { gameState, setHelpOpen, setMenuOpen, chatUnread, tutorialMode } =
+    useStore();
   const isMobile = useIsMobile();
   const [themeExpanded, setThemeExpanded] = useState(false);
 
@@ -22,23 +28,25 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
   const themeInfo = THEME_EFFECTS[gameState.theme] || THEME_EFFECTS.swamp;
   const themeIcon = THEME_ICON[gameState.theme] || THEME_ICON.swamp;
   const playerCount = Object.keys(gameState.players).length;
-  const alivePlayers = Object.values(gameState.players).filter(p => !p.eliminated).length;
+  const alivePlayers = Object.values(gameState.players).filter(
+    (p) => !p.eliminated,
+  ).length;
 
   // First-game rules prompt — only shows once ever, skip if tutorial was completed
   const [showRulesPrompt, setShowRulesPrompt] = useState(() => {
     if (tutorialMode) return false;
-    if (localStorage.getItem('gg_tutorial_complete')) return false;
+    if (localStorage.getItem("gg_tutorial_complete")) return false;
     return !localStorage.getItem(FIRST_GAME_KEY);
   });
 
   const handleRulesYes = () => {
-    localStorage.setItem(FIRST_GAME_KEY, '1');
+    localStorage.setItem(FIRST_GAME_KEY, "1");
     setShowRulesPrompt(false);
     setHelpOpen(true);
   };
 
   const handleRulesNo = () => {
-    localStorage.setItem(FIRST_GAME_KEY, '1');
+    localStorage.setItem(FIRST_GAME_KEY, "1");
     setShowRulesPrompt(false);
   };
 
@@ -55,20 +63,28 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
             <span className="mr-0.5">{themeIcon}</span>
             <span className="text-gray-300 font-medium">{themeInfo.name}</span>
           </button>
-          <span className="text-gray-500 text-[10px]">Turn {gameState.turnNumber}</span>
-          <span className="text-gray-500 text-[10px]">{alivePlayers}/{playerCount}</span>
-          <span className="text-gray-500 text-[10px]">Dk {gameState.deckCount}</span>
-          <span className="text-gray-500 text-[10px]">Gv {gameState.graveyardCount}</span>
+          <span className="text-gray-500 text-[10px]">
+            Turn {gameState.turnNumber}
+          </span>
+          <span className="text-gray-500 text-[10px]">
+            {alivePlayers}/{playerCount}
+          </span>
+          <span className="text-gray-500 text-[10px]">
+            Dk {gameState.deckCount}
+          </span>
+          <span className="text-gray-500 text-[10px]">
+            Gv {gameState.graveyardCount}
+          </span>
           {setChatOpen && (
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className={`relative flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px] ${chatOpen ? 'text-white' : 'text-gray-400'}`}
+              className={`relative flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px] ${chatOpen ? "text-white" : "text-gray-400"}`}
               title="Chat"
             >
-              {'\u{1F4AC}'}
+              {"\u{1F4AC}"}
               {chatUnread > 0 && !chatOpen && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5">
-                  {chatUnread > 9 ? '9+' : chatUnread}
+                  {chatUnread > 9 ? "9+" : chatUnread}
                 </span>
               )}
             </button>
@@ -76,10 +92,10 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
           {setMobileLogOpen && (
             <button
               onClick={() => setMobileLogOpen(!mobileLogOpen)}
-              className={`flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px] ${mobileLogOpen ? 'text-white' : 'text-gray-400'}`}
+              className={`flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px] ${mobileLogOpen ? "text-white" : "text-gray-400"}`}
               title="Activity Log"
             >
-              {'\u{1F4DC}'}
+              {"\u{1F4DC}"}
             </button>
           )}
           {!tutorialMode && (
@@ -105,8 +121,12 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
         <div className="relative flex items-center px-4 py-2 bg-gray-950/90 border-b border-gray-800 pointer-events-auto">
           {/* LEFT — brand */}
           <div className="flex items-center gap-2 shrink-0">
-            <span className="font-display text-[var(--color-gold)] text-lg leading-none">Goblin's Gambit</span>
-            <span className="text-gray-600 text-[10px]">v{__APP_VERSION__}</span>
+            <span className="font-display text-[var(--color-gold)] text-lg leading-none">
+              Goblin's Gambit
+            </span>
+            <span className="text-gray-600 text-[10px]">
+              v{__APP_VERSION__}
+            </span>
           </div>
 
           {/* CENTER — game stats */}
@@ -118,13 +138,23 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
                 title="Click to see theme effects"
               >
                 <span className="mr-0.5">{themeIcon}</span>
-                <span className="text-gray-300 font-medium">{themeInfo.name}</span>
+                <span className="text-gray-300 font-medium">
+                  {themeInfo.name}
+                </span>
               </button>
               <span className="text-gray-600">|</span>
-              <span className="text-gray-500 text-[12px]">Turn {gameState.turnNumber}</span>
-              <span className="text-gray-500 text-[12px]">{alivePlayers}/{playerCount} alive</span>
-              <span className="text-gray-500 text-[12px]">Deck {gameState.deckCount}</span>
-              <span className="text-gray-500 text-[12px]">Grave {gameState.graveyardCount}</span>
+              <span className="text-gray-500 text-[12px]">
+                Turn {gameState.turnNumber}
+              </span>
+              <span className="text-gray-500 text-[12px]">
+                {alivePlayers}/{playerCount} alive
+              </span>
+              <span className="text-gray-500 text-[12px]">
+                Deck {gameState.deckCount}
+              </span>
+              <span className="text-gray-500 text-[12px]">
+                Grave {gameState.graveyardCount}
+              </span>
             </div>
           </div>
 
@@ -133,13 +163,13 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
             {setChatOpen && (
               <button
                 onClick={() => setChatOpen(!chatOpen)}
-                className={`relative flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px] ${chatOpen ? 'text-white' : 'text-gray-400'}`}
+                className={`relative flex items-center justify-center bg-gray-800 hover:bg-gray-700 rounded-lg transition w-8 h-8 text-[14px] ${chatOpen ? "text-white" : "text-gray-400"}`}
                 title="Chat"
               >
-                {'\u{1F4AC}'}
+                {"\u{1F4AC}"}
                 {chatUnread > 0 && !chatOpen && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-0.5">
-                    {chatUnread > 9 ? '9+' : chatUnread}
+                    {chatUnread > 9 ? "9+" : chatUnread}
                   </span>
                 )}
               </button>
@@ -167,32 +197,40 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
       )}
 
       {/* Theme effects expandable */}
-      {themeExpanded && gameState.theme !== 'swamp' && (
+      {themeExpanded && gameState.theme !== "swamp" && (
         <div
-          className={`bg-gray-900/95 border-b border-gray-700 pointer-events-auto ${isMobile ? 'px-2 py-1.5 text-[10px]' : 'px-4 py-1.5 text-[12px]'}`}
+          className={`bg-gray-900/95 border-b border-gray-700 pointer-events-auto ${isMobile ? "px-2 py-1.5 text-[10px]" : "px-4 py-1.5 text-[12px]"}`}
           onClick={() => setThemeExpanded(false)}
         >
-          <span className="text-gray-300">{themeIcon} {themeInfo.description}</span>
+          <span className="text-gray-300">
+            {themeIcon} {themeInfo.description}
+          </span>
         </div>
       )}
 
       {/* First-game rules dialog */}
       {showRulesPrompt && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center pointer-events-auto">
-          <div className={`bg-gray-900 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl text-center ${
-            isMobile ? 'mx-4 px-5 py-6 max-w-[300px]' : 'px-8 py-8 max-w-sm'
-          }`}>
-            <h2 className={`font-display text-[var(--color-gold)] mb-3 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+          <div
+            className={`bg-gray-900 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl text-center ${
+              isMobile ? "mx-4 px-5 py-6 max-w-[300px]" : "px-8 py-8 max-w-sm"
+            }`}
+          >
+            <h2
+              className={`font-display text-[var(--color-gold)] mb-3 ${isMobile ? "text-xl" : "text-2xl"}`}
+            >
               First time playing?
             </h2>
-            <p className={`text-gray-300 mb-5 ${isMobile ? 'text-[13px]' : 'text-[15px]'}`}>
+            <p
+              className={`text-gray-300 mb-5 ${isMobile ? "text-[13px]" : "text-[15px]"}`}
+            >
               Would you like to read the rules before your first game?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={handleRulesYes}
                 className={`flex-1 bg-[var(--color-card-green)] hover:bg-green-600 text-white font-bold rounded-lg transition ${
-                  isMobile ? 'py-2.5 text-[13px]' : 'py-3 text-[15px]'
+                  isMobile ? "py-2.5 text-[13px]" : "py-3 text-[15px]"
                 }`}
               >
                 Show me the rules
@@ -200,7 +238,7 @@ export default function GameHUD({ mobileLogOpen, setMobileLogOpen, chatOpen, set
               <button
                 onClick={handleRulesNo}
                 className={`flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-lg transition ${
-                  isMobile ? 'py-2.5 text-[13px]' : 'py-3 text-[15px]'
+                  isMobile ? "py-2.5 text-[13px]" : "py-3 text-[15px]"
                 }`}
               >
                 I'll figure it out

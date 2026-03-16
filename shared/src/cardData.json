@@ -475,7 +475,12 @@
     "copies": 1,
     "image": "Rhy Bear.jpg",
     "abilityId": "rhy_bear_split",
-    "multiAttack": { "targets": 2, "damage": 400, "canFocus": true, "focusDamage": 800 }
+    "multiAttack": {
+      "targets": 2,
+      "damage": 400,
+      "canFocus": true,
+      "focusDamage": 800
+    }
   },
   {
     "id": "thot",

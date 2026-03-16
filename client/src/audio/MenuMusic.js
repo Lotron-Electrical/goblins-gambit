@@ -5,7 +5,7 @@
 
 // E minor pentatonic across octaves
 const SCALE = [164.81, 196, 220, 261.63, 293.66]; // E3 G3 A3 C4 D4
-const HIGH_SCALE = [659.25, 783.99, 880, 1046.50, 1174.66]; // E5 G5 A5 C6 D6
+const HIGH_SCALE = [659.25, 783.99, 880, 1046.5, 1174.66]; // E5 G5 A5 C6 D6
 const BASS = [82.41, 98, 110]; // E2 G2 A2
 
 /**
@@ -37,7 +37,7 @@ export function playMenuLoop(ctx, volume) {
 }
 
 /** Duration of one menu music loop in ms */
-export const MENU_LOOP_MS = Math.round((4 * 4 * (60 / 70)) * 1000); // ~13714ms
+export const MENU_LOOP_MS = Math.round(4 * 4 * (60 / 70) * 1000); // ~13714ms
 
 function playDrone(ctx, t, dur, volume, nodes) {
   const droneVol = volume * 0.35;
@@ -46,9 +46,9 @@ function playDrone(ctx, t, dur, volume, nodes) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   const filter = ctx.createBiquadFilter();
-  osc.type = 'triangle';
+  osc.type = "triangle";
   osc.frequency.setValueAtTime(82.41, t); // E2
-  filter.type = 'lowpass';
+  filter.type = "lowpass";
   filter.frequency.setValueAtTime(200, t);
   gain.gain.setValueAtTime(0, t);
   gain.gain.linearRampToValueAtTime(droneVol, t + 1.5);
@@ -64,7 +64,7 @@ function playDrone(ctx, t, dur, volume, nodes) {
   // Fifth above for richness
   const osc2 = ctx.createOscillator();
   const g2 = ctx.createGain();
-  osc2.type = 'sine';
+  osc2.type = "sine";
   osc2.frequency.setValueAtTime(82.41 * 1.5, t); // B2
   g2.gain.setValueAtTime(0, t);
   g2.gain.linearRampToValueAtTime(droneVol * 0.3, t + 2);
@@ -83,8 +83,8 @@ function playPads(ctx, t, bar, bars, volume, nodes) {
 
   // Two-bar pad chords: Em then Am
   const chords = [
-    [164.81, 196, 246.94],   // Em: E3 G3 B3
-    [220, 261.63, 329.63],   // Am: A3 C4 E4
+    [164.81, 196, 246.94], // Em: E3 G3 B3
+    [220, 261.63, 329.63], // Am: A3 C4 E4
   ];
 
   for (let i = 0; i < bars; i += 2) {
@@ -97,14 +97,14 @@ function playPads(ctx, t, bar, bars, volume, nodes) {
       const gain = ctx.createGain();
       const filter = ctx.createBiquadFilter();
 
-      osc.type = 'sawtooth';
+      osc.type = "sawtooth";
       osc.frequency.setValueAtTime(freq, start);
       // Slow detune wobble for ethereal feel
       osc.detune.setValueAtTime(-5, start);
       osc.detune.linearRampToValueAtTime(5, start + dur / 2);
       osc.detune.linearRampToValueAtTime(-5, start + dur);
 
-      filter.type = 'lowpass';
+      filter.type = "lowpass";
       filter.frequency.setValueAtTime(400, start);
       filter.frequency.linearRampToValueAtTime(700, start + dur / 2);
       filter.frequency.linearRampToValueAtTime(400, start + dur);
@@ -139,7 +139,7 @@ function playGlisten(ctx, t, beat, bar, bars, volume, nodes) {
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
+    osc.type = "sine";
     osc.frequency.setValueAtTime(freq, beatTime);
 
     // Bell-like envelope with long tail
@@ -168,11 +168,13 @@ function playSparkles(ctx, t, totalDur, volume, nodes) {
     const noteCount = 3 + Math.floor(Math.random() * 3);
     for (let n = 0; n < noteCount; n++) {
       const nStart = start + n * 0.08;
-      const freq = HIGH_SCALE[Math.floor(Math.random() * HIGH_SCALE.length)] * (1 + Math.random() * 0.5);
+      const freq =
+        HIGH_SCALE[Math.floor(Math.random() * HIGH_SCALE.length)] *
+        (1 + Math.random() * 0.5);
 
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freq, nStart);
 
       gain.gain.setValueAtTime(0, nStart);

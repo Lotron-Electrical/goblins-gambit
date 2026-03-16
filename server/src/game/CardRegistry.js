@@ -1,4 +1,4 @@
-import cardData from '../../../shared/src/cardData.json' with { type: 'json' };
+import cardData from "../../../shared/src/cardData.json" with { type: "json" };
 
 const cardsById = new Map();
 const cardsByName = new Map();
@@ -24,7 +24,7 @@ export function getAllCards() {
 export function buildDeck() {
   const deck = [];
   for (const card of cardData) {
-    if (card.type === 'Event') continue;
+    if (card.type === "Event") continue;
     for (let i = 0; i < card.copies; i++) {
       deck.push({
         ...card,

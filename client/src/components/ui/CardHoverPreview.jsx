@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useStore } from '../../store.js';
-import { ICONS, TYPE_ICON } from './icons.js';
-import { useIsMobile } from '../../hooks/useIsMobile.js';
-import { THEME_EFFECTS } from '../../../../shared/src/constants.js';
+import { useEffect, useState } from "react";
+import { useStore } from "../../store.js";
+import { ICONS, TYPE_ICON } from "./icons.js";
+import { useIsMobile } from "../../hooks/useIsMobile.js";
+import { THEME_EFFECTS } from "../../../../shared/src/constants.js";
 
 export default function CardHoverPreview() {
   const { hoveredCard, hoverPosition, clearHoveredCard } = useStore();
@@ -39,16 +39,16 @@ export default function CardHoverPreview() {
     if (!hoveredCard || isMobile) return;
     const handleMouseMove = (e) => {
       const target = e.target;
-      if (!target.closest('[data-card-hover]')) {
+      if (!target.closest("[data-card-hover]")) {
         clearHoveredCard();
       }
     };
     const timer = setTimeout(() => {
-      window.addEventListener('mousemove', handleMouseMove, { once: true });
+      window.addEventListener("mousemove", handleMouseMove, { once: true });
     }, 500);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, [hoveredCard, clearHoveredCard, isMobile]);
 
@@ -65,21 +65,23 @@ export default function CardHoverPreview() {
   let top = delayedPos.y - previewH / 2;
 
   // If hovering hand cards (bottom of screen), show above cursor
-  if (delayedPos.zone === 'hand') {
+  if (delayedPos.zone === "hand") {
     top = delayedPos.y - previewH - gap;
   }
 
   // Clamp to viewport
   if (left + previewW > window.innerWidth) left = delayedPos.x - previewW - gap;
   if (top < 8) top = 8;
-  if (top + previewH > window.innerHeight - 8) top = window.innerHeight - previewH - 8;
+  if (top + previewH > window.innerHeight - 8)
+    top = window.innerHeight - previewH - 8;
 
   const theme = useStore.getState().theme;
   const themeEffects = THEME_EFFECTS[theme] || THEME_EFFECTS.swamp;
-  const effectiveCost = card.type === 'Magic' && themeEffects.spellCostMultiplier !== undefined
-    ? Math.floor(card.cost * themeEffects.spellCostMultiplier)
-    : card.cost;
-  const costText = effectiveCost === 0 ? 'FREE' : `${effectiveCost} AP`;
+  const effectiveCost =
+    card.type === "Magic" && themeEffects.spellCostMultiplier !== undefined
+      ? Math.floor(card.cost * themeEffects.spellCostMultiplier)
+      : card.cost;
+  const costText = effectiveCost === 0 ? "FREE" : `${effectiveCost} AP`;
 
   return (
     <div
@@ -98,9 +100,17 @@ export default function CardHoverPreview() {
             />
           )}
           {/* Cost badge */}
-          <div className={`absolute top-2 right-2 text-[12px] font-bold px-2 py-0.5 rounded ${
-            effectiveCost === 0 ? 'bg-green-700 text-white' : effectiveCost > card.cost ? 'bg-red-800 text-red-200' : effectiveCost < card.cost ? 'bg-green-700 text-green-200' : 'bg-blue-800 text-blue-200'
-          }`}>
+          <div
+            className={`absolute top-2 right-2 text-[12px] font-bold px-2 py-0.5 rounded ${
+              effectiveCost === 0
+                ? "bg-green-700 text-white"
+                : effectiveCost > card.cost
+                  ? "bg-red-800 text-red-200"
+                  : effectiveCost < card.cost
+                    ? "bg-green-700 text-green-200"
+                    : "bg-blue-800 text-blue-200"
+            }`}
+          >
             {costText}
           </div>
           {/* Type icon */}
@@ -111,14 +121,24 @@ export default function CardHoverPreview() {
 
         {/* Card info (bottom 50%) */}
         <div className="flex-1 p-2.5 flex flex-col gap-1">
-          <div className="text-white text-[14px] font-bold text-center leading-tight">{card.name}</div>
-          <div className="text-gray-400 text-[11px] text-center">{card.type}</div>
+          <div className="text-white text-[14px] font-bold text-center leading-tight">
+            {card.name}
+          </div>
+          <div className="text-gray-400 text-[11px] text-center">
+            {card.type}
+          </div>
 
-          {card.type === 'Creature' && (
+          {card.type === "Creature" && (
             <div className="flex justify-center gap-4 text-[13px] mt-1">
-              <span className="text-red-400 font-bold">{ICONS.swords} {card.attack}</span>
-              <span className="text-blue-400 font-bold">{ICONS.shield} {card.defence}</span>
-              <span className="text-yellow-400 font-bold">{ICONS.coin} {card.sp}</span>
+              <span className="text-red-400 font-bold">
+                {ICONS.swords} {card.attack}
+              </span>
+              <span className="text-blue-400 font-bold">
+                {ICONS.shield} {card.defence}
+              </span>
+              <span className="text-yellow-400 font-bold">
+                {ICONS.coin} {card.sp}
+              </span>
             </div>
           )}
 

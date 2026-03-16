@@ -4,13 +4,13 @@ import {
   getCurrentPlayerId,
   drawCardRaw,
   getClientState,
-} from './GameState.js';
-import { resolvePlayCard, getEffectiveStats } from './EffectResolver.js';
-import { getNextFreeSlot } from './abilities/helpers.js';
-import { resolveAttack, killCreature } from './CombatResolver.js';
-import { isLastPlace } from './abilities/helpers.js';
-import { activatedRegistry, hasActivatedAbility } from './abilities/index.js';
-import { cursed_set_bonus } from './abilities/armour.js';
+} from "./GameState.js";
+import { resolvePlayCard, getEffectiveStats } from "./EffectResolver.js";
+import { getNextFreeSlot } from "./abilities/helpers.js";
+import { resolveAttack, killCreature } from "./CombatResolver.js";
+import { isLastPlace } from "./abilities/helpers.js";
+import { activatedRegistry, hasActivatedAbility } from "./abilities/index.js";
+import { cursed_set_bonus } from "./abilities/armour.js";
 import {
   BASE_AP,
   MAX_HAND_SIZE,
@@ -24,7 +24,7 @@ import {
   VOLCANO_TRIGGER_RATIO,
   JARGON_CHANCE,
   JARGON_CARD_COST_MULTIPLIER,
-} from '../../../shared/src/constants.js';
+} from "../../../shared/src/constants.js";
 
 // Encumbrance: hoarding cards (8-9) penalises AP to 1, but maxing hand (10)
 // flips to 7 AP as a "hoarding becomes advantage" comeback mechanic.
@@ -40,7 +40,7 @@ export class GameEngine {
   constructor(playerIds, playerNames, winSP, theme, settings = {}) {
     this.state = createGameState(playerIds, playerNames, settings);
     if (winSP) this.state.winSP = winSP;
-    this.state.theme = theme || 'swamp';
+    this.state.theme = theme || "swamp";
     this.actionLog = [];
   }
 
@@ -51,7 +51,10 @@ export class GameEngine {
       if (this.state.pendingTarget) {
         this.state.pendingTarget = null;
         this.state.turnPhase = TURN_PHASE.MAIN;
-        this.state.animations.push({ type: 'buff', text: 'Target selection timed out' });
+        this.state.animations.push({
+          type: "buff",
+          text: "Target selection timed out",
+        });
         if (this._onPendingTargetTimeout) this._onPendingTargetTimeout();
       }
     }, 20000);
@@ -75,7 +78,7 @@ export class GameEngine {
     state.animations = [];
 
     if (state.phase !== GAME_PHASE.PLAYING) {
-      return { success: false, error: 'Game is not in progress' };
+      return { success: false, error: "Game is not in progress" };
     }
 
     // Handle target selection (can come from non-active player for reactions)
@@ -89,24 +92,31 @@ export class GameEngine {
     }
 
     // Block actions while another player has a pending choice (e.g. Dead Meme)
-    if (state.pendingChoice && state.pendingChoice.playerId !== playerId && action.type !== ACTION.CHOOSE_CARD) {
-      return { success: false, error: 'Waiting for another player to choose' };
+    if (
+      state.pendingChoice &&
+      state.pendingChoice.playerId !== playerId &&
+      action.type !== ACTION.CHOOSE_CARD
+    ) {
+      return { success: false, error: "Waiting for another player to choose" };
     }
 
     // Reaction cards can be played on any player's turn
-    const REACTION_ABILITIES = ['stfu_silence', 'lagg_delay'];
-    if (action.type === ACTION.PLAY_CARD && playerId !== this.getCurrentPlayerId()) {
+    const REACTION_ABILITIES = ["stfu_silence", "lagg_delay"];
+    if (
+      action.type === ACTION.PLAY_CARD &&
+      playerId !== this.getCurrentPlayerId()
+    ) {
       const reactPlayer = state.players[playerId];
-      const reactCard = reactPlayer?.hand.find(c => c.uid === action.cardUid);
+      const reactCard = reactPlayer?.hand.find((c) => c.uid === action.cardUid);
       if (reactCard && REACTION_ABILITIES.includes(reactCard.abilityId)) {
         return this.handlePlayCard(reactPlayer, playerId, action);
       }
-      return { success: false, error: 'Not your turn' };
+      return { success: false, error: "Not your turn" };
     }
 
     // All other actions must be from current player
     if (playerId !== this.getCurrentPlayerId()) {
-      return { success: false, error: 'Not your turn' };
+      return { success: false, error: "Not your turn" };
     }
 
     const player = getCurrentPlayer(state);
@@ -146,35 +156,35 @@ export class GameEngine {
         return this.handleBuyFromJargon(player, playerId, action);
 
       default:
-        return { success: false, error: 'Unknown action' };
+        return { success: false, error: "Unknown action" };
     }
   }
 
   handleDrawCard(player, playerId) {
     if (player.ap < 1) {
-      return { success: false, error: 'Need 1 AP to draw' };
+      return { success: false, error: "Need 1 AP to draw" };
     }
 
     if (player.hand.length >= MAX_HAND_SIZE) {
-      return { success: false, error: 'Hand is full' };
+      return { success: false, error: "Hand is full" };
     }
 
     player.ap -= 1;
     const card = drawCardRaw(this.state, playerId);
-    if (!card) return { success: false, error: 'No cards to draw' };
+    if (!card) return { success: false, error: "No cards to draw" };
 
-    const events = [{ type: 'draw_card', playerId, count: 1 }];
+    const events = [{ type: "draw_card", playerId, count: 1 }];
 
     // Nerd/Nerdet draw buffs
     for (const c of player.swamp) {
       if (c._silenced) continue;
-      if (c.abilityId === 'nerd_draw_buff') {
+      if (c.abilityId === "nerd_draw_buff") {
         c._attackBuff = (c._attackBuff || 0) + 100;
-        events.push({ type: 'buff', cardUid: c.uid, text: 'Nerd +100 ATK' });
+        events.push({ type: "buff", cardUid: c.uid, text: "Nerd +100 ATK" });
       }
-      if (c.abilityId === 'nerdet_draw_buff') {
+      if (c.abilityId === "nerdet_draw_buff") {
         c._defenceBuff = (c._defenceBuff || 0) + 100;
-        events.push({ type: 'buff', cardUid: c.uid, text: 'Nerdet +100 DEF' });
+        events.push({ type: "buff", cardUid: c.uid, text: "Nerdet +100 DEF" });
       }
     }
 
@@ -182,7 +192,7 @@ export class GameEngine {
       this.state.stats[playerId].cardsDrawn++;
     }
 
-    this.logAction(playerId, 'draw', { cardId: card.id });
+    this.logAction(playerId, "draw", { cardId: card.id });
     this.state.animations.push(...events);
     return this.checkWin({ success: true, events });
   }
@@ -206,7 +216,9 @@ export class GameEngine {
     if (this.state.stats[playerId]) {
       this.state.stats[playerId].cardsPlayed++;
       // Check if a creature was played by scanning events
-      const playedEvt = result.events?.find(e => e.type === 'card_played' && e.card?.type === 'Creature');
+      const playedEvt = result.events?.find(
+        (e) => e.type === "card_played" && e.card?.type === "Creature",
+      );
       if (playedEvt) {
         this.state.stats[playerId].creaturesPlayed++;
         this.state.stats[playerId].creatureStats[playedEvt.card.uid] = {
@@ -218,7 +230,7 @@ export class GameEngine {
     }
     this.trackEvents(result.events);
 
-    this.logAction(playerId, 'play', { cardUid });
+    this.logAction(playerId, "play", { cardUid });
     this.state.animations.push(...(result.events || []));
     return this.checkWin({ success: true, events: result.events });
   }
@@ -227,31 +239,41 @@ export class GameEngine {
     const { attackerUid, defenderOwnerId, defenderUid } = action;
 
     if (player.ap < 1) {
-      return { success: false, error: 'Need 1 AP to attack' };
+      return { success: false, error: "Need 1 AP to attack" };
     }
 
-    const attackerCard = player.swamp.find(c => c.uid === attackerUid);
-    if (!attackerCard) return { success: false, error: 'Attacker not on field' };
+    const attackerCard = player.swamp.find((c) => c.uid === attackerUid);
+    if (!attackerCard)
+      return { success: false, error: "Attacker not on field" };
 
     if (attackerCard._hasAttacked) {
-      return { success: false, error: 'This creature already attacked this turn' };
+      return {
+        success: false,
+        error: "This creature already attacked this turn",
+      };
     }
 
     // Block 0-ATK creatures from attacking (wastes AP for nothing)
     const preCheckStats = getEffectiveStats(this.state, playerId, attackerCard);
     if (preCheckStats.attack <= 0) {
-      return { success: false, error: 'This creature has no attack power' };
+      return { success: false, error: "This creature has no attack power" };
     }
 
     const defenderPlayer = this.state.players[defenderOwnerId];
-    if (!defenderPlayer) return { success: false, error: 'Invalid target player' };
+    if (!defenderPlayer)
+      return { success: false, error: "Invalid target player" };
 
     // --- Direct player attack (defenderUid matches the player ID) ---
     if (defenderUid === defenderOwnerId) {
       // Can only attack a player directly if they have no creatures
-      const visibleCreatures = defenderPlayer.swamp.filter(c => !c._invisible);
+      const visibleCreatures = defenderPlayer.swamp.filter(
+        (c) => !c._invisible,
+      );
       if (visibleCreatures.length > 0) {
-        return { success: false, error: 'Cannot attack player directly while they have creatures' };
+        return {
+          success: false,
+          error: "Cannot attack player directly while they have creatures",
+        };
       }
 
       // Ghost reveal on attack
@@ -268,12 +290,15 @@ export class GameEngine {
 
       // Berserk: last-place player deals double damage (Blood Moon)
       const themeEffects = THEME_EFFECTS[this.state.theme];
-      if (themeEffects?.berserkMultiplier > 1 && isLastPlace(this.state, playerId)) {
+      if (
+        themeEffects?.berserkMultiplier > 1 &&
+        isLastPlace(this.state, playerId)
+      ) {
         damage = Math.floor(damage * themeEffects.berserkMultiplier);
       }
 
       events.push({
-        type: 'attack',
+        type: "attack",
         attacker: attackerUid,
         defender: defenderOwnerId,
         attackerOwner: playerId,
@@ -286,19 +311,33 @@ export class GameEngine {
         const shieldDmg = Math.min(defenderPlayer.playerShield, damage);
         defenderPlayer.playerShield -= shieldDmg;
         damage -= shieldDmg;
-        events.push({ type: 'buff', cardUid: defenderOwnerId, text: `Shield absorbed ${shieldDmg} damage! (${defenderPlayer.playerShield} remaining)` });
+        events.push({
+          type: "buff",
+          cardUid: defenderOwnerId,
+          text: `Shield absorbed ${shieldDmg} damage! (${defenderPlayer.playerShield} remaining)`,
+        });
       }
 
       // Remaining damage hits SP
       if (damage > 0) {
         defenderPlayer.sp = Math.max(0, defenderPlayer.sp - damage);
-        events.push({ type: 'sp_change', playerId: defenderOwnerId, amount: -damage, reason: 'Direct attack' });
+        events.push({
+          type: "sp_change",
+          playerId: defenderOwnerId,
+          amount: -damage,
+          reason: "Direct attack",
+        });
 
         // Attacker gains half the damage dealt as SP
         const spGain = Math.floor(damage / 2);
         if (spGain > 0) {
           player.sp += spGain;
-          events.push({ type: 'sp_change', playerId, amount: spGain, reason: 'Direct attack bonus' });
+          events.push({
+            type: "sp_change",
+            playerId,
+            amount: spGain,
+            reason: "Direct attack bonus",
+          });
         }
       }
 
@@ -307,33 +346,47 @@ export class GameEngine {
         const actualDmg = damage; // damage remaining after shield
         this.state.stats[playerId].damageDealt += actualDmg;
         if (this.state.stats[playerId].creatureStats[attackerUid]) {
-          this.state.stats[playerId].creatureStats[attackerUid].damageDealt += actualDmg;
+          this.state.stats[playerId].creatureStats[attackerUid].damageDealt +=
+            actualDmg;
         }
       }
       // Track SP gains from events
       for (const evt of events) {
-        if (evt.type === 'sp_change' && evt.amount > 0 && this.state.stats[evt.playerId]) {
+        if (
+          evt.type === "sp_change" &&
+          evt.amount > 0 &&
+          this.state.stats[evt.playerId]
+        ) {
           this.state.stats[evt.playerId].spEarned += evt.amount;
         }
       }
 
-      this.logAction(playerId, 'attack', { attackerUid, defenderOwnerId, directAttack: true });
+      this.logAction(playerId, "attack", {
+        attackerUid,
+        defenderOwnerId,
+        directAttack: true,
+      });
       this.state.animations.push(...events);
       return this.checkWin({ success: true, events });
     }
 
     // --- Normal creature attack ---
-    const defenderCard = defenderPlayer.swamp.find(c => c.uid === defenderUid);
-    if (!defenderCard) return { success: false, error: 'Defender not on field' };
+    const defenderCard = defenderPlayer.swamp.find(
+      (c) => c.uid === defenderUid,
+    );
+    if (!defenderCard)
+      return { success: false, error: "Defender not on field" };
 
     // Ghost: invisible creatures can't be targeted
     if (defenderCard._invisible) {
-      return { success: false, error: 'Cannot attack an invisible creature' };
+      return { success: false, error: "Cannot attack an invisible creature" };
     }
 
-    const hasTaunt = defenderPlayer.swamp.find(c => c.abilityId === 'gamer_boy_taunt' && !c._silenced);
+    const hasTaunt = defenderPlayer.swamp.find(
+      (c) => c.abilityId === "gamer_boy_taunt" && !c._silenced,
+    );
     if (hasTaunt && defenderUid !== hasTaunt.uid) {
-      return { success: false, error: 'Must attack Gamer Boy first (taunt)' };
+      return { success: false, error: "Must attack Gamer Boy first (taunt)" };
     }
 
     // Ghost reveal on attack
@@ -344,7 +397,13 @@ export class GameEngine {
     player.ap -= 1;
     attackerCard._hasAttacked = true;
 
-    const result = resolveAttack(this.state, playerId, attackerUid, defenderOwnerId, defenderUid);
+    const result = resolveAttack(
+      this.state,
+      playerId,
+      attackerUid,
+      defenderOwnerId,
+      defenderUid,
+    );
 
     if (result.error) return { success: false, error: result.error };
 
@@ -355,15 +414,20 @@ export class GameEngine {
 
       // Safety timeout: auto-pick first card after 20s to prevent permanent softlock
       this._pendingChoiceTimeout = setTimeout(() => {
-        if (this.state.pendingChoice?.type === 'dead_meme') {
+        if (this.state.pendingChoice?.type === "dead_meme") {
           const cards = this.state.pendingChoice.cards;
           if (cards.length > 0) {
-            this.handleCardChoice(this.state.pendingChoice.playerId, { cardUid: cards[0].uid });
+            this.handleCardChoice(this.state.pendingChoice.playerId, {
+              cardUid: cards[0].uid,
+            });
           } else {
             this.state.pendingChoice = null;
             this.state.turnPhase = TURN_PHASE.MAIN;
           }
-          this.state.animations.push({ type: 'buff', text: 'Dead Meme choice timed out — auto-picked' });
+          this.state.animations.push({
+            type: "buff",
+            text: "Dead Meme choice timed out — auto-picked",
+          });
           if (this._onPendingChoiceTimeout) this._onPendingChoiceTimeout();
         }
       }, 20000);
@@ -372,26 +436,35 @@ export class GameEngine {
     // Track creature attack stats
     if (this.state.stats[playerId] && result.events) {
       for (const evt of result.events) {
-        if (evt.type === 'damage') {
+        if (evt.type === "damage") {
           const dmg = evt.amount || 0;
           this.state.stats[playerId].damageDealt += dmg;
           if (this.state.stats[playerId].creatureStats[attackerUid]) {
-            this.state.stats[playerId].creatureStats[attackerUid].damageDealt += dmg;
+            this.state.stats[playerId].creatureStats[attackerUid].damageDealt +=
+              dmg;
           }
         }
-        if (evt.type === 'destroy' && evt.owner !== playerId) {
+        if (evt.type === "destroy" && evt.owner !== playerId) {
           this.state.stats[playerId].creaturesKilled++;
           if (this.state.stats[playerId].creatureStats[attackerUid]) {
             this.state.stats[playerId].creatureStats[attackerUid].kills++;
           }
         }
-        if (evt.type === 'sp_change' && evt.amount > 0 && this.state.stats[evt.playerId]) {
+        if (
+          evt.type === "sp_change" &&
+          evt.amount > 0 &&
+          this.state.stats[evt.playerId]
+        ) {
           this.state.stats[evt.playerId].spEarned += evt.amount;
         }
       }
     }
 
-    this.logAction(playerId, 'attack', { attackerUid, defenderUid, defenderOwnerId });
+    this.logAction(playerId, "attack", {
+      attackerUid,
+      defenderUid,
+      defenderOwnerId,
+    });
     this.state.animations.push(...(result.events || []));
     return this.checkWin({ success: true, events: result.events });
   }
@@ -409,9 +482,9 @@ export class GameEngine {
     }
 
     // Return Snacc-controlled creatures
-    const snaccReturns = player.swamp.filter(c => c._snaccReturn);
+    const snaccReturns = player.swamp.filter((c) => c._snaccReturn);
     for (const creature of snaccReturns) {
-      const idx = player.swamp.findIndex(c => c.uid === creature.uid);
+      const idx = player.swamp.findIndex((c) => c.uid === creature.uid);
       if (idx !== -1) {
         player.swamp.splice(idx, 1);
         const origOwnerId = creature._originalOwner;
@@ -423,10 +496,21 @@ export class GameEngine {
           delete creature._hasAttacked;
           creature._slot = getNextFreeSlot(origOwner);
           origOwner.swamp.push(creature);
-          events.push({ type: 'card_moved', cardUid: creature.uid, from: playerId, to: origOwnerId, reason: 'Snacc returned' });
+          events.push({
+            type: "card_moved",
+            cardUid: creature.uid,
+            from: playerId,
+            to: origOwnerId,
+            reason: "Snacc returned",
+          });
         } else {
           killCreature(this.state, playerId, creature.uid);
-          events.push({ type: 'destroy', cardUid: creature.uid, owner: playerId, reason: 'No room to return' });
+          events.push({
+            type: "destroy",
+            cardUid: creature.uid,
+            owner: playerId,
+            reason: "No room to return",
+          });
         }
       }
     }
@@ -440,7 +524,8 @@ export class GameEngine {
     }
 
     // Advance to next player
-    this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
+    this.state.currentTurnIndex =
+      (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
     this.state.turnNumber++;
     this.state.turnPhase = TURN_PHASE.MAIN;
     this.state.pendingTarget = null;
@@ -453,7 +538,10 @@ export class GameEngine {
     const nextPlayer = getCurrentPlayer(this.state);
     const nextPlayerId = this.getCurrentPlayerId();
     const apPenalty = nextPlayer.apPenalty || 0;
-    nextPlayer.ap = Math.max(0, getEncumbranceAP(nextPlayer.hand.length, this.state.baseAP) - apPenalty);
+    nextPlayer.ap = Math.max(
+      0,
+      getEncumbranceAP(nextPlayer.hand.length, this.state.baseAP) - apPenalty,
+    );
     nextPlayer.apPenalty = 0;
 
     // Theme AP penalty (e.g. Frost: -1 AP per turn, minimum 1)
@@ -463,15 +551,22 @@ export class GameEngine {
     }
 
     // Hessian set bonus: extra AP
-    const hessianCount = ['head', 'body', 'feet'].filter(s => nextPlayer.gear[s]?.set === 'hessian').length;
-    if (hessianCount >= 2) nextPlayer.ap = Math.max(nextPlayer.ap, hessianCount);
+    const hessianCount = ["head", "body", "feet"].filter(
+      (s) => nextPlayer.gear[s]?.set === "hessian",
+    ).length;
+    if (hessianCount >= 2)
+      nextPlayer.ap = Math.max(nextPlayer.ap, hessianCount);
 
     // Clear silence on next player's creatures (they lasted 1 turn)
     for (const c of nextPlayer.swamp) {
       delete c._silenced;
     }
 
-    events.push({ type: 'turn_start', playerId: nextPlayerId, turnNumber: this.state.turnNumber });
+    events.push({
+      type: "turn_start",
+      playerId: nextPlayerId,
+      turnNumber: this.state.turnNumber,
+    });
 
     // Detect turn cycle completion (wrapped back to first player)
     if (this.state.currentTurnIndex === 0 && this.state.eventsEnabled) {
@@ -496,71 +591,88 @@ export class GameEngine {
         delete c._silenced;
         delete c._stonerShield;
       }
-      const reason = skipLagg ? 'Lagg!' : 'Disconnected';
-      events.push({ type: 'turn_skipped', playerId: curId, reason });
+      const reason = skipLagg ? "Lagg!" : "Disconnected";
+      events.push({ type: "turn_skipped", playerId: curId, reason });
 
       // Run end-of-turn effects for skipped player (same as handleEndTurn)
       this.tickEndOfTurnEffects(cur, curId, events);
 
-      this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
+      this.state.currentTurnIndex =
+        (this.state.currentTurnIndex + 1) % this.state.turnOrder.length;
       this.state.turnNumber++;
       const np = getCurrentPlayer(this.state);
       const npId = this.getCurrentPlayerId();
       const apPen = np.apPenalty || 0;
-      np.ap = Math.max(0, getEncumbranceAP(np.hand.length, this.state.baseAP) - apPen);
+      np.ap = Math.max(
+        0,
+        getEncumbranceAP(np.hand.length, this.state.baseAP) - apPen,
+      );
       np.apPenalty = 0;
       // Theme AP penalty
       if (themeAP?.apPenalty) {
         np.ap = Math.max(1, np.ap - themeAP.apPenalty);
       }
-      for (const c of np.swamp) { delete c._silenced; }
-      events.push({ type: 'turn_start', playerId: npId, turnNumber: this.state.turnNumber });
+      for (const c of np.swamp) {
+        delete c._silenced;
+      }
+      events.push({
+        type: "turn_start",
+        playerId: npId,
+        turnNumber: this.state.turnNumber,
+      });
     }
 
-    this.logAction(playerId, 'end_turn', {});
+    this.logAction(playerId, "end_turn", {});
     this.state.animations.push(...events);
     return this.checkWin({ success: true, events });
   }
 
   handleBuyAP(player, playerId) {
     let cost = BUY_AP_COST;
-    for (const slot of ['head', 'body', 'feet']) {
+    for (const slot of ["head", "body", "feet"]) {
       const armour = player.gear[slot];
-      if (armour?.abilityId === 'hessian_discount') {
+      if (armour?.abilityId === "hessian_discount") {
         cost -= armour.discountAmount;
       }
     }
     cost = Math.max(0, cost);
 
     if (player.sp < cost) {
-      return { success: false, error: `Need ${cost} SP to buy AP (have ${player.sp})` };
+      return {
+        success: false,
+        error: `Need ${cost} SP to buy AP (have ${player.sp})`,
+      };
     }
 
     player.sp -= cost;
     player.ap += 1;
 
     const events = [
-      { type: 'sp_change', playerId, amount: -cost, reason: 'Buy AP' },
-      { type: 'buff', text: `+1 AP (cost ${cost} SP)` },
+      { type: "sp_change", playerId, amount: -cost, reason: "Buy AP" },
+      { type: "buff", text: `+1 AP (cost ${cost} SP)` },
     ];
 
-    this.logAction(playerId, 'buy_ap', { cost });
+    this.logAction(playerId, "buy_ap", { cost });
     this.state.animations.push(...events);
     return { success: true, events };
   }
 
   handleUseAbility(player, playerId, action) {
     const { cardUid, targetInfo } = action;
-    const card = player.swamp.find(c => c.uid === cardUid);
-    if (!card) return { success: false, error: 'Creature not on field' };
+    const card = player.swamp.find((c) => c.uid === cardUid);
+    if (!card) return { success: false, error: "Creature not on field" };
     if (card._silenced) {
       // STFU penalty: still costs 1 AP when trying to use a silenced ability
       if (player.ap >= 1) player.ap -= 1;
-      return { success: false, error: 'Creature is silenced! (1 AP wasted)' };
+      return { success: false, error: "Creature is silenced! (1 AP wasted)" };
     }
 
     const handler = activatedRegistry[card.abilityId];
-    if (!handler) return { success: false, error: 'This creature has no activated ability' };
+    if (!handler)
+      return {
+        success: false,
+        error: "This creature has no activated ability",
+      };
 
     const result = handler(this.state, playerId, card, targetInfo);
 
@@ -580,7 +692,7 @@ export class GameEngine {
     }
     this.trackEvents(result.events);
 
-    this.logAction(playerId, 'ability', { cardUid, ability: card.abilityId });
+    this.logAction(playerId, "ability", { cardUid, ability: card.abilityId });
     this.state.animations.push(...(result.events || []));
     return this.checkWin({ success: true, events: result.events });
   }
@@ -589,7 +701,7 @@ export class GameEngine {
     this._clearPendingTargetTimeout();
     const pending = this.state.pendingTarget;
     if (!pending || pending.playerId !== playerId) {
-      return { success: false, error: 'No pending target selection for you' };
+      return { success: false, error: "No pending target selection for you" };
     }
 
     const targetInfo = {
@@ -604,19 +716,31 @@ export class GameEngine {
       if (targetInfo.targets) {
         // Multi-target: each must be in validTargets
         for (const t of targetInfo.targets) {
-          if (!valid.some(v => v.uid === t.targetUid && v.ownerId === t.targetOwnerId)) {
-            return { success: false, error: 'Invalid target selected' };
+          if (
+            !valid.some(
+              (v) => v.uid === t.targetUid && v.ownerId === t.targetOwnerId,
+            )
+          ) {
+            return { success: false, error: "Invalid target selected" };
           }
         }
       } else if (targetInfo.targetUid) {
         // Single creature target
-        if (!valid.some(v => v.uid === targetInfo.targetUid && v.ownerId === targetInfo.targetOwnerId)) {
-          return { success: false, error: 'Invalid target selected' };
+        if (
+          !valid.some(
+            (v) =>
+              v.uid === targetInfo.targetUid &&
+              v.ownerId === targetInfo.targetOwnerId,
+          )
+        ) {
+          return { success: false, error: "Invalid target selected" };
         }
-      } else if (targetInfo.targetOwnerId && pending.targetType === 'player') {
+      } else if (targetInfo.targetOwnerId && pending.targetType === "player") {
         // Player target
-        if (!valid.some(v => (v.ownerId || v.id) === targetInfo.targetOwnerId)) {
-          return { success: false, error: 'Invalid target player selected' };
+        if (
+          !valid.some((v) => (v.ownerId || v.id) === targetInfo.targetOwnerId)
+        ) {
+          return { success: false, error: "Invalid target player selected" };
         }
       }
     }
@@ -624,18 +748,18 @@ export class GameEngine {
     // Activated ability target resolution
     if (pending.abilityActivation) {
       const player = this.state.players[playerId];
-      const card = player.swamp.find(c => c.uid === pending.cardUid);
+      const card = player.swamp.find((c) => c.uid === pending.cardUid);
       if (!card) {
         this.state.pendingTarget = null;
         this.state.turnPhase = TURN_PHASE.MAIN;
-        return { success: false, error: 'Card no longer on field' };
+        return { success: false, error: "Card no longer on field" };
       }
 
       const handler = activatedRegistry[card.abilityId];
       if (!handler) {
         this.state.pendingTarget = null;
         this.state.turnPhase = TURN_PHASE.MAIN;
-        return { success: false, error: 'No ability handler' };
+        return { success: false, error: "No ability handler" };
       }
 
       const result = handler(this.state, playerId, card, targetInfo);
@@ -647,7 +771,7 @@ export class GameEngine {
     }
 
     // Cursed set SP swap target
-    if (pending.action === 'cursed_swap') {
+    if (pending.action === "cursed_swap") {
       const events = [];
       cursed_set_bonus(this.state, playerId, targetInfo.targetOwnerId, events);
       this.state.pendingTarget = null;
@@ -658,7 +782,12 @@ export class GameEngine {
     }
 
     // Regular card play target resolution
-    const result = resolvePlayCard(this.state, playerId, pending.cardUid, targetInfo);
+    const result = resolvePlayCard(
+      this.state,
+      playerId,
+      pending.cardUid,
+      targetInfo,
+    );
     this.state.pendingTarget = null;
     this.state.turnPhase = TURN_PHASE.MAIN;
     this.trackEvents(result.events);
@@ -673,21 +802,27 @@ export class GameEngine {
   handleCardChoice(playerId, action) {
     const pending = this.state.pendingChoice;
     if (!pending || pending.playerId !== playerId) {
-      return { success: false, error: 'No pending choice for you' };
+      return { success: false, error: "No pending choice for you" };
     }
 
     const events = [];
 
     // Dead Meme: pick a card from graveyard to return to hand
-    if (pending.type === 'dead_meme') {
+    if (pending.type === "dead_meme") {
       const chosenUid = action.cardUid;
-      const idx = this.state.graveyard.findIndex(c => c.uid === chosenUid);
+      const idx = this.state.graveyard.findIndex((c) => c.uid === chosenUid);
       if (idx !== -1) {
         const [card] = this.state.graveyard.splice(idx, 1);
         const player = this.state.players[playerId];
         if (player.hand.length < MAX_HAND_SIZE) {
           player.hand.push(card);
-          events.push({ type: 'card_recovered', cardUid: card.uid, card, playerId, reason: 'Dead Meme revive' });
+          events.push({
+            type: "card_recovered",
+            cardUid: card.uid,
+            card,
+            playerId,
+            reason: "Dead Meme revive",
+          });
         } else {
           this.state.graveyard.push(card);
         }
@@ -715,7 +850,7 @@ export class GameEngine {
           this._pendingChoiceTimeout = null;
         }
         this.state.animations.push({
-          type: 'game_over',
+          type: "game_over",
           winner: pid,
           winnerName: p.name,
         });
@@ -730,17 +865,18 @@ export class GameEngine {
     if (!events || !this.state.stats) return;
     for (const evt of events) {
       switch (evt.type) {
-        case 'damage': {
+        case "damage": {
           const ownerStats = this.state.stats[evt.attackerOwner];
           if (ownerStats) {
             ownerStats.damageDealt += evt.amount || 0;
             if (evt.attackerUid && ownerStats.creatureStats[evt.attackerUid]) {
-              ownerStats.creatureStats[evt.attackerUid].damageDealt += evt.amount || 0;
+              ownerStats.creatureStats[evt.attackerUid].damageDealt +=
+                evt.amount || 0;
             }
           }
           break;
         }
-        case 'sp_change': {
+        case "sp_change": {
           // Direct SP damage also counts as damageDealt for the attacker
           if (evt.amount < 0 && evt.attackerOwner) {
             const ownerStats = this.state.stats[evt.attackerOwner];
@@ -749,17 +885,25 @@ export class GameEngine {
             }
           }
           // SP gains
-          if (evt.amount > 0 && evt.playerId && this.state.stats[evt.playerId]) {
+          if (
+            evt.amount > 0 &&
+            evt.playerId &&
+            this.state.stats[evt.playerId]
+          ) {
             this.state.stats[evt.playerId].spEarned += evt.amount;
           }
           break;
         }
-        case 'destroy': {
+        case "destroy": {
           // Creature killed — attribute to attacker if known
           if (evt.attackerOwner && this.state.stats[evt.attackerOwner]) {
             this.state.stats[evt.attackerOwner].creaturesKilled++;
-            if (evt.attackerUid && this.state.stats[evt.attackerOwner].creatureStats[evt.attackerUid]) {
-              this.state.stats[evt.attackerOwner].creatureStats[evt.attackerUid].kills++;
+            if (
+              evt.attackerUid &&
+              this.state.stats[evt.attackerOwner].creatureStats[evt.attackerUid]
+            ) {
+              this.state.stats[evt.attackerOwner].creatureStats[evt.attackerUid]
+                .kills++;
             }
           }
           break;
@@ -771,12 +915,12 @@ export class GameEngine {
   handleDiscardCard(player, playerId, action) {
     const { cardUid } = action;
     if (player.ap < 1) {
-      return { success: false, error: 'Need 1 AP to discard' };
+      return { success: false, error: "Need 1 AP to discard" };
     }
 
-    const cardIdx = player.hand.findIndex(c => c.uid === cardUid);
+    const cardIdx = player.hand.findIndex((c) => c.uid === cardUid);
     if (cardIdx === -1) {
-      return { success: false, error: 'Card not in hand' };
+      return { success: false, error: "Card not in hand" };
     }
 
     player.ap -= 1;
@@ -784,19 +928,19 @@ export class GameEngine {
     this.state.graveyard.push(card);
 
     const events = [
-      { type: 'card_discarded', playerId, cardUid: card.uid, card },
+      { type: "card_discarded", playerId, cardUid: card.uid, card },
     ];
 
-    this.logAction(playerId, 'discard', { cardUid: card.uid });
+    this.logAction(playerId, "discard", { cardUid: card.uid });
     this.state.animations.push(...events);
     return { success: true, events };
   }
 
   handleRecycleCreature(player, playerId, action) {
     const { cardUid } = action;
-    const creatureIdx = player.swamp.findIndex(c => c.uid === cardUid);
+    const creatureIdx = player.swamp.findIndex((c) => c.uid === cardUid);
     if (creatureIdx === -1) {
-      return { success: false, error: 'Creature not on your field' };
+      return { success: false, error: "Creature not on your field" };
     }
 
     const creature = player.swamp[creatureIdx];
@@ -804,7 +948,10 @@ export class GameEngine {
     const spCost = Math.ceil(stats.sp / 2);
 
     if (player.sp < spCost) {
-      return { success: false, error: `Need ${spCost} SP to recycle (half of ${stats.sp} SP value)` };
+      return {
+        success: false,
+        error: `Need ${spCost} SP to recycle (half of ${stats.sp} SP value)`,
+      };
     }
 
     // Deduct SP cost
@@ -820,16 +967,34 @@ export class GameEngine {
     killCreature(this.state, playerId, creature.uid);
 
     const events = [
-      { type: 'sp_change', playerId, amount: -spCost, reason: 'Recycle cost' },
-      { type: 'creature_recycled', playerId, cardUid: creature.uid, card: creature, shieldGained: remainingDef },
-      { type: 'destroy', cardUid: creature.uid, owner: playerId, reason: 'Recycled' },
+      { type: "sp_change", playerId, amount: -spCost, reason: "Recycle cost" },
+      {
+        type: "creature_recycled",
+        playerId,
+        cardUid: creature.uid,
+        card: creature,
+        shieldGained: remainingDef,
+      },
+      {
+        type: "destroy",
+        cardUid: creature.uid,
+        owner: playerId,
+        reason: "Recycled",
+      },
     ];
 
     if (remainingDef > 0) {
-      events.push({ type: 'buff', text: `+${remainingDef} player shield from recycling` });
+      events.push({
+        type: "buff",
+        text: `+${remainingDef} player shield from recycling`,
+      });
     }
 
-    this.logAction(playerId, 'recycle', { cardUid: creature.uid, spCost, shieldGained: remainingDef });
+    this.logAction(playerId, "recycle", {
+      cardUid: creature.uid,
+      spCost,
+      shieldGained: remainingDef,
+    });
     this.state.animations.push(...events);
     return this.checkWin({ success: true, events });
   }
@@ -838,16 +1003,29 @@ export class GameEngine {
   tickEndOfTurnEffects(player, playerId, events) {
     // Harambe round countdown — check ALL players' swamps
     for (const [pid, p] of Object.entries(this.state.players)) {
-      const harambes = p.swamp.filter(c => c.abilityId === 'harambe_plant' && c._roundsRemaining !== undefined);
+      const harambes = p.swamp.filter(
+        (c) =>
+          c.abilityId === "harambe_plant" && c._roundsRemaining !== undefined,
+      );
       for (const h of harambes) {
         if (h._roundsRemaining <= 0) {
           const stats = getEffectiveStats(this.state, pid, h);
           const harambeOwner = this.state.players[h._harambeOwner];
           if (harambeOwner) {
             harambeOwner.sp += stats.sp;
-            events.push({ type: 'sp_change', playerId: h._harambeOwner, amount: stats.sp, reason: 'Harambe expired' });
+            events.push({
+              type: "sp_change",
+              playerId: h._harambeOwner,
+              amount: stats.sp,
+              reason: "Harambe expired",
+            });
           }
-          events.push({ type: 'destroy', cardUid: h.uid, owner: pid, reason: 'Harambe expired' });
+          events.push({
+            type: "destroy",
+            cardUid: h.uid,
+            owner: pid,
+            reason: "Harambe expired",
+          });
           killCreature(this.state, pid, h.uid);
         } else {
           h._roundsRemaining--;
@@ -857,47 +1035,65 @@ export class GameEngine {
 
     // Crystal armour income (only if player has at least 1 creature)
     if (player.swamp.length > 0) {
-      for (const slot of ['head', 'body', 'feet']) {
+      for (const slot of ["head", "body", "feet"]) {
         const armour = player.gear[slot];
-        if (armour?.abilityId === 'crystal_income') {
+        if (armour?.abilityId === "crystal_income") {
           player.sp += armour.incomeAmount;
-          events.push({ type: 'sp_change', playerId, amount: armour.incomeAmount, reason: armour.name });
+          events.push({
+            type: "sp_change",
+            playerId,
+            amount: armour.incomeAmount,
+            reason: armour.name,
+          });
         }
       }
     }
 
     // Swapeewee toggle
     for (const c of player.swamp) {
-      if (c.abilityId === 'swapeewee_swap' && !c._silenced) {
+      if (c.abilityId === "swapeewee_swap" && !c._silenced) {
         c._swapped = !c._swapped;
-        events.push({ type: 'buff', cardUid: c.uid, text: 'Stats swapped!' });
+        events.push({ type: "buff", cardUid: c.uid, text: "Stats swapped!" });
       }
     }
 
     // Digital Artist +100 temp shield (creature DEF) + 100 player shield
     for (const c of player.swamp) {
-      if (c.abilityId === 'digital_artist_shield' && !c._silenced) {
+      if (c.abilityId === "digital_artist_shield" && !c._silenced) {
         c._tempShield = (c._tempShield || 0) + 100;
         player.playerShield += 100;
-        events.push({ type: 'buff', cardUid: c.uid, text: '+100 shield' });
+        events.push({ type: "buff", cardUid: c.uid, text: "+100 shield" });
       }
     }
 
     // Armour durability countdown
-    for (const slot of ['head', 'body', 'feet']) {
+    for (const slot of ["head", "body", "feet"]) {
       const armour = player.gear[slot];
       if (!armour || armour._turnsRemaining === undefined) continue;
-      if (armour._justEquipped) { delete armour._justEquipped; continue; }
+      if (armour._justEquipped) {
+        delete armour._justEquipped;
+        continue;
+      }
       armour._turnsRemaining--;
       if (armour._turnsRemaining <= 0) {
-        if (armour.abilityId === 'lucky_shield') {
-          player.playerShield = Math.max(0, player.playerShield - (armour.shieldAmount || 0));
-          const luckyBefore = ['head', 'body', 'feet'].filter(s => player.gear[s]?.abilityId === 'lucky_shield').length;
+        if (armour.abilityId === "lucky_shield") {
+          player.playerShield = Math.max(
+            0,
+            player.playerShield - (armour.shieldAmount || 0),
+          );
+          const luckyBefore = ["head", "body", "feet"].filter(
+            (s) => player.gear[s]?.abilityId === "lucky_shield",
+          ).length;
           if (luckyBefore === 3) {
             player.playerShield = Math.max(0, player.playerShield - 500);
           }
         }
-        events.push({ type: 'destroy', cardUid: armour.uid, owner: playerId, reason: `${armour.name} expired` });
+        events.push({
+          type: "destroy",
+          cardUid: armour.uid,
+          owner: playerId,
+          reason: `${armour.name} expired`,
+        });
         this.state.graveyard.push(armour);
         player.gear[slot] = null;
       }
@@ -913,7 +1109,9 @@ export class GameEngine {
     const halfWinSP = state.winSP * VOLCANO_TRIGGER_RATIO;
 
     // Check if any player has reached the threshold
-    const thresholdReached = Object.values(state.players).some(p => p.sp >= halfWinSP);
+    const thresholdReached = Object.values(state.players).some(
+      (p) => p.sp >= halfWinSP,
+    );
 
     if (!thresholdReached) return;
 
@@ -921,8 +1119,8 @@ export class GameEngine {
     if (!state.volcano.active && !state.dragon.active) {
       state.volcano.active = true;
       events.push({
-        type: 'volcano_active',
-        text: 'THE VOLCANO AWAKENS!',
+        type: "volcano_active",
+        text: "THE VOLCANO AWAKENS!",
       });
     }
 
@@ -936,16 +1134,23 @@ export class GameEngine {
           deposits[i].maturesIn--;
           if (deposits[i].maturesIn <= 0) {
             const dep = deposits[i];
-            const payout = Math.floor(dep.amount * (1 + dep.interestRate / 100));
+            const payout = Math.floor(
+              dep.amount * (1 + dep.interestRate / 100),
+            );
             player.sp += payout;
             state.volcano.totalBanked -= dep.amount;
             events.push({
-              type: 'volcano_withdraw',
+              type: "volcano_withdraw",
               playerId: pid,
               amount: payout,
               interest: payout - dep.amount,
             });
-            events.push({ type: 'sp_change', playerId: pid, amount: payout, reason: 'Volcano matured' });
+            events.push({
+              type: "sp_change",
+              playerId: pid,
+              amount: payout,
+              reason: "Volcano matured",
+            });
             matured.push(i);
           }
         }
@@ -968,14 +1173,26 @@ export class GameEngine {
         }
         if (dmg > 0) {
           p.sp = Math.max(0, p.sp - dmg);
-          events.push({ type: 'sp_change', playerId: pid, amount: -dmg, reason: 'Dragon attack' });
+          events.push({
+            type: "sp_change",
+            playerId: pid,
+            amount: -dmg,
+            reason: "Dragon attack",
+          });
         }
       }
-      events.push({ type: 'dragon_attack', text: 'The Dragon attacks all players!' });
+      events.push({
+        type: "dragon_attack",
+        text: "The Dragon attacks all players!",
+      });
     }
 
     // Dragon spawn check (only if Volcano has banked SP and Dragon is NOT already active)
-    if (state.volcano.active && !state.dragon.active && state.volcano.totalBanked > 0) {
+    if (
+      state.volcano.active &&
+      !state.dragon.active &&
+      state.volcano.totalBanked > 0
+    ) {
       const spawnChance = Math.min(0.5, state.volcano.totalBanked / 20000);
       if (Math.random() < spawnChance) {
         this.spawnDragon(events);
@@ -994,7 +1211,10 @@ export class GameEngine {
       state.jargon.cyclesRemaining--;
       if (state.jargon.cyclesRemaining <= 0) {
         state.jargon.active = false;
-        events.push({ type: 'jargon_departure', text: 'Jargon the Vendor departs...' });
+        events.push({
+          type: "jargon_departure",
+          text: "Jargon the Vendor departs...",
+        });
       }
     }
   }
@@ -1010,8 +1230,8 @@ export class GameEngine {
       state.dragon.damageByPlayer[pid] = 0;
     }
     events.push({
-      type: 'dragon_spawn',
-      text: 'A DRAGON APPROACHES!',
+      type: "dragon_spawn",
+      text: "A DRAGON APPROACHES!",
       maxHP: state.dragon.maxHP,
     });
   }
@@ -1021,8 +1241,8 @@ export class GameEngine {
     state.jargon.active = true;
     state.jargon.cyclesRemaining = 1;
     events.push({
-      type: 'jargon_arrival',
-      text: 'JARGON THE VENDOR ARRIVES!',
+      type: "jargon_arrival",
+      text: "JARGON THE VENDOR ARRIVES!",
     });
   }
 
@@ -1031,19 +1251,19 @@ export class GameEngine {
     const amount = Math.floor(Number(action.amount) || 0);
 
     if (!state.eventsEnabled || !state.volcano.active) {
-      return { success: false, error: 'Volcano is not active' };
+      return { success: false, error: "Volcano is not active" };
     }
     if (state.dragon.active) {
-      return { success: false, error: 'Cannot deposit while Dragon is active' };
+      return { success: false, error: "Cannot deposit while Dragon is active" };
     }
     if (amount <= 0) {
-      return { success: false, error: 'Must deposit a positive amount' };
+      return { success: false, error: "Must deposit a positive amount" };
     }
     if (player.sp < amount) {
       return { success: false, error: `Not enough SP (have ${player.sp})` };
     }
     if (player.ap < 1) {
-      return { success: false, error: 'Need 1 AP to deposit' };
+      return { success: false, error: "Need 1 AP to deposit" };
     }
 
     player.ap -= 1;
@@ -1065,19 +1285,32 @@ export class GameEngine {
     state.volcano.totalBanked += amount;
 
     const events = [
-      { type: 'sp_change', playerId, amount: -amount, reason: 'Volcano deposit' },
       {
-        type: 'volcano_deposit',
+        type: "sp_change",
+        playerId,
+        amount: -amount,
+        reason: "Volcano deposit",
+      },
+      {
+        type: "volcano_deposit",
         playerId,
         amount,
         interestRate,
         maturesIn: d6,
         text: `Deposited ${amount} SP! Locked for ${d6} cycles at ${interestRate}% interest`,
       },
-      { type: 'dice_roll', dice: [d6], result: `${interestRate}% interest, ${d6} cycle lock` },
+      {
+        type: "dice_roll",
+        dice: [d6],
+        result: `${interestRate}% interest, ${d6} cycle lock`,
+      },
     ];
 
-    this.logAction(playerId, 'deposit_volcano', { amount, interestRate, maturesIn: d6 });
+    this.logAction(playerId, "deposit_volcano", {
+      amount,
+      interestRate,
+      maturesIn: d6,
+    });
     state.animations.push(...events);
     return this.checkWin({ success: true, events });
   }
@@ -1086,17 +1319,21 @@ export class GameEngine {
     const state = this.state;
 
     if (!state.eventsEnabled || !state.dragon.active) {
-      return { success: false, error: 'No Dragon to attack' };
+      return { success: false, error: "No Dragon to attack" };
     }
     if (player.ap < 1) {
-      return { success: false, error: 'Need 1 AP to attack Dragon' };
+      return { success: false, error: "Need 1 AP to attack Dragon" };
     }
 
     const { attackerUid } = action;
-    const attackerCard = player.swamp.find(c => c.uid === attackerUid);
-    if (!attackerCard) return { success: false, error: 'Creature not on field' };
+    const attackerCard = player.swamp.find((c) => c.uid === attackerUid);
+    if (!attackerCard)
+      return { success: false, error: "Creature not on field" };
     if (attackerCard._hasAttacked) {
-      return { success: false, error: 'This creature already attacked this turn' };
+      return {
+        success: false,
+        error: "This creature already attacked this turn",
+      };
     }
 
     player.ap -= 1;
@@ -1117,19 +1354,20 @@ export class GameEngine {
     }
 
     state.dragon.currentHP -= damage;
-    state.dragon.damageByPlayer[playerId] = (state.dragon.damageByPlayer[playerId] || 0) + damage;
+    state.dragon.damageByPlayer[playerId] =
+      (state.dragon.damageByPlayer[playerId] || 0) + damage;
 
     const events = [
       {
-        type: 'attack',
+        type: "attack",
         attacker: attackerUid,
-        defender: 'dragon',
+        defender: "dragon",
         attackerOwner: playerId,
-        defenderOwner: 'dragon',
+        defenderOwner: "dragon",
       },
       {
-        type: 'damage',
-        targetUid: 'dragon',
+        type: "damage",
+        targetUid: "dragon",
         amount: damage,
         attackerOwner: playerId,
         attackerUid,
@@ -1165,15 +1403,17 @@ export class GameEngine {
           let fullPayout = 0;
           for (const [, deposits] of Object.entries(state.volcano.deposits)) {
             for (const dep of deposits) {
-              fullPayout += Math.floor(dep.amount * (1 + dep.interestRate / 100));
+              fullPayout += Math.floor(
+                dep.amount * (1 + dep.interestRate / 100),
+              );
             }
           }
           killer.sp += fullPayout;
           events.push({
-            type: 'sp_change',
+            type: "sp_change",
             playerId: killerId,
             amount: fullPayout,
-            reason: 'Dragon slain! Volcano treasure claimed!',
+            reason: "Dragon slain! Volcano treasure claimed!",
           });
           if (state.stats[killerId]) {
             state.stats[killerId].spEarned += fullPayout;
@@ -1182,11 +1422,11 @@ export class GameEngine {
       }
 
       events.push({
-        type: 'dragon_killed',
+        type: "dragon_killed",
         killerId,
-        killerName: killerId ? state.players[killerId]?.name : 'Unknown',
+        killerName: killerId ? state.players[killerId]?.name : "Unknown",
         totalPayout: state.volcano.totalBanked,
-        text: `${killerId ? state.players[killerId]?.name : 'Unknown'} SLAYS THE DRAGON!`,
+        text: `${killerId ? state.players[killerId]?.name : "Unknown"} SLAYS THE DRAGON!`,
       });
 
       // Reset volcano entirely
@@ -1198,7 +1438,7 @@ export class GameEngine {
       state.volcano.totalBanked = 0;
     }
 
-    this.logAction(playerId, 'attack_event', { attackerUid, damage });
+    this.logAction(playerId, "attack_event", { attackerUid, damage });
     state.animations.push(...events);
     return this.checkWin({ success: true, events });
   }
@@ -1207,13 +1447,13 @@ export class GameEngine {
     const state = this.state;
 
     if (!state.eventsEnabled || !state.jargon.active) {
-      return { success: false, error: 'Jargon is not available' };
+      return { success: false, error: "Jargon is not available" };
     }
     if (state.graveyard.length === 0) {
-      return { success: false, error: 'Graveyard is empty' };
+      return { success: false, error: "Graveyard is empty" };
     }
     if (player.hand.length >= MAX_HAND_SIZE) {
-      return { success: false, error: 'Hand is full' };
+      return { success: false, error: "Hand is full" };
     }
 
     // Pick random card from graveyard
@@ -1222,7 +1462,10 @@ export class GameEngine {
     const cost = Math.max(100, (card.cost || 1) * JARGON_CARD_COST_MULTIPLIER);
 
     if (player.sp < cost) {
-      return { success: false, error: `Need ${cost} SP to buy from Jargon (have ${player.sp})` };
+      return {
+        success: false,
+        error: `Need ${cost} SP to buy from Jargon (have ${player.sp})`,
+      };
     }
 
     player.sp -= cost;
@@ -1230,9 +1473,14 @@ export class GameEngine {
     player.hand.push(card);
 
     const events = [
-      { type: 'sp_change', playerId, amount: -cost, reason: 'Bought from Jargon' },
       {
-        type: 'card_recovered',
+        type: "sp_change",
+        playerId,
+        amount: -cost,
+        reason: "Bought from Jargon",
+      },
+      {
+        type: "card_recovered",
         cardUid: card.uid,
         card,
         playerId,
@@ -1240,7 +1488,7 @@ export class GameEngine {
       },
     ];
 
-    this.logAction(playerId, 'buy_jargon', { cardUid: card.uid, cost });
+    this.logAction(playerId, "buy_jargon", { cardUid: card.uid, cost });
     state.animations.push(...events);
     return { success: true, events };
   }

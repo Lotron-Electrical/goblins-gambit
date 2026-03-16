@@ -1,17 +1,18 @@
-import { useState } from 'react';
-import { useStore } from '../store.js';
-import SparkleParticles from '../components/ui/SparkleParticles.jsx';
+import { useState } from "react";
+import { useStore } from "../store.js";
+import SparkleParticles from "../components/ui/SparkleParticles.jsx";
 
 export default function LoginScreen() {
-  const { loginUser, registerUser, authLoading, authError, clearAuthError } = useStore();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [mode, setMode] = useState('register'); // 'login' | 'register' — default to register for new players
+  const { loginUser, registerUser, authLoading, authError, clearAuthError } =
+    useStore();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState("register"); // 'login' | 'register' — default to register for new players
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) return;
-    if (mode === 'login') {
+    if (mode === "login") {
       loginUser(username.trim(), password);
     } else {
       registerUser(username.trim(), password);
@@ -25,16 +26,24 @@ export default function LoginScreen() {
         <h1 className="text-3xl md:text-6xl font-display text-[var(--color-gold-bright)] drop-shadow-[0_0_30px_rgba(212,160,23,0.5)] mb-2">
           Goblin's Gambit
         </h1>
-        <p className="text-gray-400 text-lg">A card game of cunning and chaos</p>
+        <p className="text-gray-400 text-lg">
+          A card game of cunning and chaos
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 relative z-10">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm space-y-4 relative z-10"
+      >
         <div>
           <label className="block text-gray-300 text-sm mb-1">Username</label>
           <input
             type="text"
             value={username}
-            onChange={(e) => { setUsername(e.target.value); clearAuthError(); }}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              clearAuthError();
+            }}
             placeholder="Enter username..."
             maxLength={20}
             autoComplete="username"
@@ -47,9 +56,14 @@ export default function LoginScreen() {
           <input
             type="password"
             value={password}
-            onChange={(e) => { setPassword(e.target.value); clearAuthError(); }}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              clearAuthError();
+            }}
             placeholder="Enter password..."
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            autoComplete={
+              mode === "login" ? "current-password" : "new-password"
+            }
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-lg focus:outline-none focus:border-[var(--color-gold)] transition"
           />
         </div>
@@ -57,18 +71,32 @@ export default function LoginScreen() {
         {authError && (
           <div className="text-center">
             <p className="text-red-400 text-sm">{authError}</p>
-            {mode === 'login' && authError.includes('Invalid') && (
+            {mode === "login" && authError.includes("Invalid") && (
               <p className="text-gray-400 text-xs mt-1">
-                New here?{' '}
-                <button type="button" onClick={() => { setMode('register'); clearAuthError(); }} className="text-[var(--color-gold)] hover:underline">
+                New here?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("register");
+                    clearAuthError();
+                  }}
+                  className="text-[var(--color-gold)] hover:underline"
+                >
                   Create an account
                 </button>
               </p>
             )}
-            {mode === 'register' && authError.includes('taken') && (
+            {mode === "register" && authError.includes("taken") && (
               <p className="text-gray-400 text-xs mt-1">
-                Already registered?{' '}
-                <button type="button" onClick={() => { setMode('login'); clearAuthError(); }} className="text-[var(--color-gold)] hover:underline">
+                Already registered?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    clearAuthError();
+                  }}
+                  className="text-[var(--color-gold)] hover:underline"
+                >
                   Login instead
                 </button>
               </p>
@@ -81,21 +109,39 @@ export default function LoginScreen() {
           disabled={authLoading || !username.trim() || !password.trim()}
           className="w-full bg-[var(--color-card-green)] hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-3 px-6 rounded-lg transition text-lg"
         >
-          {authLoading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Register'}
+          {authLoading
+            ? "Please wait..."
+            : mode === "login"
+              ? "Login"
+              : "Register"}
         </button>
 
         <p className="text-center text-gray-400 text-sm">
-          {mode === 'login' ? (
+          {mode === "login" ? (
             <>
-              No account?{' '}
-              <button type="button" onClick={() => { setMode('register'); clearAuthError(); }} className="text-[var(--color-gold)] hover:underline">
+              No account?{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("register");
+                  clearAuthError();
+                }}
+                className="text-[var(--color-gold)] hover:underline"
+              >
                 Register
               </button>
             </>
           ) : (
             <>
-              Already have an account?{' '}
-              <button type="button" onClick={() => { setMode('login'); clearAuthError(); }} className="text-[var(--color-gold)] hover:underline">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("login");
+                  clearAuthError();
+                }}
+                className="text-[var(--color-gold)] hover:underline"
+              >
                 Login
               </button>
             </>

@@ -39,8 +39,18 @@ export function cursed_set_bonus(state, playerId, targetOwnerId, events) {
     const targetOldSP = target.sp;
     player.sp = targetOldSP;
     target.sp = playerOldSP;
-    events.push({ type: 'sp_change', playerId, amount: targetOldSP - playerOldSP, reason: 'Cursed set - SP swapped!' });
-    events.push({ type: 'sp_change', playerId: targetOwnerId, amount: playerOldSP - targetOldSP, reason: 'Cursed set - SP swapped!' });
+    events.push({
+      type: "sp_change",
+      playerId,
+      amount: targetOldSP - playerOldSP,
+      reason: "Cursed set - SP swapped!",
+    });
+    events.push({
+      type: "sp_change",
+      playerId: targetOwnerId,
+      amount: playerOldSP - targetOldSP,
+      reason: "Cursed set - SP swapped!",
+    });
   }
   return { success: true, events };
 }
@@ -51,9 +61,9 @@ export function cursed_set_bonus(state, playerId, targetOwnerId, events) {
 export function getLuckyShield(player) {
   let shield = 0;
   let luckyCount = 0;
-  for (const slot of ['head', 'body', 'feet']) {
+  for (const slot of ["head", "body", "feet"]) {
     const armour = player.gear[slot];
-    if (armour?.abilityId === 'lucky_shield') {
+    if (armour?.abilityId === "lucky_shield") {
       shield += armour.shieldAmount || 0;
       luckyCount++;
     }

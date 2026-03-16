@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: 'MedievalSharp', cursive;
-  --font-body: 'Inter', sans-serif;
+  --font-display: "MedievalSharp", cursive;
+  --font-body: "Inter", sans-serif;
   --color-swamp: #1c2410;
   --color-swamp-dark: #0e1206;
   --color-card-red: #b91c1c;
@@ -13,7 +13,8 @@
   --color-gold-bright: #fbbf24;
 }
 
-html, body {
+html,
+body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -23,7 +24,8 @@ html, body {
   padding-right: env(safe-area-inset-right);
 }
 
-html.game-active, html.game-active body {
+html.game-active,
+html.game-active body {
   overflow: hidden;
   position: fixed;
   width: 100%;
@@ -33,7 +35,13 @@ html.game-active, html.game-active body {
 
 body {
   font-family: var(--font-body);
-  background: linear-gradient(180deg, #080a04 0%, #19200c 35%, #1a2210 55%, #0e1206 100%);
+  background: linear-gradient(
+    180deg,
+    #080a04 0%,
+    #19200c 35%,
+    #1a2210 55%,
+    #0e1206 100%
+  );
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
@@ -45,23 +53,47 @@ body {
 
 /* Mud blob texture overlay */
 body::before {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(62, 44, 20, 0.22) 0%, transparent 50%),
-    radial-gradient(circle at 70% 60%, rgba(40, 50, 20, 0.18) 0%, transparent 40%),
-    radial-gradient(circle at 50% 80%, rgba(80, 55, 20, 0.15) 0%, transparent 45%),
-    radial-gradient(ellipse at 30% 70%, rgba(50, 40, 15, 0.12) 0%, transparent 35%),
-    radial-gradient(circle at 85% 20%, rgba(55, 40, 10, 0.16) 0%, transparent 40%),
-    radial-gradient(circle at 10% 90%, rgba(70, 50, 15, 0.14) 0%, transparent 45%);
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(62, 44, 20, 0.22) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 70% 60%,
+      rgba(40, 50, 20, 0.18) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(80, 55, 20, 0.15) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 30% 70%,
+      rgba(50, 40, 15, 0.12) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(55, 40, 10, 0.16) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 10% 90%,
+      rgba(70, 50, 15, 0.14) 0%,
+      transparent 45%
+    );
 }
 
 /* SVG noise texture for organic grit */
 body::after {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -82,8 +114,12 @@ body::after {
 
 /* Card zoom slide-in */
 @keyframes slide-in-right {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 .animate-slide-in-right {
   animation: slide-in-right 0.2s ease-out;
@@ -98,15 +134,41 @@ body::after {
   --color-card-green: #991b1b;
 }
 [data-theme="blood"] body {
-  background: linear-gradient(180deg, #0a0204 0%, #1a0808 35%, #220a0a 55%, #0e0404 100%);
+  background: linear-gradient(
+    180deg,
+    #0a0204 0%,
+    #1a0808 35%,
+    #220a0a 55%,
+    #0e0404 100%
+  );
 }
 [data-theme="blood"] body::before {
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(80, 15, 15, 0.25) 0%, transparent 50%),
-    radial-gradient(circle at 70% 60%, rgba(60, 10, 10, 0.2) 0%, transparent 40%),
-    radial-gradient(circle at 50% 80%, rgba(90, 20, 10, 0.18) 0%, transparent 45%),
-    radial-gradient(ellipse at 30% 70%, rgba(70, 15, 10, 0.15) 0%, transparent 35%),
-    radial-gradient(circle at 85% 20%, rgba(80, 10, 10, 0.2) 0%, transparent 40%),
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(80, 15, 15, 0.25) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 70% 60%,
+      rgba(60, 10, 10, 0.2) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(90, 20, 10, 0.18) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 30% 70%,
+      rgba(70, 15, 10, 0.15) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(80, 10, 10, 0.2) 0%,
+      transparent 40%
+    ),
     radial-gradient(circle at 10% 90%, rgba(60, 5, 5, 0.16) 0%, transparent 45%);
 }
 
@@ -119,22 +181,61 @@ body::after {
   --color-card-green: #1d4ed8;
 }
 [data-theme="frost"] body {
-  background: linear-gradient(180deg, #040810 0%, #081420 35%, #0a1a28 55%, #040a12 100%);
+  background: linear-gradient(
+    180deg,
+    #040810 0%,
+    #081420 35%,
+    #0a1a28 55%,
+    #040a12 100%
+  );
 }
 [data-theme="frost"] body::before {
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(15, 40, 80, 0.22) 0%, transparent 50%),
-    radial-gradient(circle at 70% 60%, rgba(10, 30, 60, 0.18) 0%, transparent 40%),
-    radial-gradient(circle at 50% 80%, rgba(20, 50, 90, 0.15) 0%, transparent 45%),
-    radial-gradient(ellipse at 30% 70%, rgba(10, 35, 65, 0.12) 0%, transparent 35%),
-    radial-gradient(circle at 85% 20%, rgba(15, 45, 75, 0.16) 0%, transparent 40%),
-    radial-gradient(circle at 10% 90%, rgba(10, 30, 55, 0.14) 0%, transparent 45%);
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(15, 40, 80, 0.22) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 70% 60%,
+      rgba(10, 30, 60, 0.18) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(20, 50, 90, 0.15) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse at 30% 70%,
+      rgba(10, 35, 65, 0.12) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(15, 45, 75, 0.16) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 10% 90%,
+      rgba(10, 30, 55, 0.14) 0%,
+      transparent 45%
+    );
 }
 
 /* Sparkle border for selected cards */
 @keyframes sparkle-border {
-  0%, 100% { box-shadow: 0 0 6px 2px rgba(212, 160, 23, 0.4), 0 0 12px 4px rgba(212, 160, 23, 0.15); }
-  50% { box-shadow: 0 0 10px 4px rgba(251, 191, 36, 0.6), 0 0 20px 8px rgba(251, 191, 36, 0.25); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 6px 2px rgba(212, 160, 23, 0.4),
+      0 0 12px 4px rgba(212, 160, 23, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 10px 4px rgba(251, 191, 36, 0.6),
+      0 0 20px 8px rgba(251, 191, 36, 0.25);
+  }
 }
 .animate-sparkle-border {
   animation: sparkle-border 1.2s ease-in-out infinite;
@@ -142,7 +243,9 @@ body::after {
 
 /* Reduced motion: disable animations */
 @media (prefers-reduced-motion: reduce) {
-  .animate-pulse, .animate-slide-in-right, .animate-sparkle-border {
+  .animate-pulse,
+  .animate-slide-in-right,
+  .animate-sparkle-border {
     animation: none !important;
   }
   * {

@@ -1,17 +1,17 @@
-import { useEffect, useRef } from 'react';
-import { useStore } from '../../store.js';
+import { useEffect, useRef } from "react";
+import { useStore } from "../../store.js";
 
 const PARTICLE_COUNT = 40;
 const COLORS = [
-  'rgba(212, 160, 23, 0.6)',  // gold
-  'rgba(212, 160, 23, 0.3)',  // dim gold
-  'rgba(180, 220, 255, 0.4)', // pale blue
-  'rgba(255, 255, 255, 0.3)', // white
-  'rgba(160, 200, 120, 0.3)', // swamp green
+  "rgba(212, 160, 23, 0.6)", // gold
+  "rgba(212, 160, 23, 0.3)", // dim gold
+  "rgba(180, 220, 255, 0.4)", // pale blue
+  "rgba(255, 255, 255, 0.3)", // white
+  "rgba(160, 200, 120, 0.3)", // swamp green
 ];
 
 export default function SparkleParticles() {
-  const animationsOff = useStore(s => s.animationsOff);
+  const animationsOff = useStore((s) => s.animationsOff);
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const rafRef = useRef(null);
@@ -20,17 +20,19 @@ export default function SparkleParticles() {
     if (animationsOff) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener("resize", resize);
 
     // Initialize particles
-    particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => createParticle(canvas));
+    particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () =>
+      createParticle(canvas),
+    );
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -44,7 +46,8 @@ export default function SparkleParticles() {
         p.twinkle += p.twinkleSpeed;
 
         // Fade based on life + twinkle
-        const lifeFade = Math.min(1, p.life * 3) * Math.min(1, (1 - p.life) * 5);
+        const lifeFade =
+          Math.min(1, p.life * 3) * Math.min(1, (1 - p.life) * 5);
         const twinkle = 0.5 + 0.5 * Math.sin(p.twinkle);
         const alpha = lifeFade * twinkle * p.baseAlpha;
 
@@ -54,7 +57,7 @@ export default function SparkleParticles() {
           ctx.fillStyle = p.color;
           ctx.beginPath();
 
-          if (p.shape === 'circle') {
+          if (p.shape === "circle") {
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fill();
           } else {
@@ -74,7 +77,12 @@ export default function SparkleParticles() {
         }
 
         // Respawn when dead or off-screen
-        if (p.life <= 0 || p.y > canvas.height + 10 || p.x < -10 || p.x > canvas.width + 10) {
+        if (
+          p.life <= 0 ||
+          p.y > canvas.height + 10 ||
+          p.x < -10 ||
+          p.x > canvas.width + 10
+        ) {
           Object.assign(p, createParticle(canvas));
         }
       }
@@ -85,7 +93,7 @@ export default function SparkleParticles() {
     rafRef.current = requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener('resize', resize);
+      window.removeEventListener("resize", resize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [animationsOff]);
@@ -93,10 +101,7 @@ export default function SparkleParticles() {
   if (animationsOff) return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
-    />
+    <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
   );
 }
 
@@ -116,7 +121,7 @@ function createParticle(canvas) {
     wobbleSpeed: 0.01 + Math.random() * 0.02,
     twinkle: Math.random() * Math.PI * 2,
     twinkleSpeed: 0.03 + Math.random() * 0.06,
-    shape: Math.random() > 0.6 ? 'star' : 'circle',
+    shape: Math.random() > 0.6 ? "star" : "circle",
   };
 }
 

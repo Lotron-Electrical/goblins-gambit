@@ -1,5 +1,5 @@
 // TutorialEngine — pure JS state machine for the tutorial flow
-import { TUTORIAL_STEPS } from './tutorialSteps.js';
+import { TUTORIAL_STEPS } from "./tutorialSteps.js";
 
 export class TutorialEngine {
   constructor() {
@@ -14,12 +14,12 @@ export class TutorialEngine {
 
   getStepConfig() {
     const step = this.steps[this.currentStepIndex];
-    const hiddenIds = ['select-target', 'complete'];
-    const visibleSteps = this.steps.filter(s => !hiddenIds.includes(s.id));
+    const hiddenIds = ["select-target", "complete"];
+    const visibleSteps = this.steps.filter((s) => !hiddenIds.includes(s.id));
     const displayTotalSteps = visibleSteps.length;
     const displayStepNumber = this.steps
       .slice(0, this.currentStepIndex + 1)
-      .filter(s => !hiddenIds.includes(s.id)).length;
+      .filter((s) => !hiddenIds.includes(s.id)).length;
     return {
       stepNumber: this.currentStepIndex + 1,
       totalSteps: this.steps.length,
@@ -40,8 +40,10 @@ export class TutorialEngine {
   }
 
   isFinished() {
-    return this.currentStepIndex >= this.steps.length - 1 &&
-      this.steps[this.currentStepIndex].id === 'complete';
+    return (
+      this.currentStepIndex >= this.steps.length - 1 &&
+      this.steps[this.currentStepIndex].id === "complete"
+    );
   }
 
   handleAction(actionType, payload = {}) {
@@ -79,8 +81,9 @@ export class TutorialEngine {
       this.gameState = nextStep.setupState();
     }
 
-    const finished = this.currentStepIndex >= this.steps.length - 1 &&
-      this.steps[this.currentStepIndex].id === 'complete';
+    const finished =
+      this.currentStepIndex >= this.steps.length - 1 &&
+      this.steps[this.currentStepIndex].id === "complete";
 
     return { advanced: true, finished };
   }

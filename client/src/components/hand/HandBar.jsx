@@ -311,6 +311,7 @@ function CircularCardRow({
       stopInertia();
       // Smooth lerp to target index
       const target = scrollToIndex;
+      const scrollTickIdx = { current: Math.round(currentIndexRef.current) };
       const easeToTarget = () => {
         const cur = currentIndexRef.current;
         const diff = target - cur;
@@ -323,11 +324,17 @@ function CircularCardRow({
         const next = cur + diff * 0.18;
         currentIndexRef.current = next;
         setCurrentIndex(next);
+        // Play tick sound as we pass each card
+        const rounded = Math.round(Math.max(0, Math.min(next, sortedHand.length - 1)));
+        if (rounded !== scrollTickIdx.current) {
+          scrollTickIdx.current = rounded;
+          soundManager.play("card_tick");
+        }
         inertiaRaf.current = requestAnimationFrame(easeToTarget);
       };
       inertiaRaf.current = requestAnimationFrame(easeToTarget);
     }
-  }, [scrollToIndex, stopInertia]);
+  }, [scrollToIndex, stopInertia, sortedHand.length]);
 
   // Auto-select the centred card — only when the rounded index changes
   useEffect(() => {

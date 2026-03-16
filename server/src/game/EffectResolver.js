@@ -3,11 +3,18 @@
  * Routes card plays to the correct handler based on abilityId.
  */
 
-import { onPlayRegistry } from './abilities/index.js';
-import { getEffectiveStats as _getEffectiveStats, getNextFreeSlot } from './abilities/helpers.js';
-import { getLuckyShield, cursed_set_bonus } from './abilities/armour.js';
-import { MAX_SWAMP_SIZE, CARD_TYPE, THEME_EFFECTS } from '../../../shared/src/constants.js';
-import { getOtherPlayerIds } from './GameState.js';
+import { onPlayRegistry } from "./abilities/index.js";
+import {
+  getEffectiveStats as _getEffectiveStats,
+  getNextFreeSlot,
+} from "./abilities/helpers.js";
+import { getLuckyShield, cursed_set_bonus } from "./abilities/armour.js";
+import {
+  MAX_SWAMP_SIZE,
+  CARD_TYPE,
+  THEME_EFFECTS,
+} from "../../../shared/src/constants.js";
+import { getOtherPlayerIds } from "./GameState.js";
 
 // Re-export getEffectiveStats so existing imports keep working
 export const getEffectiveStats = _getEffectiveStats;
@@ -18,31 +25,37 @@ export const getEffectiveStats = _getEffectiveStats;
  */
 export function resolvePlayCard(state, playerId, cardUid, targetInfo) {
   const player = state.players[playerId];
-  const cardIdx = player.hand.findIndex(c => c.uid === cardUid);
+  const cardIdx = player.hand.findIndex((c) => c.uid === cardUid);
 
   // For target resolution, card may already be on field (creatures)
   const isTargetResolution = !!targetInfo && cardIdx === -1;
 
   if (cardIdx === -1 && !isTargetResolution) {
-    return { success: false, error: 'Card not in hand' };
+    return { success: false, error: "Card not in hand" };
   }
 
   const card = isTargetResolution
     ? findCardOnField(state, playerId, cardUid)
     : player.hand[cardIdx];
 
-  if (!card) return { success: false, error: 'Card not found' };
+  if (!card) return { success: false, error: "Card not found" };
 
   // Apply theme spell cost multiplier for Magic cards
   const themeEffects = THEME_EFFECTS[state.theme];
   let effectiveCost = card.cost;
-  if (card.type === CARD_TYPE.MAGIC && themeEffects?.spellCostMultiplier !== undefined) {
+  if (
+    card.type === CARD_TYPE.MAGIC &&
+    themeEffects?.spellCostMultiplier !== undefined
+  ) {
     effectiveCost = Math.floor(card.cost * themeEffects.spellCostMultiplier);
   }
 
   // Check AP cost (skip for target resolution — already paid)
   if (!isTargetResolution && effectiveCost > player.ap) {
-    return { success: false, error: `Need ${effectiveCost} AP, have ${player.ap}` };
+    return {
+      success: false,
+      error: `Need ${effectiveCost} AP, have ${player.ap}`,
+    };
   }
 
   // Store effective cost so resolution functions use it
@@ -52,15 +65,24 @@ export function resolvePlayCard(state, playerId, cardUid, targetInfo) {
   if (!isTargetResolution) {
     for (const [pid, p] of Object.entries(state.players)) {
       if (pid === playerId) continue;
-      for (const slot of ['head', 'body', 'feet']) {
+      for (const slot of ["head", "body", "feet"]) {
         const armour = p.gear[slot];
-        if (!armour || armour.abilityId !== 'rusty_block') continue;
+        if (!armour || armour.abilityId !== "rusty_block") continue;
         if (armour.blockedType === card.type) {
-          return { success: false, error: `Blocked by ${armour.name}! Can't play ${card.type} cards` };
+          return {
+            success: false,
+            error: `Blocked by ${armour.name}! Can't play ${card.type} cards`,
+          };
         }
-        const hasFullSet = p.gear.head?.set === 'rusty' && p.gear.body?.set === 'rusty' && p.gear.feet?.set === 'rusty';
-        if (hasFullSet && card.type === 'Creature') {
-          return { success: false, error: 'Blocked by full Rusty set! Can\'t play Creature cards' };
+        const hasFullSet =
+          p.gear.head?.set === "rusty" &&
+          p.gear.body?.set === "rusty" &&
+          p.gear.feet?.set === "rusty";
+        if (hasFullSet && card.type === "Creature") {
+          return {
+            success: false,
+            error: "Blocked by full Rusty set! Can't play Creature cards",
+          };
         }
       }
     }
@@ -71,16 +93,30 @@ export function resolvePlayCard(state, playerId, cardUid, targetInfo) {
       return resolveTrick(state, playerId, card, cardIdx, targetInfo);
 
     case CARD_TYPE.CREATURE:
-      return resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetResolution);
+      return resolveCreature(
+        state,
+        playerId,
+        card,
+        cardIdx,
+        targetInfo,
+        isTargetResolution,
+      );
 
     case CARD_TYPE.MAGIC:
-      return resolveMagic(state, playerId, card, cardIdx, targetInfo, isTargetResolution);
+      return resolveMagic(
+        state,
+        playerId,
+        card,
+        cardIdx,
+        targetInfo,
+        isTargetResolution,
+      );
 
     case CARD_TYPE.ARMOUR:
       return resolveArmour(state, playerId, card, cardIdx);
 
     default:
-      return { success: false, error: 'Unknown card type' };
+      return { success: false, error: "Unknown card type" };
   }
 }
 
@@ -91,21 +127,31 @@ function resolveTrick(state, playerId, card, cardIdx, targetInfo) {
   }
   // Fallback: consume card
   const player = state.players[playerId];
-  player.ap -= (card._effectiveCost ?? card.cost);
+  player.ap -= card._effectiveCost ?? card.cost;
   player.hand.splice(cardIdx, 1);
   state.graveyard.push(card);
-  return { success: true, events: [{ type: 'card_played', cardUid: card.uid, card, playerId }] };
+  return {
+    success: true,
+    events: [{ type: "card_played", cardUid: card.uid, card, playerId }],
+  };
 }
 
-function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetResolution) {
+function resolveCreature(
+  state,
+  playerId,
+  card,
+  cardIdx,
+  targetInfo,
+  isTargetResolution,
+) {
   const player = state.players[playerId];
   const events = [];
 
   if (!isTargetResolution) {
     if (player.swamp.length >= MAX_SWAMP_SIZE) {
-      return { success: false, error: 'Swamp is full (max 5 creatures)' };
+      return { success: false, error: "Swamp is full (max 5 creatures)" };
     }
-    player.ap -= (card._effectiveCost ?? card.cost);
+    player.ap -= card._effectiveCost ?? card.cost;
     player.hand.splice(cardIdx, 1);
 
     // Support slot-based placement — assign visual slot position
@@ -116,7 +162,13 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
       card._slot = getNextFreeSlot(player);
     }
     player.swamp.push(card);
-    events.push({ type: 'card_played', cardUid: card.uid, card, playerId, zone: 'swamp' });
+    events.push({
+      type: "card_played",
+      cardUid: card.uid,
+      card,
+      playerId,
+      zone: "swamp",
+    });
 
     // Strip placement-only targetInfo so ability handlers see null (not { slotIndex })
     if (targetInfo && !targetInfo.targetOwnerId && !targetInfo.targetUid) {
@@ -127,8 +179,12 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
   // Check Book Witch protection for targeted creature abilities
   if (targetInfo?.targetOwnerId && targetInfo.targetOwnerId !== playerId) {
     const targetPlayer = state.players[targetInfo.targetOwnerId];
-    if (targetPlayer?.swamp.some(c => c.abilityId === 'book_witch_shield' && !c._silenced)) {
-      events.push({ type: 'buff', text: 'Blocked by Book Witch!' });
+    if (
+      targetPlayer?.swamp.some(
+        (c) => c.abilityId === "book_witch_shield" && !c._silenced,
+      )
+    ) {
+      events.push({ type: "buff", text: "Blocked by Book Witch!" });
       return { success: true, events };
     }
   }
@@ -146,21 +202,32 @@ function resolveCreature(state, playerId, card, cardIdx, targetInfo, isTargetRes
   return { success: true, events };
 }
 
-function resolveMagic(state, playerId, card, cardIdx, targetInfo, isTargetResolution) {
+function resolveMagic(
+  state,
+  playerId,
+  card,
+  cardIdx,
+  targetInfo,
+  isTargetResolution,
+) {
   const player = state.players[playerId];
   const events = [];
 
   // Check Book Witch protection
   if (targetInfo?.targetOwnerId) {
     const targetPlayer = state.players[targetInfo.targetOwnerId];
-    if (targetPlayer?.swamp.some(c => c.abilityId === 'book_witch_shield' && !c._silenced)) {
+    if (
+      targetPlayer?.swamp.some(
+        (c) => c.abilityId === "book_witch_shield" && !c._silenced,
+      )
+    ) {
       if (!isTargetResolution) {
-        player.ap -= (card._effectiveCost ?? card.cost);
+        player.ap -= card._effectiveCost ?? card.cost;
         player.hand.splice(cardIdx, 1);
       }
       state.graveyard.push(card);
-      events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
-      events.push({ type: 'buff', text: 'Blocked by Book Witch!' });
+      events.push({ type: "card_played", cardUid: card.uid, card, playerId });
+      events.push({ type: "buff", text: "Blocked by Book Witch!" });
       return { success: true, events };
     }
   }
@@ -176,11 +243,11 @@ function resolveMagic(state, playerId, card, cardIdx, targetInfo, isTargetResolu
     if (card.cost === 0) {
       player.hand.splice(cardIdx, 1);
     } else {
-      player.ap -= (card._effectiveCost ?? card.cost);
+      player.ap -= card._effectiveCost ?? card.cost;
       player.hand.splice(cardIdx, 1);
     }
   }
-  events.push({ type: 'card_played', cardUid: card.uid, card, playerId });
+  events.push({ type: "card_played", cardUid: card.uid, card, playerId });
   state.graveyard.push(card);
   return { success: true, events };
 }
@@ -190,62 +257,90 @@ function resolveArmour(state, playerId, card, cardIdx) {
   const slot = card.slot;
   const events = [];
 
-  if (!slot) return { success: false, error: 'Invalid armour card' };
+  if (!slot) return { success: false, error: "Invalid armour card" };
 
   // If slot already occupied, old armour goes to graveyard
   if (player.gear[slot]) {
     // Remove Lucky shield contribution from old armour
-    if (player.gear[slot].abilityId === 'lucky_shield') {
-      player.playerShield = Math.max(0, player.playerShield - (player.gear[slot].shieldAmount || 0));
+    if (player.gear[slot].abilityId === "lucky_shield") {
+      player.playerShield = Math.max(
+        0,
+        player.playerShield - (player.gear[slot].shieldAmount || 0),
+      );
     }
     state.graveyard.push(player.gear[slot]);
-    events.push({ type: 'destroy', cardUid: player.gear[slot].uid, owner: playerId, reason: 'Replaced' });
+    events.push({
+      type: "destroy",
+      cardUid: player.gear[slot].uid,
+      owner: playerId,
+      reason: "Replaced",
+    });
   }
 
-  player.ap -= (card._effectiveCost ?? card.cost);
+  player.ap -= card._effectiveCost ?? card.cost;
   player.hand.splice(cardIdx, 1);
   // Track durability countdown (skip first tick so it lasts the full duration)
   card._turnsRemaining = card.durability;
   card._justEquipped = true;
   player.gear[slot] = card;
-  events.push({ type: 'equip_armour', cardUid: card.uid, card, playerId, slot });
+  events.push({
+    type: "equip_armour",
+    cardUid: card.uid,
+    card,
+    playerId,
+    slot,
+  });
 
   // Lucky armour: add shield on equip
-  if (card.abilityId === 'lucky_shield') {
+  if (card.abilityId === "lucky_shield") {
     player.playerShield += card.shieldAmount || 0;
   }
 
   // Check for set completion
   const set = card.set;
   if (set) {
-    const pieces = ['head', 'body', 'feet'].filter(s => player.gear[s]?.set === set);
+    const pieces = ["head", "body", "feet"].filter(
+      (s) => player.gear[s]?.set === set,
+    );
     if (pieces.length === 3) {
-      events.push({ type: 'set_complete', set, playerId });
+      events.push({ type: "set_complete", set, playerId });
 
       // Lucky set bonus: +500 player shield
-      if (set === 'lucky') {
+      if (set === "lucky") {
         player.playerShield += 500;
-        events.push({ type: 'buff', cardUid: card.uid, text: 'Lucky set bonus! +500 player shield' });
+        events.push({
+          type: "buff",
+          cardUid: card.uid,
+          text: "Lucky set bonus! +500 player shield",
+        });
       }
 
       // Cursed set bonus: choose opponent to swap SP
-      if (set === 'cursed') {
+      if (set === "cursed") {
         const otherIds = getOtherPlayerIds(state, playerId);
         if (otherIds.length === 1) {
           cursed_set_bonus(state, playerId, otherIds[0], events);
         } else if (otherIds.length > 1) {
           // Need to choose opponent
           const validTargets = otherIds
-            .filter(id => state.players[id])
-            .map(id => ({
-              ownerId: id, uid: id, name: state.players[id].name,
+            .filter((id) => state.players[id])
+            .map((id) => ({
+              ownerId: id,
+              uid: id,
+              name: state.players[id].name,
             }));
           return {
-            success: true, events, needsTarget: true,
+            success: true,
+            events,
+            needsTarget: true,
             targetRequest: {
-              playerId, action: 'cursed_swap', cardUid: card.uid, validTargets,
-              prompt: 'Choose opponent to swap SP totals with (Cursed set bonus)',
-              targetType: 'player',
+              playerId,
+              action: "cursed_swap",
+              cardUid: card.uid,
+              validTargets,
+              prompt:
+                "Choose opponent to swap SP totals with (Cursed set bonus)",
+              targetType: "player",
             },
           };
         }
@@ -259,5 +354,5 @@ function resolveArmour(state, playerId, card, cardIdx) {
 /** Find a card on a player's field (swamp) by uid */
 function findCardOnField(state, playerId, cardUid) {
   const player = state.players[playerId];
-  return player.swamp.find(c => c.uid === cardUid) || null;
+  return player.swamp.find((c) => c.uid === cardUid) || null;
 }

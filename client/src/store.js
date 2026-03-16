@@ -1,22 +1,26 @@
-import { create } from 'zustand';
-import { socket } from './socket.js';
-import { EVENTS, ACTION, CHAT_EMOTES } from '../../shared/src/constants.js';
-import { login as apiLogin, register as apiRegister, getProfile as apiGetProfile } from './api.js';
-import { TutorialEngine } from './tutorial/TutorialEngine.js';
+import { create } from "zustand";
+import { socket } from "./socket.js";
+import { EVENTS, ACTION, CHAT_EMOTES } from "../../shared/src/constants.js";
+import {
+  login as apiLogin,
+  register as apiRegister,
+  getProfile as apiGetProfile,
+} from "./api.js";
+import { TutorialEngine } from "./tutorial/TutorialEngine.js";
 
 export const useStore = create((set, get) => ({
   // Auth
-  authToken: localStorage.getItem('gg_token') || null,
+  authToken: localStorage.getItem("gg_token") || null,
   authUser: null,
   authLoading: false,
   authError: null,
 
   // Connection
   connected: false,
-  playerName: '',
+  playerName: "",
 
   // Lobby
-  screen: 'lobby', // 'lobby' | 'room' | 'game'
+  screen: "lobby", // 'lobby' | 'room' | 'game'
   rooms: [],
   currentRoom: null,
 
@@ -38,11 +42,13 @@ export const useStore = create((set, get) => ({
   zoomedCard: null,
   helpOpen: false,
   menuOpen: false,
-  muted: JSON.parse(localStorage.getItem('gg_sfxMuted') || 'false'),
-  musicMuted: JSON.parse(localStorage.getItem('gg_musicMuted') || 'false'),
-  animationsOff: JSON.parse(localStorage.getItem('gg_animationsOff') || 'false'),
-  handArc: JSON.parse(localStorage.getItem('gg_handArc') || '0'),
-  theme: 'swamp',
+  muted: JSON.parse(localStorage.getItem("gg_sfxMuted") || "false"),
+  musicMuted: JSON.parse(localStorage.getItem("gg_musicMuted") || "false"),
+  animationsOff: JSON.parse(
+    localStorage.getItem("gg_animationsOff") || "false",
+  ),
+  handArc: JSON.parse(localStorage.getItem("gg_handArc") || "0"),
+  theme: "swamp",
   hoveredCard: null,
   hoverPosition: null,
   graveyardOpen: false,
@@ -68,8 +74,13 @@ export const useStore = create((set, get) => ({
     set({ authLoading: true, authError: null });
     try {
       const data = await apiLogin(username, password);
-      localStorage.setItem('gg_token', data.token);
-      set({ authToken: data.token, authUser: data.user, authLoading: false, playerName: data.user.username });
+      localStorage.setItem("gg_token", data.token);
+      set({
+        authToken: data.token,
+        authUser: data.user,
+        authLoading: false,
+        playerName: data.user.username,
+      });
     } catch (err) {
       set({ authLoading: false, authError: err.message });
     }
@@ -79,8 +90,13 @@ export const useStore = create((set, get) => ({
     set({ authLoading: true, authError: null });
     try {
       const data = await apiRegister(username, password);
-      localStorage.setItem('gg_token', data.token);
-      set({ authToken: data.token, authUser: data.user, authLoading: false, playerName: data.user.username });
+      localStorage.setItem("gg_token", data.token);
+      set({
+        authToken: data.token,
+        authUser: data.user,
+        authLoading: false,
+        playerName: data.user.username,
+      });
     } catch (err) {
       set({ authLoading: false, authError: err.message });
     }
@@ -94,20 +110,20 @@ export const useStore = create((set, get) => ({
       set({ authUser: data.user, playerName: data.user.username });
     } catch {
       // Token invalid — clear it
-      localStorage.removeItem('gg_token');
+      localStorage.removeItem("gg_token");
       set({ authToken: null, authUser: null });
     }
   },
 
   logout: () => {
-    localStorage.removeItem('gg_token');
-    set({ authToken: null, authUser: null, playerName: '', screen: 'lobby' });
+    localStorage.removeItem("gg_token");
+    set({ authToken: null, authUser: null, playerName: "", screen: "lobby" });
   },
 
   clearAuthError: () => set({ authError: null }),
 
   skipAuth: () => {
-    set({ authToken: 'guest' });
+    set({ authToken: "guest" });
   },
 
   connect: () => {
@@ -117,17 +133,17 @@ export const useStore = create((set, get) => ({
   createRoom: (options = {}) => {
     const { playerName } = get();
     if (!socket.connected) {
-      set({ error: 'Not connected to server — try refreshing' });
+      set({ error: "Not connected to server — try refreshing" });
       return;
     }
     socket.emit(EVENTS.CREATE_ROOM, { name: playerName, options }, (res) => {
       if (res?.error) {
         set({ error: res.error });
       } else if (res?.room) {
-        sessionStorage.setItem('gg_roomId', res.room.id);
-        set({ currentRoom: res.room, screen: 'room' });
+        sessionStorage.setItem("gg_roomId", res.room.id);
+        set({ currentRoom: res.room, screen: "room" });
       } else {
-        set({ error: 'Failed to create room — no response from server' });
+        set({ error: "Failed to create room — no response from server" });
       }
     });
   },
@@ -138,21 +154,30 @@ export const useStore = create((set, get) => ({
       if (res.error) {
         set({ error: res.error });
       } else {
-        sessionStorage.setItem('gg_roomId', res.room.id);
-        set({ currentRoom: res.room, screen: 'room' });
+        sessionStorage.setItem("gg_roomId", res.room.id);
+        set({ currentRoom: res.room, screen: "room" });
       }
     });
   },
 
   leaveRoom: () => {
     socket.emit(EVENTS.LEAVE_ROOM);
-    sessionStorage.removeItem('gg_roomId');
-    set({ currentRoom: null, screen: 'lobby', gameState: null, chatMessages: [], chatUnread: 0, chatOpen: false, tutorialMode: false, tutorialEngine: null });
+    sessionStorage.removeItem("gg_roomId");
+    set({
+      currentRoom: null,
+      screen: "lobby",
+      gameState: null,
+      chatMessages: [],
+      chatUnread: 0,
+      chatOpen: false,
+      tutorialMode: false,
+      tutorialEngine: null,
+    });
   },
 
   toggleReady: () => {
     if (!socket.connected) {
-      set({ error: 'Not connected to server — try refreshing' });
+      set({ error: "Not connected to server — try refreshing" });
       return;
     }
     socket.emit(EVENTS.READY_UP);
@@ -160,7 +185,7 @@ export const useStore = create((set, get) => ({
 
   startGame: () => {
     if (!socket.connected) {
-      set({ error: 'Not connected to server — try refreshing' });
+      set({ error: "Not connected to server — try refreshing" });
       return;
     }
     socket.emit(EVENTS.START_GAME, null, (res) => {
@@ -177,79 +202,117 @@ export const useStore = create((set, get) => ({
   },
 
   playCard: (cardUid, targetInfo) => {
-    if (get().tutorialMode) return get().tutorialAction(ACTION.PLAY_CARD, { cardUid });
-    socket.emit(EVENTS.GAME_ACTION, {
-      type: ACTION.PLAY_CARD,
-      cardUid,
-      targetInfo,
-    }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    if (get().tutorialMode)
+      return get().tutorialAction(ACTION.PLAY_CARD, { cardUid });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      {
+        type: ACTION.PLAY_CARD,
+        cardUid,
+        targetInfo,
+      },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
     set({ selectedCard: null });
   },
 
   attack: (attackerUid, defenderOwnerId, defenderUid) => {
-    if (get().tutorialMode) return get().tutorialAction(ACTION.ATTACK, { attackerUid, defenderOwnerId, defenderUid });
-    socket.emit(EVENTS.GAME_ACTION, {
-      type: ACTION.ATTACK,
-      attackerUid,
-      defenderOwnerId,
-      defenderUid,
-    }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    if (get().tutorialMode)
+      return get().tutorialAction(ACTION.ATTACK, {
+        attackerUid,
+        defenderOwnerId,
+        defenderUid,
+      });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      {
+        type: ACTION.ATTACK,
+        attackerUid,
+        defenderOwnerId,
+        defenderUid,
+      },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
     set({ selectedCard: null, targetMode: false });
   },
 
   selectTarget: (targetOwnerId, targetUid, targets) => {
-    if (get().tutorialMode) return get().tutorialAction(ACTION.SELECT_TARGET, { targetOwnerId, targetUid });
-    socket.emit(EVENTS.GAME_ACTION, {
-      type: ACTION.SELECT_TARGET,
-      targetOwnerId,
-      targetUid,
-      targets,
-    }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    if (get().tutorialMode)
+      return get().tutorialAction(ACTION.SELECT_TARGET, {
+        targetOwnerId,
+        targetUid,
+      });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      {
+        type: ACTION.SELECT_TARGET,
+        targetOwnerId,
+        targetUid,
+        targets,
+      },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
     set({ targetMode: false });
   },
 
   useAbility: (cardUid, targetInfo) => {
-    socket.emit(EVENTS.GAME_ACTION, {
-      type: ACTION.USE_ABILITY,
-      cardUid,
-      targetInfo,
-    }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      {
+        type: ACTION.USE_ABILITY,
+        cardUid,
+        targetInfo,
+      },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
   },
 
   chooseCard: (cardUid) => {
-    socket.emit(EVENTS.GAME_ACTION, {
-      type: ACTION.CHOOSE_CARD,
-      cardUid,
-    }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      {
+        type: ACTION.CHOOSE_CARD,
+        cardUid,
+      },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
   },
 
   discardCard: (cardUid) => {
-    socket.emit(EVENTS.GAME_ACTION, {
-      type: ACTION.DISCARD_CARD,
-      cardUid,
-    }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      {
+        type: ACTION.DISCARD_CARD,
+        cardUid,
+      },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
     set({ selectedCard: null, zoomedCard: null });
   },
 
   recycleCreature: (cardUid) => {
-    socket.emit(EVENTS.GAME_ACTION, {
-      type: ACTION.RECYCLE_CREATURE,
-      cardUid,
-    }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      {
+        type: ACTION.RECYCLE_CREATURE,
+        cardUid,
+      },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
     set({ selectedCard: null, zoomedCard: null });
   },
 
@@ -267,15 +330,23 @@ export const useStore = create((set, get) => ({
   },
 
   depositVolcano: (amount) => {
-    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.DEPOSIT_VOLCANO, amount }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      { type: ACTION.DEPOSIT_VOLCANO, amount },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
   },
 
   attackEvent: (attackerUid) => {
-    socket.emit(EVENTS.GAME_ACTION, { type: ACTION.ATTACK_EVENT, attackerUid }, (res) => {
-      if (res?.error) set({ error: res.error });
-    });
+    socket.emit(
+      EVENTS.GAME_ACTION,
+      { type: ACTION.ATTACK_EVENT, attackerUid },
+      (res) => {
+        if (res?.error) set({ error: res.error });
+      },
+    );
     set({ selectedCard: null, targetMode: false });
   },
 
@@ -285,7 +356,7 @@ export const useStore = create((set, get) => ({
     });
   },
 
-  addBot: (difficulty = 'medium') => {
+  addBot: (difficulty = "medium") => {
     socket.emit(EVENTS.ADD_BOT, { difficulty }, (res) => {
       if (res?.error) set({ error: res.error });
     });
@@ -304,7 +375,7 @@ export const useStore = create((set, get) => ({
       tutorialMode: true,
       tutorialEngine: engine,
       gameState: engine.getState(),
-      screen: 'tutorial',
+      screen: "tutorial",
       selectedCard: null,
       targetMode: false,
     });
@@ -321,12 +392,21 @@ export const useStore = create((set, get) => ({
       const newState = engine.getState();
       if (delayAfter > 0) {
         // Pause tutorial UI — update game state but suppress next step's highlights
-        set({ gameState: { ...newState }, selectedCard: null, targetMode: false, tutorialPaused: true });
+        set({
+          gameState: { ...newState },
+          selectedCard: null,
+          targetMode: false,
+          tutorialPaused: true,
+        });
         setTimeout(() => {
           set({ tutorialPaused: false });
         }, delayAfter);
       } else {
-        set({ gameState: { ...newState }, selectedCard: null, targetMode: false });
+        set({
+          gameState: { ...newState },
+          selectedCard: null,
+          targetMode: false,
+        });
       }
       // Clear animations from engine state after they've been set so they don't replay
       if (newState.animations?.length) {
@@ -335,11 +415,13 @@ export const useStore = create((set, get) => ({
       // Auto-select the highlighted card for the next step (after optional delay)
       const nextConfig = engine.getStepConfig();
       if (nextConfig.highlightCardUid) {
-        const hand = newState.players?.['tutorial-player']?.hand;
-        const targetCard = hand?.find(c => c.uid === nextConfig.highlightCardUid);
+        const hand = newState.players?.["tutorial-player"]?.hand;
+        const targetCard = hand?.find(
+          (c) => c.uid === nextConfig.highlightCardUid,
+        );
         if (targetCard) {
           setTimeout(() => {
-            set({ selectedCard: { ...targetCard, _zone: 'hand' } });
+            set({ selectedCard: { ...targetCard, _zone: "hand" } });
           }, delayAfter + 100);
         }
       }
@@ -354,7 +436,7 @@ export const useStore = create((set, get) => ({
       tutorialMode: false,
       tutorialEngine: null,
       gameState: null,
-      screen: 'lobby',
+      screen: "lobby",
       selectedCard: null,
       targetMode: false,
     });
@@ -377,33 +459,36 @@ export const useStore = create((set, get) => ({
   setHelpOpen: (open) => set({ helpOpen: open }),
   setMenuOpen: (open) => set({ menuOpen: open }),
   setMuted: (muted) => {
-    localStorage.setItem('gg_sfxMuted', JSON.stringify(muted));
+    localStorage.setItem("gg_sfxMuted", JSON.stringify(muted));
     set({ muted });
   },
   setMusicMuted: (musicMuted) => {
-    localStorage.setItem('gg_musicMuted', JSON.stringify(musicMuted));
+    localStorage.setItem("gg_musicMuted", JSON.stringify(musicMuted));
     set({ musicMuted });
   },
   setAnimationsOff: (animationsOff) => {
-    localStorage.setItem('gg_animationsOff', JSON.stringify(animationsOff));
+    localStorage.setItem("gg_animationsOff", JSON.stringify(animationsOff));
     set({ animationsOff });
   },
   setHandArc: (handArc) => {
-    localStorage.setItem('gg_handArc', JSON.stringify(handArc));
+    localStorage.setItem("gg_handArc", JSON.stringify(handArc));
     set({ handArc });
   },
   setTheme: (theme) => {
-    if (theme === 'swamp') {
-      document.documentElement.removeAttribute('data-theme');
+    if (theme === "swamp") {
+      document.documentElement.removeAttribute("data-theme");
     } else {
-      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute("data-theme", theme);
     }
     set({ theme });
   },
-  setHoveredCard: (card, position) => set({ hoveredCard: card, hoverPosition: position }),
+  setHoveredCard: (card, position) =>
+    set({ hoveredCard: card, hoverPosition: position }),
   clearHoveredCard: () => set({ hoveredCard: null, hoverPosition: null }),
-  setAttackAnimation: (attackerUid, defenderUid) => set({ attackingCardUid: attackerUid, defendingCardUid: defenderUid }),
-  clearAttackAnimation: () => set({ attackingCardUid: null, defendingCardUid: null }),
+  setAttackAnimation: (attackerUid, defenderUid) =>
+    set({ attackingCardUid: attackerUid, defendingCardUid: defenderUid }),
+  clearAttackAnimation: () =>
+    set({ attackingCardUid: null, defendingCardUid: null }),
   setDraggingCard: (card) => set({ draggingCard: card }),
   clearDraggingCard: () => set({ draggingCard: null }),
   setGraveyardOpen: (open) => set({ graveyardOpen: open }),
@@ -426,33 +511,41 @@ export const useStore = create((set, get) => ({
 }));
 
 // Socket event listeners
-socket.on('connect', () => {
+socket.on("connect", () => {
   useStore.setState({ connected: true });
 
   // Re-authenticate if we have a token
   const { authToken } = useStore.getState();
-  if (authToken && authToken !== 'guest') {
-    socket.emit('authenticate', { token: authToken });
+  if (authToken && authToken !== "guest") {
+    socket.emit("authenticate", { token: authToken });
   }
 
   // Attempt to rejoin if we were in a room/game before disconnect
-  const savedRoomId = sessionStorage.getItem('gg_roomId');
+  const savedRoomId = sessionStorage.getItem("gg_roomId");
   const { playerName, screen } = useStore.getState();
-  if (savedRoomId && playerName && (screen === 'game' || screen === 'room')) {
-    socket.emit(EVENTS.REJOIN_ROOM, { roomId: savedRoomId, name: playerName }, (res) => {
-      if (res?.error) {
-        // Room gone — reset to lobby
-        sessionStorage.removeItem('gg_roomId');
-        useStore.setState({ screen: 'lobby', currentRoom: null, gameState: null });
-      }
-      // Success case handled by GAME_STATE / ROOM_UPDATE event listeners
-    });
+  if (savedRoomId && playerName && (screen === "game" || screen === "room")) {
+    socket.emit(
+      EVENTS.REJOIN_ROOM,
+      { roomId: savedRoomId, name: playerName },
+      (res) => {
+        if (res?.error) {
+          // Room gone — reset to lobby
+          sessionStorage.removeItem("gg_roomId");
+          useStore.setState({
+            screen: "lobby",
+            currentRoom: null,
+            gameState: null,
+          });
+        }
+        // Success case handled by GAME_STATE / ROOM_UPDATE event listeners
+      },
+    );
   } else {
     useStore.getState().refreshRooms();
   }
 });
 
-socket.on('disconnect', () => {
+socket.on("disconnect", () => {
   useStore.setState({ connected: false });
 });
 
@@ -479,14 +572,14 @@ socket.on(EVENTS.GAME_STATE, (state) => {
     for (const p of Object.values(state.players)) {
       allCards.push(...(p.swamp || []), ...(p.hand || []));
     }
-    if (!allCards.some(c => c.uid === hoveredUid)) {
+    if (!allCards.some((c) => c.uid === hoveredUid)) {
       clearHover = true;
     }
   }
 
   useStore.setState({
     gameState: state,
-    screen: 'game',
+    screen: "game",
     ...(clearHover ? { hoveredCard: null, hoverPosition: null } : {}),
     ...(state.stats ? { gameStats: state.stats } : {}),
   });
@@ -501,7 +594,7 @@ socket.on(EVENTS.GAME_OVER, ({ winner, winnerName, stats }) => {
     useStore.setState({ gameStats: stats });
   }
   // Game is over — clear saved room so we don't try to rejoin
-  sessionStorage.removeItem('gg_roomId');
+  sessionStorage.removeItem("gg_roomId");
 });
 
 socket.on(EVENTS.PLAYER_DISCONNECTED, ({ playerName }) => {

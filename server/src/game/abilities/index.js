@@ -9,29 +9,54 @@
  */
 
 // On-play: Tricks
-import { trick_sp, horse_dice } from './tricks.js';
+import { trick_sp, horse_dice } from "./tricks.js";
 
 // On-play: Creatures
 import {
-  streamer_draw, ghost_invisible, thot_instakill, stoner_shield,
-  thief_steal, king_thief_steal, troll_swap, saving_grace_multi,
-  dead_meme_revive, zucc_steal, crack_head_multi, harambe_plant,
-  rhy_bear_split, catfish_mimic, gamblid_dynamic,
-} from './creatures.js';
+  streamer_draw,
+  ghost_invisible,
+  thot_instakill,
+  stoner_shield,
+  thief_steal,
+  king_thief_steal,
+  troll_swap,
+  saving_grace_multi,
+  dead_meme_revive,
+  zucc_steal,
+  crack_head_multi,
+  harambe_plant,
+  rhy_bear_split,
+  catfish_mimic,
+  gamblid_dynamic,
+} from "./creatures.js";
 
 // On-play: Magic
 import {
-  smesh_damage, savage_destroy, ooft_buff, thicc_buff,
-  judgment_steal, yeet_discard, ama_reveal, finesse_steal,
-  woke_peek, snacc_control, lerker_draw, stfu_silence, lagg_delay,
-} from './magic.js';
+  smesh_damage,
+  savage_destroy,
+  ooft_buff,
+  thicc_buff,
+  judgment_steal,
+  yeet_discard,
+  ama_reveal,
+  finesse_steal,
+  woke_peek,
+  snacc_control,
+  lerker_draw,
+  stfu_silence,
+  lagg_delay,
+} from "./magic.js";
 
 // Activated abilities (used from field)
 import {
-  activate_stoner_shield, activate_thief_steal, activate_king_thief_steal,
-  activate_troll_swap, activate_saving_grace, activate_rhy_bear_split,
+  activate_stoner_shield,
+  activate_thief_steal,
+  activate_king_thief_steal,
+  activate_troll_swap,
+  activate_saving_grace,
+  activate_rhy_bear_split,
   activate_crack_head_multi,
-} from './activated.js';
+} from "./activated.js";
 
 /**
  * On-play ability registry.

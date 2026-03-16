@@ -4,8 +4,14 @@
  * Triggered via the USE_ABILITY game action.
  */
 
-import { getEffectiveStats, getOpponentCreatures, getOwnCreatures, getAllCreatures, getOpponentPlayers } from './helpers.js';
-import { killCreature } from '../CombatResolver.js';
+import {
+  getEffectiveStats,
+  getOpponentCreatures,
+  getOwnCreatures,
+  getAllCreatures,
+  getOpponentPlayers,
+} from "./helpers.js";
+import { killCreature } from "../CombatResolver.js";
 
 /**
  * Stoner Shield: spend 1 AP -> temp shield in front of all own creatures.
@@ -15,13 +21,18 @@ export function activate_stoner_shield(state, playerId, card, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  if (player.ap < 1) return { success: false, error: 'Need 1 AP' };
+  if (player.ap < 1) return { success: false, error: "Need 1 AP" };
 
   player.ap -= 1;
   for (const c of player.swamp) {
     c._stonerShield = true;
   }
-  events.push({ type: 'ability_used', cardUid: card.uid, ability: 'stoner_shield', text: 'Shield activated!' });
+  events.push({
+    type: "ability_used",
+    cardUid: card.uid,
+    ability: "stoner_shield",
+    text: "Shield activated!",
+  });
   return { success: true, events };
 }
 
@@ -32,16 +43,21 @@ export function activate_thief_steal(state, playerId, card, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  if (player.ap < 1) return { success: false, error: 'Need 1 AP' };
+  if (player.ap < 1) return { success: false, error: "Need 1 AP" };
 
   if (!targetInfo) {
     const validTargets = getOpponentPlayers(state, playerId);
     return {
-      success: true, events, needsTarget: true,
+      success: true,
+      events,
+      needsTarget: true,
       targetRequest: {
-        playerId, action: 'thief_steal', cardUid: card.uid, validTargets,
-        prompt: 'Choose a player to steal 200 SP from',
-        targetType: 'player',
+        playerId,
+        action: "thief_steal",
+        cardUid: card.uid,
+        validTargets,
+        prompt: "Choose a player to steal 200 SP from",
+        targetType: "player",
         abilityActivation: true,
       },
     };
@@ -50,13 +66,27 @@ export function activate_thief_steal(state, playerId, card, targetInfo) {
   player.ap -= 1;
   const { targetOwnerId } = targetInfo;
   const target = state.players[targetOwnerId];
-  if (!target) return { success: false, error: 'Target player not found' };
+  if (!target) return { success: false, error: "Target player not found" };
   const stealAmount = Math.min(200, target.sp);
   target.sp -= stealAmount;
   player.sp += stealAmount;
-  events.push({ type: 'sp_change', playerId, amount: stealAmount, reason: 'Thief steal' });
-  events.push({ type: 'sp_change', playerId: targetOwnerId, amount: -stealAmount, reason: 'Thief steal' });
-  events.push({ type: 'ability_used', cardUid: card.uid, ability: 'thief_steal' });
+  events.push({
+    type: "sp_change",
+    playerId,
+    amount: stealAmount,
+    reason: "Thief steal",
+  });
+  events.push({
+    type: "sp_change",
+    playerId: targetOwnerId,
+    amount: -stealAmount,
+    reason: "Thief steal",
+  });
+  events.push({
+    type: "ability_used",
+    cardUid: card.uid,
+    ability: "thief_steal",
+  });
   return { success: true, events };
 }
 
@@ -67,16 +97,21 @@ export function activate_king_thief_steal(state, playerId, card, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  if (player.ap < 2) return { success: false, error: 'Need 2 AP' };
+  if (player.ap < 2) return { success: false, error: "Need 2 AP" };
 
   if (!targetInfo) {
     const validTargets = getOpponentPlayers(state, playerId);
     return {
-      success: true, events, needsTarget: true,
+      success: true,
+      events,
+      needsTarget: true,
       targetRequest: {
-        playerId, action: 'king_thief_steal', cardUid: card.uid, validTargets,
-        prompt: 'Choose a player to steal 500 SP from',
-        targetType: 'player',
+        playerId,
+        action: "king_thief_steal",
+        cardUid: card.uid,
+        validTargets,
+        prompt: "Choose a player to steal 500 SP from",
+        targetType: "player",
         abilityActivation: true,
       },
     };
@@ -85,13 +120,27 @@ export function activate_king_thief_steal(state, playerId, card, targetInfo) {
   player.ap -= 2;
   const { targetOwnerId } = targetInfo;
   const target = state.players[targetOwnerId];
-  if (!target) return { success: false, error: 'Target player not found' };
+  if (!target) return { success: false, error: "Target player not found" };
   const stealAmount = Math.min(500, target.sp);
   target.sp -= stealAmount;
   player.sp += stealAmount;
-  events.push({ type: 'sp_change', playerId, amount: stealAmount, reason: 'King of Thieves steal' });
-  events.push({ type: 'sp_change', playerId: targetOwnerId, amount: -stealAmount, reason: 'King of Thieves steal' });
-  events.push({ type: 'ability_used', cardUid: card.uid, ability: 'king_thief_steal' });
+  events.push({
+    type: "sp_change",
+    playerId,
+    amount: stealAmount,
+    reason: "King of Thieves steal",
+  });
+  events.push({
+    type: "sp_change",
+    playerId: targetOwnerId,
+    amount: -stealAmount,
+    reason: "King of Thieves steal",
+  });
+  events.push({
+    type: "ability_used",
+    cardUid: card.uid,
+    ability: "king_thief_steal",
+  });
   return { success: true, events };
 }
 
@@ -102,22 +151,29 @@ export function activate_troll_swap(state, playerId, card, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  if (player.ap < 1) return { success: false, error: 'Need 1 AP' };
+  if (player.ap < 1) return { success: false, error: "Need 1 AP" };
 
   if (!targetInfo) {
     const validTargets = getAllCreatures(state);
     return {
-      success: true, events, needsTarget: true,
+      success: true,
+      events,
+      needsTarget: true,
       targetRequest: {
-        playerId, action: 'troll_swap', cardUid: card.uid, validTargets,
-        prompt: 'Choose any creature to cycle stats (ATK->DEF->SP->ATK)',
+        playerId,
+        action: "troll_swap",
+        cardUid: card.uid,
+        validTargets,
+        prompt: "Choose any creature to cycle stats (ATK->DEF->SP->ATK)",
       },
     };
   }
 
   player.ap -= 1;
   const { targetOwnerId, targetUid } = targetInfo;
-  const targetCard = state.players[targetOwnerId]?.swamp.find(c => c.uid === targetUid);
+  const targetCard = state.players[targetOwnerId]?.swamp.find(
+    (c) => c.uid === targetUid,
+  );
   if (targetCard) {
     const oldAtk = targetCard.attack || 0;
     const oldDef = targetCard.defence || 0;
@@ -130,8 +186,16 @@ export function activate_troll_swap(state, playerId, card, targetInfo) {
     delete targetCard._defenceDamage;
     delete targetCard._attackBuff;
     delete targetCard._defenceBuff;
-    events.push({ type: 'ability_used', cardUid: card.uid, ability: 'troll_swap' });
-    events.push({ type: 'buff', cardUid: targetUid, text: `Stats cycled! ATK:${targetCard.attack} DEF:${targetCard.defence} SP:${targetCard.sp}` });
+    events.push({
+      type: "ability_used",
+      cardUid: card.uid,
+      ability: "troll_swap",
+    });
+    events.push({
+      type: "buff",
+      cardUid: targetUid,
+      text: `Stats cycled! ATK:${targetCard.attack} DEF:${targetCard.defence} SP:${targetCard.sp}`,
+    });
   }
   return { success: true, events };
 }
@@ -143,16 +207,22 @@ export function activate_saving_grace(state, playerId, card, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  if (player.ap < 1) return { success: false, error: 'Need 1 AP' };
+  if (player.ap < 1) return { success: false, error: "Need 1 AP" };
 
   if (!targetInfo) {
     const validTargets = getOwnCreatures(state, playerId);
     return {
-      success: true, events, needsTarget: true,
+      success: true,
+      events,
+      needsTarget: true,
       targetRequest: {
-        playerId, action: 'saving_grace_multi', cardUid: card.uid, validTargets,
-        prompt: 'Choose mode: select 1 creature for +300 ATK, or select up to 3 for +100 ATK each',
-        mode: 'saving_grace',
+        playerId,
+        action: "saving_grace_multi",
+        cardUid: card.uid,
+        validTargets,
+        prompt:
+          "Choose mode: select 1 creature for +300 ATK, or select up to 3 for +100 ATK each",
+        mode: "saving_grace",
         maxTargets: 3,
       },
     };
@@ -162,22 +232,38 @@ export function activate_saving_grace(state, playerId, card, targetInfo) {
   const targets = targetInfo.targets || [targetInfo];
   if (targets.length === 1) {
     // Single target: +300 ATK
-    const t = state.players[targets[0].targetOwnerId || playerId]?.swamp.find(c => c.uid === (targets[0].targetUid || targets[0].uid));
+    const t = state.players[targets[0].targetOwnerId || playerId]?.swamp.find(
+      (c) => c.uid === (targets[0].targetUid || targets[0].uid),
+    );
     if (t) {
       t._attackBuff = (t._attackBuff || 0) + 300;
-      events.push({ type: 'buff', cardUid: t.uid, text: '+300 ATK (Saving Grace)' });
+      events.push({
+        type: "buff",
+        cardUid: t.uid,
+        text: "+300 ATK (Saving Grace)",
+      });
     }
   } else {
     // Multi target: +100 ATK each (up to 3)
     for (const tgt of targets.slice(0, 3)) {
-      const t = state.players[tgt.targetOwnerId || playerId]?.swamp.find(c => c.uid === (tgt.targetUid || tgt.uid));
+      const t = state.players[tgt.targetOwnerId || playerId]?.swamp.find(
+        (c) => c.uid === (tgt.targetUid || tgt.uid),
+      );
       if (t) {
         t._attackBuff = (t._attackBuff || 0) + 100;
-        events.push({ type: 'buff', cardUid: t.uid, text: '+100 ATK (Saving Grace)' });
+        events.push({
+          type: "buff",
+          cardUid: t.uid,
+          text: "+100 ATK (Saving Grace)",
+        });
       }
     }
   }
-  events.push({ type: 'ability_used', cardUid: card.uid, ability: 'saving_grace_multi' });
+  events.push({
+    type: "ability_used",
+    cardUid: card.uid,
+    ability: "saving_grace_multi",
+  });
   return { success: true, events };
 }
 
@@ -189,18 +275,25 @@ export function activate_rhy_bear_split(state, playerId, card, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  if (player.ap < 1) return { success: false, error: 'Need 1 AP' };
-  if (card._hasAttacked) return { success: false, error: 'Already attacked this turn' };
+  if (player.ap < 1) return { success: false, error: "Need 1 AP" };
+  if (card._hasAttacked)
+    return { success: false, error: "Already attacked this turn" };
 
   if (!targetInfo) {
     const validTargets = getOpponentCreatures(state, playerId);
-    if (validTargets.length === 0) return { success: false, error: 'No targets' };
+    if (validTargets.length === 0)
+      return { success: false, error: "No targets" };
     return {
-      success: true, events, needsTarget: true,
+      success: true,
+      events,
+      needsTarget: true,
       targetRequest: {
-        playerId, action: 'rhy_bear_split', cardUid: card.uid, validTargets,
-        prompt: 'Select 1 creature for 800 damage, or 2 for 400 each',
-        mode: 'rhy_bear',
+        playerId,
+        action: "rhy_bear_split",
+        cardUid: card.uid,
+        validTargets,
+        prompt: "Select 1 creature for 800 damage, or 2 for 400 each",
+        mode: "rhy_bear",
         maxTargets: 2,
       },
     };
@@ -214,20 +307,39 @@ export function activate_rhy_bear_split(state, playerId, card, targetInfo) {
 
   for (const tgt of targets.slice(0, 2)) {
     const { targetOwnerId, targetUid } = tgt;
-    const targetCard = state.players[targetOwnerId]?.swamp.find(c => c.uid === targetUid);
+    const targetCard = state.players[targetOwnerId]?.swamp.find(
+      (c) => c.uid === targetUid,
+    );
     if (targetCard) {
-      targetCard._defenceDamage = (targetCard._defenceDamage || 0) + damagePerTarget;
-      events.push({ type: 'damage', cardUid: targetUid, amount: damagePerTarget, attackerOwner: playerId, attackerUid: card.uid });
+      targetCard._defenceDamage =
+        (targetCard._defenceDamage || 0) + damagePerTarget;
+      events.push({
+        type: "damage",
+        cardUid: targetUid,
+        amount: damagePerTarget,
+        attackerOwner: playerId,
+        attackerUid: card.uid,
+      });
       const stats = getEffectiveStats(state, targetOwnerId, targetCard);
       if (stats.defence <= 0) {
         player.sp += stats.sp;
-        events.push({ type: 'destroy', cardUid: targetUid, owner: targetOwnerId, attackerOwner: playerId, attackerUid: card.uid });
-        events.push({ type: 'sp_change', playerId, amount: stats.sp });
+        events.push({
+          type: "destroy",
+          cardUid: targetUid,
+          owner: targetOwnerId,
+          attackerOwner: playerId,
+          attackerUid: card.uid,
+        });
+        events.push({ type: "sp_change", playerId, amount: stats.sp });
         killCreature(state, targetOwnerId, targetUid);
       }
     }
   }
-  events.push({ type: 'ability_used', cardUid: card.uid, ability: 'rhy_bear_split' });
+  events.push({
+    type: "ability_used",
+    cardUid: card.uid,
+    ability: "rhy_bear_split",
+  });
   return { success: true, events };
 }
 
@@ -238,18 +350,25 @@ export function activate_crack_head_multi(state, playerId, card, targetInfo) {
   const player = state.players[playerId];
   const events = [];
 
-  if (player.ap < 1) return { success: false, error: 'Need 1 AP' };
-  if (card._hasAttacked) return { success: false, error: 'Already attacked this turn' };
+  if (player.ap < 1) return { success: false, error: "Need 1 AP" };
+  if (card._hasAttacked)
+    return { success: false, error: "Already attacked this turn" };
 
   if (!targetInfo) {
     const validTargets = getOpponentCreatures(state, playerId);
-    if (validTargets.length === 0) return { success: false, error: 'No targets' };
+    if (validTargets.length === 0)
+      return { success: false, error: "No targets" };
     return {
-      success: true, events, needsTarget: true,
+      success: true,
+      events,
+      needsTarget: true,
       targetRequest: {
-        playerId, action: 'crack_head_multi', cardUid: card.uid, validTargets,
-        prompt: 'Choose 2 creatures to deal 200 damage each',
-        mode: 'multi_target',
+        playerId,
+        action: "crack_head_multi",
+        cardUid: card.uid,
+        validTargets,
+        prompt: "Choose 2 creatures to deal 200 damage each",
+        mode: "multi_target",
         maxTargets: 2,
       },
     };
@@ -261,19 +380,37 @@ export function activate_crack_head_multi(state, playerId, card, targetInfo) {
   const targets = targetInfo.targets || [targetInfo];
   for (const tgt of targets.slice(0, 2)) {
     const { targetOwnerId, targetUid } = tgt;
-    const targetCard = state.players[targetOwnerId]?.swamp.find(c => c.uid === targetUid);
+    const targetCard = state.players[targetOwnerId]?.swamp.find(
+      (c) => c.uid === targetUid,
+    );
     if (targetCard) {
       targetCard._defenceDamage = (targetCard._defenceDamage || 0) + 200;
-      events.push({ type: 'damage', cardUid: targetUid, amount: 200, attackerOwner: playerId, attackerUid: card.uid });
+      events.push({
+        type: "damage",
+        cardUid: targetUid,
+        amount: 200,
+        attackerOwner: playerId,
+        attackerUid: card.uid,
+      });
       const stats = getEffectiveStats(state, targetOwnerId, targetCard);
       if (stats.defence <= 0) {
         player.sp += stats.sp;
-        events.push({ type: 'destroy', cardUid: targetUid, owner: targetOwnerId, attackerOwner: playerId, attackerUid: card.uid });
-        events.push({ type: 'sp_change', playerId, amount: stats.sp });
+        events.push({
+          type: "destroy",
+          cardUid: targetUid,
+          owner: targetOwnerId,
+          attackerOwner: playerId,
+          attackerUid: card.uid,
+        });
+        events.push({ type: "sp_change", playerId, amount: stats.sp });
         killCreature(state, targetOwnerId, targetUid);
       }
     }
   }
-  events.push({ type: 'ability_used', cardUid: card.uid, ability: 'crack_head_multi' });
+  events.push({
+    type: "ability_used",
+    cardUid: card.uid,
+    ability: "crack_head_multi",
+  });
   return { success: true, events };
 }

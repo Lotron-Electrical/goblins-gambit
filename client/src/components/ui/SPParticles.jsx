@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Gold particle burst when SP is gained.
@@ -38,8 +38,8 @@ function ParticleBurst({ x, y, amount }) {
             top: y,
             width: p.size,
             height: p.size,
-            background: 'radial-gradient(circle, #fbbf24, #f59e0b)',
-            boxShadow: '0 0 6px #fbbf24',
+            background: "radial-gradient(circle, #fbbf24, #f59e0b)",
+            boxShadow: "0 0 6px #fbbf24",
           }}
           initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
           animate={{
@@ -51,7 +51,7 @@ function ParticleBurst({ x, y, amount }) {
           transition={{
             duration: 0.7,
             delay: p.delay,
-            ease: 'easeOut',
+            ease: "easeOut",
           }}
         />
       ))}
@@ -61,8 +61,8 @@ function ParticleBurst({ x, y, amount }) {
         style={{
           left: x,
           top: y,
-          textShadow: '0 0 8px rgba(251, 191, 36, 0.6)',
-          transform: 'translate(-50%, -50%)',
+          textShadow: "0 0 8px rgba(251, 191, 36, 0.6)",
+          transform: "translate(-50%, -50%)",
         }}
         initial={{ opacity: 1, y: 0 }}
         animate={{ opacity: 0, y: -50 }}

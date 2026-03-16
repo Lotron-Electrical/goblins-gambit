@@ -1,11 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useStore } from '../store.js';
-import { useIsMobile } from '../hooks/useIsMobile.js';
-import { soundManager } from '../audio/SoundManager.js';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useStore } from "../store.js";
+import { useIsMobile } from "../hooks/useIsMobile.js";
+import { soundManager } from "../audio/SoundManager.js";
 
 export default function TutorialOverlay() {
-  const { tutorialEngine, endTutorial, gameState, selectedCard, tutorialPaused } = useStore();
-  const centerY = useStore(s => s.centerZoneY);
+  const {
+    tutorialEngine,
+    endTutorial,
+    gameState,
+    selectedCard,
+    tutorialPaused,
+  } = useStore();
+  const centerY = useStore((s) => s.centerZoneY);
   const isMobile = useIsMobile();
   const [spotlightRect, setSpotlightRect] = useState(null);
   const [showOpponentThinking, setShowOpponentThinking] = useState(false);
@@ -15,13 +21,13 @@ export default function TutorialOverlay() {
   if (!tutorialEngine) return null;
 
   const config = tutorialEngine.getStepConfig();
-  const isComplete = config.id === 'complete';
+  const isComplete = config.id === "complete";
 
   // Delay victory screen to let animations finish, then play victory sound
   useEffect(() => {
     if (isComplete && !showVictory) {
       const timer = setTimeout(() => {
-        soundManager.play('victory');
+        soundManager.play("victory");
         setShowVictory(true);
       }, 2000); // Wait for attack + damage + destroy + sp_change animations
       return () => clearTimeout(timer);
@@ -30,19 +36,22 @@ export default function TutorialOverlay() {
 
   // Build the effective highlight selector
   // For attack steps: once the player selects their creature, shift spotlight to opponent's creature
-  let effectiveHighlight = config.highlight
-    || (config.highlightCardUid ? `[data-card-uid="${config.highlightCardUid}"]` : null);
+  let effectiveHighlight =
+    config.highlight ||
+    (config.highlightCardUid
+      ? `[data-card-uid="${config.highlightCardUid}"]`
+      : null);
 
-  if (config.expectedAction === 'attack' && selectedCard) {
+  if (config.expectedAction === "attack" && selectedCard) {
     // Player selected their attacker — now highlight the opponent's creature
-    const opponentSwamp = gameState?.players?.['tutorial-opponent']?.swamp;
+    const opponentSwamp = gameState?.players?.["tutorial-opponent"]?.swamp;
     if (opponentSwamp?.length > 0) {
       effectiveHighlight = `[data-card-uid="${opponentSwamp[0].uid}"]`;
     }
   }
 
   // For play_card steps, shift spotlight to the Play button once the card info panel is visible
-  if (config.expectedAction === 'play_card' && config.highlightCardUid) {
+  if (config.expectedAction === "play_card" && config.highlightCardUid) {
     const playBtn = document.querySelector('[data-tutorial="play-btn"]');
     if (playBtn) {
       effectiveHighlight = '[data-tutorial="play-btn"]';
@@ -75,7 +84,10 @@ export default function TutorialOverlay() {
     const raf = requestAnimationFrame(() => updateSpotlight());
     // Poll for position changes (layout shifts, scroll)
     const interval = setInterval(updateSpotlight, 300);
-    return () => { cancelAnimationFrame(raf); clearInterval(interval); };
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(interval);
+    };
   }, [updateSpotlight]);
 
   // Handle opponent thinking interstitial after end turn
@@ -87,7 +99,7 @@ export default function TutorialOverlay() {
   }, [showOpponentThinking, config.opponentDelay]);
 
   const handleFinish = () => {
-    localStorage.setItem('gg_tutorial_complete', '1');
+    localStorage.setItem("gg_tutorial_complete", "1");
     endTutorial();
   };
 
@@ -95,31 +107,57 @@ export default function TutorialOverlay() {
   if (isComplete && showVictory) {
     return (
       <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-        <div className={`bg-gray-900 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl text-center ${
-          isMobile ? 'mx-2 px-5 py-6 max-w-[340px]' : 'px-8 py-8 max-w-md'
-        }`}>
-          <div className={`font-display text-[var(--color-gold-bright)] mb-2 ${
-            isMobile ? 'text-4xl' : 'text-5xl'
-          }`}>
+        <div
+          className={`bg-gray-900 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl text-center ${
+            isMobile ? "mx-2 px-5 py-6 max-w-[340px]" : "px-8 py-8 max-w-md"
+          }`}
+        >
+          <div
+            className={`font-display text-[var(--color-gold-bright)] mb-2 ${
+              isMobile ? "text-4xl" : "text-5xl"
+            }`}
+          >
             VICTORY!
           </div>
-          <p className={`text-gray-300 mb-5 ${isMobile ? 'text-[13px]' : 'text-[15px]'}`}>
+          <p
+            className={`text-gray-300 mb-5 ${isMobile ? "text-[13px]" : "text-[15px]"}`}
+          >
             You defeated Gnarl the Goblin!
           </p>
-          <div className={`text-gray-400 text-left space-y-2 mb-6 ${isMobile ? 'text-[12px]' : 'text-[14px]'}`}>
-            <p><span className="text-blue-400 font-bold">Draw</span> cards to build your hand</p>
-            <p><span className="text-green-400 font-bold">Tricks</span> are free and give instant SP</p>
-            <p><span className="text-red-400 font-bold">Creatures</span> go to your Swamp — attack enemies to earn SP</p>
-            <p><span className="text-blue-300 font-bold">Magic</span> cards buff, debuff, and destroy</p>
-            <p><span className="text-gray-300 font-bold">Armour</span> equips to head, body, feet — complete a set for a bonus!</p>
+          <div
+            className={`text-gray-400 text-left space-y-2 mb-6 ${isMobile ? "text-[12px]" : "text-[14px]"}`}
+          >
+            <p>
+              <span className="text-blue-400 font-bold">Draw</span> cards to
+              build your hand
+            </p>
+            <p>
+              <span className="text-green-400 font-bold">Tricks</span> are free
+              and give instant SP
+            </p>
+            <p>
+              <span className="text-red-400 font-bold">Creatures</span> go to
+              your Swamp — attack enemies to earn SP
+            </p>
+            <p>
+              <span className="text-blue-300 font-bold">Magic</span> cards buff,
+              debuff, and destroy
+            </p>
+            <p>
+              <span className="text-gray-300 font-bold">Armour</span> equips to
+              head, body, feet — complete a set for a bonus!
+            </p>
           </div>
-          <p className={`text-gray-500 italic mb-6 ${isMobile ? 'text-[11px]' : 'text-[13px]'}`}>
-            In real games you'll also discover creature abilities, and chaotic events like Dragons and Volcanos!
+          <p
+            className={`text-gray-500 italic mb-6 ${isMobile ? "text-[11px]" : "text-[13px]"}`}
+          >
+            In real games you'll also discover creature abilities, and chaotic
+            events like Dragons and Volcanos!
           </p>
           <button
             onClick={handleFinish}
             className={`w-full bg-[var(--color-gold)] hover:bg-yellow-400 text-black font-bold rounded-lg transition ${
-              isMobile ? 'py-3 text-[15px]' : 'py-3 text-lg'
+              isMobile ? "py-3 text-[15px]" : "py-3 text-lg"
             }`}
           >
             Enter the Swamp
@@ -134,9 +172,11 @@ export default function TutorialOverlay() {
     return (
       <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none">
         <div className="text-center">
-          <div className={`font-display text-[var(--color-gold-bright)] animate-pulse ${
-            isMobile ? 'text-3xl' : 'text-4xl'
-          }`}>
+          <div
+            className={`font-display text-[var(--color-gold-bright)] animate-pulse ${
+              isMobile ? "text-3xl" : "text-4xl"
+            }`}
+          >
             Victory!
           </div>
         </div>
@@ -158,29 +198,32 @@ export default function TutorialOverlay() {
   }
 
   // Hide instruction panel when TargetPicker is showing or waiting for victory animations
-  const hideInstruction = !!gameState?.pendingTarget || (isComplete && !showVictory) || tutorialPaused;
+  const hideInstruction =
+    !!gameState?.pendingTarget ||
+    (isComplete && !showVictory) ||
+    tutorialPaused;
 
   // Spotlight dimming overlay + instruction panel
   const spotlightShadow = spotlightRect
     ? `0 0 0 9999px rgba(0,0,0,0.6)`
-    : 'none';
+    : "none";
 
   // Position prompt so it never covers the element the player needs to tap
   // Attack steps have two phases: tap own creature (bottom), then tap opponent creature (top)
-  const isAttackStep = config.expectedAction === 'attack';
+  const isAttackStep = config.expectedAction === "attack";
   const attackPhase2 = isAttackStep && selectedCard; // Attacker selected, now targeting opponent
   let promptTop, promptBottom;
   if (attackPhase2) {
     // Phase 2: opponent creature is at top — push panel to bottom
     promptTop = undefined;
-    promptBottom = isMobile ? '140px' : '120px';
+    promptBottom = isMobile ? "140px" : "120px";
   } else if (isAttackStep) {
     // Phase 1: own creature is at bottom — put panel at top
-    promptTop = isMobile ? '80px' : '60px';
+    promptTop = isMobile ? "80px" : "60px";
     promptBottom = undefined;
   } else {
     // Normal steps: above center zone
-    promptTop = isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%');
+    promptTop = isMobile ? "80px" : centerY ? `${centerY - 40}px` : "35%";
     promptBottom = undefined;
   }
 
@@ -191,17 +234,17 @@ export default function TutorialOverlay() {
         <div
           className="fixed inset-0 z-40 pointer-events-none"
           style={{
-            background: 'transparent',
+            background: "transparent",
           }}
         >
           <div
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: spotlightRect.top,
               left: spotlightRect.left,
               width: spotlightRect.width,
               height: spotlightRect.height,
-              borderRadius: '8px',
+              borderRadius: "8px",
               boxShadow: spotlightShadow,
             }}
           />
@@ -210,25 +253,38 @@ export default function TutorialOverlay() {
 
       {/* Instruction panel — no interactive elements, so pointer-events-none */}
       {config.instruction && !hideInstruction && (
-        <div className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 ${
-          isMobile ? 'w-[calc(100%-16px)]' : 'max-w-md w-full -translate-y-1/2'
-        }`}
+        <div
+          className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 ${
+            isMobile
+              ? "w-[calc(100%-16px)]"
+              : "max-w-md w-full -translate-y-1/2"
+          }`}
           style={{ top: promptTop, bottom: promptBottom }}
         >
-          <div className={`bg-gray-900/95 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl ${
-            isMobile ? 'px-3 py-2' : 'px-6 py-4'
-          }`}>
-            <div className={`flex items-center justify-between ${isMobile ? 'mb-1' : 'mb-2'}`}>
-              <span className={`text-gray-500 ${isMobile ? 'text-[10px]' : 'text-[12px]'}`}>
+          <div
+            className={`bg-gray-900/95 border-2 border-[var(--color-gold)] rounded-xl shadow-2xl ${
+              isMobile ? "px-3 py-2" : "px-6 py-4"
+            }`}
+          >
+            <div
+              className={`flex items-center justify-between ${isMobile ? "mb-1" : "mb-2"}`}
+            >
+              <span
+                className={`text-gray-500 ${isMobile ? "text-[10px]" : "text-[12px]"}`}
+              >
                 Step {config.displayStepNumber} of {config.displayTotalSteps}
               </span>
-              <span className={`font-display text-[var(--color-gold)] ${
-                isMobile ? 'text-[13px]' : 'text-[16px]'
-              }`}>
+              <span
+                className={`font-display text-[var(--color-gold)] ${
+                  isMobile ? "text-[13px]" : "text-[16px]"
+                }`}
+              >
                 {config.title}
               </span>
             </div>
-            <p className={`text-gray-200 ${isMobile ? 'text-[12px] leading-snug' : 'text-[14px] leading-relaxed'}`}>
+            <p
+              className={`text-gray-200 ${isMobile ? "text-[12px] leading-snug" : "text-[14px] leading-relaxed"}`}
+            >
               {config.instruction}
             </p>
           </div>
@@ -255,8 +311,8 @@ export default function TutorialOverlay() {
         onClick={() => endTutorial()}
         className={`fixed z-50 text-gray-500 hover:text-gray-300 transition ${
           isMobile
-            ? 'bottom-2 right-2 text-[11px] px-2 py-1'
-            : 'bottom-4 right-4 text-[13px] px-3 py-1.5'
+            ? "bottom-2 right-2 text-[11px] px-2 py-1"
+            : "bottom-4 right-4 text-[13px] px-3 py-1.5"
         } bg-gray-900/80 border border-gray-700 rounded`}
       >
         Skip Tutorial
@@ -270,10 +326,12 @@ export function useTutorialOpponentDelay() {
   const [show, setShow] = useState(false);
   const trigger = useCallback(() => {
     setShow(true);
-    return new Promise(resolve => setTimeout(() => {
-      setShow(false);
-      resolve();
-    }, 1500));
+    return new Promise((resolve) =>
+      setTimeout(() => {
+        setShow(false);
+        resolve();
+      }, 1500),
+    );
   }, []);
   return { showOpponentThinking: show, triggerOpponentDelay: trigger };
 }

@@ -1,6 +1,11 @@
-import { EVENTS, ACTION, CHAT_EMOTES } from '../../../shared/src/constants.js';
-import { createBotId, getBotName, releaseBotName, decideBotAction } from '../bot/BotPlayer.js';
-import { validateToken, updateStatsAfterGame } from '../accounts.js';
+import { EVENTS, ACTION, CHAT_EMOTES } from "../../../shared/src/constants.js";
+import {
+  createBotId,
+  getBotName,
+  releaseBotName,
+  decideBotAction,
+} from "../bot/BotPlayer.js";
+import { validateToken, updateStatsAfterGame } from "../accounts.js";
 
 export function setupSocketHandlers(io, lobby) {
   // Track which rooms have bots and bot IDs + difficulty
@@ -23,7 +28,8 @@ export function setupSocketHandlers(io, lobby) {
     if (!botIds.has(botId)) {
       // Current player isn't a bot, but check if any bot has a pending response
       const state = engine.state;
-      const pendingBotId = state.pendingTarget?.playerId || state.pendingChoice?.playerId;
+      const pendingBotId =
+        state.pendingTarget?.playerId || state.pendingChoice?.playerId;
       if (pendingBotId && botIds.has(pendingBotId)) {
         scheduleBotTick(roomId, engine, pendingBotId, 600);
       }
@@ -67,20 +73,25 @@ export function setupSocketHandlers(io, lobby) {
       if (!botIds.has(botId)) return;
 
       const botState = engine.getStateForPlayer(botId);
-      if (botState.phase !== 'playing') return;
+      if (botState.phase !== "playing") return;
 
       // Check if bot needs to respond to pending target/choice
-      const needsResponse = botState.pendingTarget?.playerId === botId
-        || botState.pendingChoice?.playerId === botId;
+      const needsResponse =
+        botState.pendingTarget?.playerId === botId ||
+        botState.pendingChoice?.playerId === botId;
 
       if (botState.currentPlayerId !== botId && !needsResponse) return;
 
       // Wait if a human player has a pending choice (e.g. Dead Meme)
-      const pendingForHuman = engine.state.pendingChoice
-        && !botIds.has(engine.state.pendingChoice.playerId);
+      const pendingForHuman =
+        engine.state.pendingChoice &&
+        !botIds.has(engine.state.pendingChoice.playerId);
       if (pendingForHuman) return;
 
-      const action = decideBotAction(botState, botDifficulty.get(botId) || 'medium');
+      const action = decideBotAction(
+        botState,
+        botDifficulty.get(botId) || "medium",
+      );
       if (!action) {
         // Bot is stuck — force end turn to prevent freeze
         if (botState.currentPlayerId === botId) {
@@ -98,7 +109,7 @@ export function setupSocketHandlers(io, lobby) {
 
       if (!result.success && !result.needsTarget) {
         // Action failed — check if it's because a human has a pending choice
-        if (result.error === 'Waiting for another player to choose') {
+        if (result.error === "Waiting for another player to choose") {
           // Don't force end turn — just wait for the human to respond
           return;
         }
@@ -118,8 +129,14 @@ export function setupSocketHandlers(io, lobby) {
       broadcastState(roomId, engine);
 
       // Check if another bot needs to respond (e.g. Dead Meme graveyard pick)
-      const pendingBotRespondId = engine.state.pendingChoice?.playerId || engine.state.pendingTarget?.playerId;
-      if (pendingBotRespondId && botIds.has(pendingBotRespondId) && pendingBotRespondId !== botId) {
+      const pendingBotRespondId =
+        engine.state.pendingChoice?.playerId ||
+        engine.state.pendingTarget?.playerId;
+      if (
+        pendingBotRespondId &&
+        botIds.has(pendingBotRespondId) &&
+        pendingBotRespondId !== botId
+      ) {
         scheduleBotTick(roomId, engine, pendingBotRespondId, 600);
       }
 
@@ -127,7 +144,7 @@ export function setupSocketHandlers(io, lobby) {
         await updateStatsAfterGame(engine.state, result.winner);
         io.to(roomId).emit(EVENTS.GAME_OVER, {
           winner: result.winner,
-          winnerName: engine.state.players[result.winner]?.name || 'Unknown',
+          winnerName: engine.state.players[result.winner]?.name || "Unknown",
           stats: engine.state.stats,
         });
         cleanupFinishedGame(roomId);
@@ -145,9 +162,10 @@ export function setupSocketHandlers(io, lobby) {
 
       // Re-fetch state after action to check current situation
       const updatedState = engine.getStateForPlayer(botId);
-      const stillNeedsAction = updatedState.currentPlayerId === botId
-        || updatedState.pendingTarget?.playerId === botId
-        || updatedState.pendingChoice?.playerId === botId;
+      const stillNeedsAction =
+        updatedState.currentPlayerId === botId ||
+        updatedState.pendingTarget?.playerId === botId ||
+        updatedState.pendingChoice?.playerId === botId;
 
       if (stillNeedsAction) {
         scheduleBotTick(roomId, engine, botId, 600 + Math.random() * 400);
@@ -166,7 +184,7 @@ export function setupSocketHandlers(io, lobby) {
           scheduleBotTick(roomId, engine, nextId, 800);
         }
       } catch (e) {
-        console.error('Bot crash recovery also failed:', e);
+        console.error("Bot crash recovery also failed:", e);
       }
     }
   }
@@ -174,22 +192,22 @@ export function setupSocketHandlers(io, lobby) {
   // Track socket -> account username for logged-in players
   const socketAccounts = new Map(); // socketId -> username
 
-  io.on('connection', (socket) => {
-    let playerName = 'Player';
+  io.on("connection", (socket) => {
+    let playerName = "Player";
 
     // Authenticate socket with account token
-    socket.on('authenticate', async ({ token }, callback) => {
+    socket.on("authenticate", async ({ token }, callback) => {
       const username = await validateToken(token);
       if (username) {
         socketAccounts.set(socket.id, username);
         callback?.({ success: true, username });
       } else {
-        callback?.({ error: 'Invalid token' });
+        callback?.({ error: "Invalid token" });
       }
     });
 
     socket.on(EVENTS.CREATE_ROOM, ({ name, options }, callback) => {
-      playerName = name || 'Player';
+      playerName = name || "Player";
       const room = lobby.createRoom(socket.id, playerName, options);
       socket.join(room.id);
       callback?.({ room });
@@ -197,7 +215,7 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.JOIN_ROOM, ({ roomId, name }, callback) => {
-      playerName = name || 'Player';
+      playerName = name || "Player";
       const result = lobby.joinRoom(roomId, socket.id, playerName);
       if (result.error) {
         callback?.({ error: result.error });
@@ -211,17 +229,19 @@ export function setupSocketHandlers(io, lobby) {
 
     // --- Reconnection: rejoin an active game with a new socket ---
     socket.on(EVENTS.REJOIN_ROOM, ({ roomId, name }, callback) => {
-      playerName = name || 'Player';
+      playerName = name || "Player";
       const room = lobby.getRoom(roomId);
       if (!room) {
-        callback?.({ error: 'Room no longer exists' });
+        callback?.({ error: "Room no longer exists" });
         return;
       }
 
       // Find the old player entry by name
-      const oldPlayer = room.players.find(p => p.name === playerName && !botIds.has(p.id));
+      const oldPlayer = room.players.find(
+        (p) => p.name === playerName && !botIds.has(p.id),
+      );
       if (!oldPlayer) {
-        callback?.({ error: 'Player not found in room' });
+        callback?.({ error: "Player not found in room" });
         return;
       }
 
@@ -335,27 +355,34 @@ export function setupSocketHandlers(io, lobby) {
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
       if (!room || room.host !== socket.id) {
-        callback?.({ error: 'Only host can add bots' });
+        callback?.({ error: "Only host can add bots" });
         return;
       }
       if (room.started) {
-        callback?.({ error: 'Game already started' });
+        callback?.({ error: "Game already started" });
         return;
       }
       if (room.players.length >= room.maxPlayers) {
-        callback?.({ error: 'Room is full' });
+        callback?.({ error: "Room is full" });
         return;
       }
 
-      const difficulty = data?.difficulty || 'medium';
+      const difficulty = data?.difficulty || "medium";
       const botId = createBotId();
       const botName = getBotName();
       botIds.add(botId);
       botDifficulty.set(botId, difficulty);
 
-      const diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+      const diffLabel =
+        difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
       // Add bot to room directly
-      room.players.push({ id: botId, name: `${botName}`, ready: true, isBot: true, difficulty });
+      room.players.push({
+        id: botId,
+        name: `${botName}`,
+        ready: true,
+        isBot: true,
+        difficulty,
+      });
       lobby.playerRooms.set(botId, roomId);
 
       io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
@@ -368,17 +395,17 @@ export function setupSocketHandlers(io, lobby) {
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
       if (!room || room.host !== socket.id) {
-        callback?.({ error: 'Only host can remove bots' });
+        callback?.({ error: "Only host can remove bots" });
         return;
       }
       if (!botIds.has(botId)) {
-        callback?.({ error: 'Not a bot' });
+        callback?.({ error: "Not a bot" });
         return;
       }
 
-      const bot = room.players.find(p => p.id === botId);
+      const bot = room.players.find((p) => p.id === botId);
       if (bot) releaseBotName(bot.name);
-      room.players = room.players.filter(p => p.id !== botId);
+      room.players = room.players.filter((p) => p.id !== botId);
       lobby.playerRooms.delete(botId);
       botIds.delete(botId);
       botDifficulty.delete(botId);
@@ -393,20 +420,38 @@ export function setupSocketHandlers(io, lobby) {
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
       if (!room || room.host !== socket.id) {
-        callback?.({ error: 'Only host can change settings' });
+        callback?.({ error: "Only host can change settings" });
         return;
       }
       if (room.started) {
-        callback?.({ error: 'Game already started' });
+        callback?.({ error: "Game already started" });
         return;
       }
       // Validate and apply settings
-      if (settings.winSP != null) room.winSP = Math.max(1000, Math.min(20000, Number(settings.winSP) || 10000));
-      if (settings.startingSP != null) room.startingSP = Math.max(0, Math.min(5000, Number(settings.startingSP) || 0));
-      if (settings.maxPlayers != null) room.maxPlayers = Math.max(2, Math.min(6, Number(settings.maxPlayers) || 6));
-      if (settings.startingHandSize != null) room.startingHandSize = Math.max(3, Math.min(10, Number(settings.startingHandSize) || 5));
-      if (settings.baseAP != null) room.baseAP = Math.max(1, Math.min(5, Number(settings.baseAP) || 2));
-      if (settings.eventsEnabled != null) room.eventsEnabled = !!settings.eventsEnabled;
+      if (settings.winSP != null)
+        room.winSP = Math.max(
+          1000,
+          Math.min(20000, Number(settings.winSP) || 10000),
+        );
+      if (settings.startingSP != null)
+        room.startingSP = Math.max(
+          0,
+          Math.min(5000, Number(settings.startingSP) || 0),
+        );
+      if (settings.maxPlayers != null)
+        room.maxPlayers = Math.max(
+          2,
+          Math.min(6, Number(settings.maxPlayers) || 6),
+        );
+      if (settings.startingHandSize != null)
+        room.startingHandSize = Math.max(
+          3,
+          Math.min(10, Number(settings.startingHandSize) || 5),
+        );
+      if (settings.baseAP != null)
+        room.baseAP = Math.max(1, Math.min(5, Number(settings.baseAP) || 2));
+      if (settings.eventsEnabled != null)
+        room.eventsEnabled = !!settings.eventsEnabled;
       io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
       callback?.({ success: true });
     });
@@ -416,11 +461,11 @@ export function setupSocketHandlers(io, lobby) {
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
       if (!room || room.host !== socket.id) {
-        callback?.({ error: 'Only host can set theme' });
+        callback?.({ error: "Only host can set theme" });
         return;
       }
-      if (!['swamp', 'blood', 'frost'].includes(theme)) {
-        callback?.({ error: 'Invalid theme' });
+      if (!["swamp", "blood", "frost"].includes(theme)) {
+        callback?.({ error: "Invalid theme" });
         return;
       }
       room.theme = theme;
@@ -433,7 +478,7 @@ export function setupSocketHandlers(io, lobby) {
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
       if (!room || room.host !== socket.id) {
-        callback?.({ error: 'Only host can start' });
+        callback?.({ error: "Only host can start" });
         return;
       }
 
@@ -466,7 +511,10 @@ export function setupSocketHandlers(io, lobby) {
       // Send initial state to each human player
       for (const p of result.room.players) {
         if (botIds.has(p.id)) continue;
-        io.to(p.id).emit(EVENTS.GAME_STATE, result.engine.getStateForPlayer(p.id));
+        io.to(p.id).emit(
+          EVENTS.GAME_STATE,
+          result.engine.getStateForPlayer(p.id),
+        );
       }
       callback?.({ success: true });
       io.emit(EVENTS.ROOM_LIST, lobby.getRoomList());
@@ -480,7 +528,7 @@ export function setupSocketHandlers(io, lobby) {
       if (!roomId) return;
       const engine = lobby.getGame(roomId);
       if (!engine) {
-        callback?.({ error: 'No active game' });
+        callback?.({ error: "No active game" });
         return;
       }
 
@@ -534,10 +582,10 @@ export function setupSocketHandlers(io, lobby) {
       };
 
       if (data.emoteKey) {
-        const validEmote = CHAT_EMOTES.find(e => e.key === data.emoteKey);
+        const validEmote = CHAT_EMOTES.find((e) => e.key === data.emoteKey);
         if (!validEmote) return;
         msg.emoteKey = data.emoteKey;
-      } else if (typeof data.text === 'string') {
+      } else if (typeof data.text === "string") {
         const text = data.text.trim().slice(0, 100);
         if (!text) return;
         msg.text = text;
@@ -552,7 +600,7 @@ export function setupSocketHandlers(io, lobby) {
       callback?.(lobby.getRoomList());
     });
 
-    socket.on('disconnect', () => {
+    socket.on("disconnect", () => {
       lastChatTime.delete(socket.id);
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) {

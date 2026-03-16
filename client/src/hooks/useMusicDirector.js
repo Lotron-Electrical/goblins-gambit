@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useStore } from '../store.js';
-import { soundManager } from '../audio/SoundManager.js';
+import { useEffect, useRef } from "react";
+import { useStore } from "../store.js";
+import { soundManager } from "../audio/SoundManager.js";
 
 /**
  * Watches game state and computes music intensity (0.0-1.0).
@@ -13,7 +13,7 @@ import { soundManager } from '../audio/SoundManager.js';
  */
 
 const MAX_CREATURES = 12; // ~6 per player max
-const MAX_TURNS = 30;     // intensity caps here
+const MAX_TURNS = 30; // intensity caps here
 
 export function computeIntensity(gameState) {
   if (!gameState) return 0;
@@ -43,7 +43,7 @@ export function computeIntensity(gameState) {
 }
 
 export default function useMusicDirector() {
-  const gameState = useStore(s => s.gameState);
+  const gameState = useStore((s) => s.gameState);
   const lastIntensity = useRef(0);
 
   useEffect(() => {

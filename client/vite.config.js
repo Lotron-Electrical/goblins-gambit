@@ -1,28 +1,94 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import path from 'path';
-import { execSync } from 'child_process';
-const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
+import { execSync } from "child_process";
+const commitHash = execSync("git rev-parse --short HEAD").toString().trim();
 
 // Goblin-themed codenames — two-word combos generated from hash
 const FIRST = [
-  'Sneaky', 'Boggy', 'Grim', 'Foul', 'Rusty', 'Slimy', 'Rotten',
-  'Crusty', 'Manky', 'Grimy', 'Musty', 'Murky', 'Scabby', 'Wonky',
-  'Filthy', 'Lumpy', 'Grotty', 'Dank', 'Mouldy', 'Cursed',
-  'Wicked', 'Putrid', 'Gnarly', 'Festering', 'Dodgy', 'Grubby',
-  'Rabid', 'Toxic', 'Savage', 'Warty', 'Busted', 'Crooked',
-  'Charred', 'Soggy', 'Tangled', 'Bloated', 'Jagged', 'Twisted',
-  'Barmy', 'Craggy',
+  "Sneaky",
+  "Boggy",
+  "Grim",
+  "Foul",
+  "Rusty",
+  "Slimy",
+  "Rotten",
+  "Crusty",
+  "Manky",
+  "Grimy",
+  "Musty",
+  "Murky",
+  "Scabby",
+  "Wonky",
+  "Filthy",
+  "Lumpy",
+  "Grotty",
+  "Dank",
+  "Mouldy",
+  "Cursed",
+  "Wicked",
+  "Putrid",
+  "Gnarly",
+  "Festering",
+  "Dodgy",
+  "Grubby",
+  "Rabid",
+  "Toxic",
+  "Savage",
+  "Warty",
+  "Busted",
+  "Crooked",
+  "Charred",
+  "Soggy",
+  "Tangled",
+  "Bloated",
+  "Jagged",
+  "Twisted",
+  "Barmy",
+  "Craggy",
 ];
 const SECOND = [
-  'Goblin', 'Toad', 'Fang', 'Lurker', 'Brew', 'Skull', 'Snot',
-  'Beetle', 'Rat', 'Brain', 'Shank', 'Tongue', 'Witch', 'Crawler',
-  'Croak', 'Muncher', 'Snorkle', 'Picker', 'Spitter', 'Guts',
-  'Fungus', 'Worm', 'Stench', 'Boggart', 'Maggot', 'Troll',
-  'Badger', 'Swamp', 'Hag', 'Roach', 'Grub', 'Boil',
-  'Barnacle', 'Serpent', 'Pustule', 'Mange', 'Ghoul', 'Giblet',
-  'Splinter', 'Sludge',
+  "Goblin",
+  "Toad",
+  "Fang",
+  "Lurker",
+  "Brew",
+  "Skull",
+  "Snot",
+  "Beetle",
+  "Rat",
+  "Brain",
+  "Shank",
+  "Tongue",
+  "Witch",
+  "Crawler",
+  "Croak",
+  "Muncher",
+  "Snorkle",
+  "Picker",
+  "Spitter",
+  "Guts",
+  "Fungus",
+  "Worm",
+  "Stench",
+  "Boggart",
+  "Maggot",
+  "Troll",
+  "Badger",
+  "Swamp",
+  "Hag",
+  "Roach",
+  "Grub",
+  "Boil",
+  "Barnacle",
+  "Serpent",
+  "Pustule",
+  "Mange",
+  "Ghoul",
+  "Giblet",
+  "Splinter",
+  "Sludge",
 ];
 const hashNum = parseInt(commitHash, 16);
 const first = FIRST[hashNum % FIRST.length];
@@ -39,12 +105,12 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/socket.io': {
-        target: 'http://localhost:3001',
+      "/socket.io": {
+        target: "http://localhost:3001",
         ws: true,
       },
-      '/api': {
-        target: 'http://localhost:3001',
+      "/api": {
+        target: "http://localhost:3001",
       },
     },
   },

@@ -10,27 +10,52 @@ const THEMES = {
   swamp: {
     bpm: 110, // slower, swampy groove
     chords: {
-      low:    [[220,261.63,329.63],[261.63,329.63,392],[196,246.94,293.66],[220,261.63,329.63]],
-      mid:    [[220,261.63,329.63],[293.66,349.23,440],[329.63,415.30,493.88],[220,261.63,329.63]],
-      high:   [[220,261.63,329.63],[174.61,220,261.63],[293.66,349.23,440],[329.63,415.30,493.88]],
-      finale: [[220,261.63,329.63],[246.94,293.66,349.23],[329.63,415.30,493.88],[220,261.63,329.63]],
+      low: [
+        [220, 261.63, 329.63],
+        [261.63, 329.63, 392],
+        [196, 246.94, 293.66],
+        [220, 261.63, 329.63],
+      ],
+      mid: [
+        [220, 261.63, 329.63],
+        [293.66, 349.23, 440],
+        [329.63, 415.3, 493.88],
+        [220, 261.63, 329.63],
+      ],
+      high: [
+        [220, 261.63, 329.63],
+        [174.61, 220, 261.63],
+        [293.66, 349.23, 440],
+        [329.63, 415.3, 493.88],
+      ],
+      finale: [
+        [220, 261.63, 329.63],
+        [246.94, 293.66, 349.23],
+        [329.63, 415.3, 493.88],
+        [220, 261.63, 329.63],
+      ],
     },
     bassRoots: {
-      low: [110,130.81,98,110], mid: [110,146.83,164.81,110],
-      high: [110,87.31,146.83,164.81], finale: [110,123.47,164.81,110],
+      low: [110, 130.81, 98, 110],
+      mid: [110, 146.83, 164.81, 110],
+      high: [110, 87.31, 146.83, 164.81],
+      finale: [110, 123.47, 164.81, 110],
     },
     melodyPools: {
-      low: [220,261.63,329.63,392,440],        // lower register, fewer notes
-      mid: [220,261.63,329.63,392,440,523.25],
-      high: [196,220,261.63,329.63,392,440,523.25],
-      finale: [196,220,261.63,293.66,329.63,392,440],
+      low: [220, 261.63, 329.63, 392, 440], // lower register, fewer notes
+      mid: [220, 261.63, 329.63, 392, 440, 523.25],
+      high: [196, 220, 261.63, 329.63, 392, 440, 523.25],
+      finale: [196, 220, 261.63, 293.66, 329.63, 392, 440],
     },
-    bassType: 'triangle',
-    melodyType: 'triangle', // softer than square
-    padType: 'sawtooth',
-    padFilter: 400,  // murkier
+    bassType: "triangle",
+    melodyType: "triangle", // softer than square
+    padType: "sawtooth",
+    padFilter: 400, // murkier
     melodyFilter: 800, // muffled, swampy
-    tritones: [[110,155.56],[123.47,174.61]],
+    tritones: [
+      [110, 155.56],
+      [123.47, 174.61],
+    ],
     // Swamp-specific: fewer melody notes, squelch layer instead
     melodyDensity: { low: 2, mid: 3, high: 4 },
   },
@@ -38,53 +63,103 @@ const THEMES = {
   blood: {
     bpm: 160,
     chords: {
-      low:    [[293.66,349.23,440],[261.63,311.13,392],[293.66,349.23,440],[261.63,329.63,392]],
-      mid:    [[293.66,349.23,440],[220,261.63,329.63],[246.94,311.13,369.99],[293.66,349.23,440]],
-      high:   [[293.66,349.23,440],[174.61,220,261.63],[246.94,311.13,369.99],[329.63,415.30,493.88]],
-      finale: [[293.66,349.23,440],[233.08,293.66,349.23],[329.63,415.30,493.88],[293.66,349.23,440]],
+      low: [
+        [293.66, 349.23, 440],
+        [261.63, 311.13, 392],
+        [293.66, 349.23, 440],
+        [261.63, 329.63, 392],
+      ],
+      mid: [
+        [293.66, 349.23, 440],
+        [220, 261.63, 329.63],
+        [246.94, 311.13, 369.99],
+        [293.66, 349.23, 440],
+      ],
+      high: [
+        [293.66, 349.23, 440],
+        [174.61, 220, 261.63],
+        [246.94, 311.13, 369.99],
+        [329.63, 415.3, 493.88],
+      ],
+      finale: [
+        [293.66, 349.23, 440],
+        [233.08, 293.66, 349.23],
+        [329.63, 415.3, 493.88],
+        [293.66, 349.23, 440],
+      ],
     },
     bassRoots: {
-      low: [73.42,65.41,73.42,65.41], mid: [73.42,55,82.41,73.42],
-      high: [73.42,43.65,82.41,73.42], finale: [73.42,61.74,82.41,73.42],
+      low: [73.42, 65.41, 73.42, 65.41],
+      mid: [73.42, 55, 82.41, 73.42],
+      high: [73.42, 43.65, 82.41, 73.42],
+      finale: [73.42, 61.74, 82.41, 73.42],
     },
     melodyPools: {
-      low: [293.66,349.23,440,523.25,587.33],
-      mid: [293.66,349.23,415.30,440,523.25,587.33],
-      high: [261.63,293.66,349.23,415.30,440,523.25,587.33],
-      finale: [233.08,293.66,349.23,415.30,440,523.25,587.33,659.25],
+      low: [293.66, 349.23, 440, 523.25, 587.33],
+      mid: [293.66, 349.23, 415.3, 440, 523.25, 587.33],
+      high: [261.63, 293.66, 349.23, 415.3, 440, 523.25, 587.33],
+      finale: [233.08, 293.66, 349.23, 415.3, 440, 523.25, 587.33, 659.25],
     },
-    bassType: 'sawtooth',
-    melodyType: 'sawtooth',
-    padType: 'sawtooth',
+    bassType: "sawtooth",
+    melodyType: "sawtooth",
+    padType: "sawtooth",
     padFilter: 400,
     melodyFilter: 900,
-    tritones: [[73.42,103.83],[82.41,116.54]],
+    tritones: [
+      [73.42, 103.83],
+      [82.41, 116.54],
+    ],
   },
 
   frost: {
     bpm: 100,
     chords: {
-      low:    [[329.63,493.88,659.25],[293.66,440,587.33],[329.63,493.88,659.25],[246.94,369.99,493.88]],
-      mid:    [[329.63,493.88,659.25],[261.63,392,523.25],[293.66,440,587.33],[329.63,493.88,659.25]],
-      high:   [[329.63,493.88,659.25],[220,329.63,440],[261.63,392,523.25],[329.63,493.88,659.25]],
-      finale: [[329.63,493.88,659.25],[246.94,311.13,493.88],[293.66,440,587.33],[329.63,493.88,659.25]],
+      low: [
+        [329.63, 493.88, 659.25],
+        [293.66, 440, 587.33],
+        [329.63, 493.88, 659.25],
+        [246.94, 369.99, 493.88],
+      ],
+      mid: [
+        [329.63, 493.88, 659.25],
+        [261.63, 392, 523.25],
+        [293.66, 440, 587.33],
+        [329.63, 493.88, 659.25],
+      ],
+      high: [
+        [329.63, 493.88, 659.25],
+        [220, 329.63, 440],
+        [261.63, 392, 523.25],
+        [329.63, 493.88, 659.25],
+      ],
+      finale: [
+        [329.63, 493.88, 659.25],
+        [246.94, 311.13, 493.88],
+        [293.66, 440, 587.33],
+        [329.63, 493.88, 659.25],
+      ],
     },
     bassRoots: {
-      low: [82.41,73.42,82.41,61.74], mid: [82.41,65.41,73.42,82.41],
-      high: [82.41,55,65.41,82.41], finale: [82.41,61.74,73.42,82.41],
+      low: [82.41, 73.42, 82.41, 61.74],
+      mid: [82.41, 65.41, 73.42, 82.41],
+      high: [82.41, 55, 65.41, 82.41],
+      finale: [82.41, 61.74, 73.42, 82.41],
     },
     melodyPools: {
-      low: [659.25,783.99,987.77,1174.66,1318.51],
-      mid: [587.33,659.25,783.99,987.77,1174.66,1318.51],
-      high: [523.25,659.25,783.99,987.77,1174.66,1318.51,1567.98],
-      finale: [493.88,659.25,783.99,987.77,1174.66,1318.51,1567.98],
+      low: [659.25, 783.99, 987.77, 1174.66, 1318.51],
+      mid: [587.33, 659.25, 783.99, 987.77, 1174.66, 1318.51],
+      high: [523.25, 659.25, 783.99, 987.77, 1174.66, 1318.51, 1567.98],
+      finale: [493.88, 659.25, 783.99, 987.77, 1174.66, 1318.51, 1567.98],
     },
-    bassType: 'sine',
-    melodyType: 'sine',
-    padType: 'triangle',
+    bassType: "sine",
+    melodyType: "sine",
+    padType: "triangle",
     padFilter: 800,
     melodyFilter: 2000,
-    tritones: [[82.41,116.54],[73.42,103.83]],
+    tritones: [
+      [82.41, 116.54],
+      [73.42, 103.83],
+    ],
   },
 };
 
@@ -93,17 +168,17 @@ function getThemeConfig(theme) {
 }
 
 function getBand(intensity) {
-  if (intensity < 0.3) return 'low';
-  if (intensity < 0.6) return 'mid';
-  if (intensity < 0.85) return 'high';
-  return 'finale';
+  if (intensity < 0.3) return "low";
+  if (intensity < 0.6) return "mid";
+  if (intensity < 0.85) return "high";
+  return "finale";
 }
 
 /**
  * Play a single dynamic loop cycle.
  * Returns array of AudioNodes for cleanup.
  */
-export function playDynamicLoop(ctx, intensity, volume, theme = 'swamp') {
+export function playDynamicLoop(ctx, intensity, volume, theme = "swamp") {
   const cfg = getThemeConfig(theme);
   const nodes = [];
   const t = ctx.currentTime;
@@ -125,7 +200,18 @@ export function playDynamicLoop(ctx, intensity, volume, theme = 'swamp') {
 
   // Layer 4: Tension pads (intensity >= 0.4)
   if (intensity >= 0.4) {
-    playTensionPads(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes);
+    playTensionPads(
+      ctx,
+      t,
+      beat,
+      bar,
+      bars,
+      intensity,
+      volume,
+      cfg,
+      band,
+      nodes,
+    );
   }
 
   // Layer 5: War drums (intensity >= 0.6)
@@ -139,22 +225,44 @@ export function playDynamicLoop(ctx, intensity, volume, theme = 'swamp') {
   }
 
   // Swamp bonus: Banjo layer (intensity < 0.7 — fades out during combat)
-  if (theme === 'swamp' && intensity < 0.7) {
-    playBanjoLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes);
+  if (theme === "swamp" && intensity < 0.7) {
+    playBanjoLayer(
+      ctx,
+      t,
+      beat,
+      bar,
+      bars,
+      intensity,
+      volume,
+      cfg,
+      band,
+      nodes,
+    );
   }
 
   // Swamp bonus: Squelch rhythm layer (goblin swamp feel)
-  if (theme === 'swamp') {
+  if (theme === "swamp") {
     playSwampSquelch(ctx, t, beat, bar, bars, intensity, volume, nodes);
   }
 
   // Frost bonus: Shimmer arpeggios (always on, ethereal sparkle)
-  if (theme === 'frost') {
-    playFrostShimmer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes);
+  if (theme === "frost") {
+    playFrostShimmer(
+      ctx,
+      t,
+      beat,
+      bar,
+      bars,
+      intensity,
+      volume,
+      cfg,
+      band,
+      nodes,
+    );
   }
 
   // Blood bonus: Heartbeat pulse at low intensity
-  if (theme === 'blood' && intensity < 0.5) {
+  if (theme === "blood" && intensity < 0.5) {
     playHeartbeat(ctx, t, beat, bar, bars, intensity, volume, nodes);
   }
 
@@ -164,7 +272,7 @@ export function playDynamicLoop(ctx, intensity, volume, theme = 'swamp') {
 /**
  * Get the loop duration in ms for a given theme.
  */
-export function getLoopDurationMs(theme = 'swamp') {
+export function getLoopDurationMs(theme = "swamp") {
   const cfg = getThemeConfig(theme);
   const beat = 60 / cfg.bpm;
   return Math.round(8 * 4 * beat * 1000);
@@ -172,7 +280,18 @@ export function getLoopDurationMs(theme = 'swamp') {
 
 // ── Layer implementations ──
 
-function playBassLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes) {
+function playBassLayer(
+  ctx,
+  t,
+  beat,
+  bar,
+  bars,
+  intensity,
+  volume,
+  cfg,
+  band,
+  nodes,
+) {
   const roots = cfg.bassRoots[band];
   const bassVol = volume * (0.4 + intensity * 0.3);
 
@@ -211,13 +330,28 @@ function playBassLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, no
   }
 }
 
-function playMelodyLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes) {
+function playMelodyLayer(
+  ctx,
+  t,
+  beat,
+  bar,
+  bars,
+  intensity,
+  volume,
+  cfg,
+  band,
+  nodes,
+) {
   const pool = cfg.melodyPools[band];
   const melodyVol = volume * (0.3 + intensity * 0.15);
   const defaultDensity = intensity < 0.3 ? 3 : intensity < 0.6 ? 5 : 7;
   const densityMap = cfg.melodyDensity;
   const notesPerBar = densityMap
-    ? (intensity < 0.3 ? densityMap.low : intensity < 0.6 ? densityMap.mid : densityMap.high)
+    ? intensity < 0.3
+      ? densityMap.low
+      : intensity < 0.6
+        ? densityMap.mid
+        : densityMap.high
     : defaultDensity;
 
   let noteTime = 0;
@@ -227,7 +361,7 @@ function playMelodyLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, 
     for (let n = 0; n < notesPerBar; n++) {
       const idx = (b * notesPerBar + n + seed) % pool.length;
       const freq = pool[idx];
-      const dur = (bar / notesPerBar);
+      const dur = bar / notesPerBar;
       const start = t + noteTime;
 
       const osc = ctx.createOscillator();
@@ -236,8 +370,11 @@ function playMelodyLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, 
 
       osc.type = cfg.melodyType;
       osc.frequency.setValueAtTime(freq, start);
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(cfg.melodyFilter + intensity * 1200, start);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(
+        cfg.melodyFilter + intensity * 1200,
+        start,
+      );
 
       // Plucky envelope
       gain.gain.setValueAtTime(0, start);
@@ -257,7 +394,17 @@ function playMelodyLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, 
   }
 }
 
-function playPercussionLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, nodes) {
+function playPercussionLayer(
+  ctx,
+  t,
+  beat,
+  bar,
+  bars,
+  intensity,
+  volume,
+  cfg,
+  nodes,
+) {
   const totalBeats = bars * 4;
   const percVol = volume * (0.2 + intensity * 0.3);
 
@@ -271,7 +418,7 @@ function playPercussionLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, no
     if (isDownbeat && intensity >= 0.3) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(80, beatTime);
       osc.frequency.linearRampToValueAtTime(40, beatTime + 0.1);
       gain.gain.setValueAtTime(percVol * 0.8, beatTime);
@@ -288,14 +435,14 @@ function playPercussionLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, no
       const bufLen = Math.floor(ctx.sampleRate * 0.06);
       const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
       const data = buf.getChannelData(0);
-      for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+      for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
       const src = ctx.createBufferSource();
       src.buffer = buf;
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(percVol * 0.5, beatTime);
       gain.gain.linearRampToValueAtTime(0, beatTime + 0.06);
       const bpf = ctx.createBiquadFilter();
-      bpf.type = 'bandpass';
+      bpf.type = "bandpass";
       bpf.frequency.setValueAtTime(3000, beatTime);
       src.connect(bpf);
       bpf.connect(gain);
@@ -309,7 +456,7 @@ function playPercussionLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, no
       const bufLen = Math.floor(ctx.sampleRate * 0.035);
       const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
       const data = buf.getChannelData(0);
-      for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+      for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
       const src = ctx.createBufferSource();
       src.buffer = buf;
       const gain = ctx.createGain();
@@ -317,7 +464,7 @@ function playPercussionLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, no
       gain.gain.setValueAtTime(tambVol, beatTime);
       gain.gain.linearRampToValueAtTime(0, beatTime + 0.035);
       const hpf = ctx.createBiquadFilter();
-      hpf.type = 'highpass';
+      hpf.type = "highpass";
       hpf.frequency.setValueAtTime(6000, beatTime);
       src.connect(hpf);
       hpf.connect(gain);
@@ -328,7 +475,18 @@ function playPercussionLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, no
   }
 }
 
-function playTensionPads(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes) {
+function playTensionPads(
+  ctx,
+  t,
+  beat,
+  bar,
+  bars,
+  intensity,
+  volume,
+  cfg,
+  band,
+  nodes,
+) {
   const chords = cfg.chords[band];
   const padVol = volume * 0.15 * Math.min(1, (intensity - 0.4) / 0.3);
 
@@ -343,7 +501,7 @@ function playTensionPads(ctx, t, beat, bar, bars, intensity, volume, cfg, band, 
       osc.type = cfg.padType;
       osc.frequency.setValueAtTime(freq * 0.5, start);
       const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
+      filter.type = "lowpass";
       filter.frequency.setValueAtTime(cfg.padFilter, start);
 
       gain.gain.setValueAtTime(0, start);
@@ -370,7 +528,7 @@ function playWarDrums(ctx, t, beat, bar, bars, intensity, volume, cfg, nodes) {
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
+    osc.type = "sine";
     osc.frequency.setValueAtTime(55, beatTime);
     osc.frequency.linearRampToValueAtTime(30, beatTime + 0.25);
     gain.gain.setValueAtTime(drumVol, beatTime);
@@ -385,14 +543,14 @@ function playWarDrums(ctx, t, beat, bar, bars, intensity, volume, cfg, nodes) {
     const bufLen = Math.floor(ctx.sampleRate * 0.08);
     const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const g2 = ctx.createGain();
     g2.gain.setValueAtTime(drumVol * 0.3, beatTime);
     g2.gain.linearRampToValueAtTime(0, beatTime + 0.08);
     const lpf = ctx.createBiquadFilter();
-    lpf.type = 'lowpass';
+    lpf.type = "lowpass";
     lpf.frequency.setValueAtTime(200, beatTime);
     src.connect(lpf);
     lpf.connect(g2);
@@ -402,7 +560,17 @@ function playWarDrums(ctx, t, beat, bar, bars, intensity, volume, cfg, nodes) {
   }
 }
 
-function playDissonance(ctx, t, beat, bar, bars, intensity, volume, cfg, nodes) {
+function playDissonance(
+  ctx,
+  t,
+  beat,
+  bar,
+  bars,
+  intensity,
+  volume,
+  cfg,
+  nodes,
+) {
   const disVol = volume * 0.12 * Math.min(1, (intensity - 0.8) / 0.2);
   const tritones = cfg.tritones;
 
@@ -414,10 +582,10 @@ function playDissonance(ctx, t, beat, bar, bars, intensity, volume, cfg, nodes) 
     for (const freq of pair) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sawtooth';
+      osc.type = "sawtooth";
       osc.frequency.setValueAtTime(freq, start);
       const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
+      filter.type = "lowpass";
       filter.frequency.setValueAtTime(400, start);
 
       gain.gain.setValueAtTime(0, start);
@@ -449,15 +617,15 @@ function playSwampSquelch(ctx, t, beat, bar, bars, intensity, volume, nodes) {
     const count = 2 + Math.floor(intensity * 2);
     for (let n = 0; n < count; n++) {
       // Place squelches on off-beat positions
-      const offset = (n + 0.5) / count * bar;
+      const offset = ((n + 0.5) / count) * bar;
       const start = t + b * bar + offset;
-      const freq = 60 + (b * 17 + n * 31) % 80; // 60-140Hz range, deterministic
+      const freq = 60 + ((b * 17 + n * 31) % 80); // 60-140Hz range, deterministic
       const dur = 0.06 + ((b + n) % 3) * 0.03;
 
       // Main squelch: sine with upward pitch bend
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freq, start);
       osc.frequency.linearRampToValueAtTime(freq * 2.5, start + dur);
       gain.gain.setValueAtTime(squelchVol, start);
@@ -473,11 +641,11 @@ function playSwampSquelch(ctx, t, beat, bar, bars, intensity, volume, nodes) {
         const bufLen = Math.floor(ctx.sampleRate * dur * 0.8);
         const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
         const data = buf.getChannelData(0);
-        for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+        for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
         const src = ctx.createBufferSource();
         src.buffer = buf;
         const lpf = ctx.createBiquadFilter();
-        lpf.type = 'lowpass';
+        lpf.type = "lowpass";
         lpf.frequency.setValueAtTime(300, start);
         lpf.frequency.linearRampToValueAtTime(100, start + dur * 0.8);
         const g2 = ctx.createGain();
@@ -497,7 +665,18 @@ function playSwampSquelch(ctx, t, beat, bar, bars, intensity, volume, nodes) {
  * Banjo layer for swamp theme — plucky arpeggiated notes with fast decay.
  * Uses square wave + aggressive lowpass for that twangy character.
  */
-function playBanjoLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes) {
+function playBanjoLayer(
+  ctx,
+  t,
+  beat,
+  bar,
+  bars,
+  intensity,
+  volume,
+  cfg,
+  band,
+  nodes,
+) {
   const chords = cfg.chords[band];
   // Banjo is louder at low intensity, fades as battle heats up
   const banjoVol = volume * 0.25 * Math.max(0, 1 - intensity * 1.5);
@@ -522,9 +701,9 @@ function playBanjoLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, n
       const filter = ctx.createBiquadFilter();
 
       // Square wave + lowpass = twangy banjo-like timbre
-      osc.type = 'square';
+      osc.type = "square";
       osc.frequency.setValueAtTime(freq * 2, noteStart); // octave up for brightness
-      filter.type = 'lowpass';
+      filter.type = "lowpass";
       filter.frequency.setValueAtTime(2500, noteStart);
       filter.frequency.linearRampToValueAtTime(800, noteStart + noteDur);
 
@@ -547,7 +726,18 @@ function playBanjoLayer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, n
 /**
  * Frost shimmer — high-register crystalline arpeggios with long reverb-like tails.
  */
-function playFrostShimmer(ctx, t, beat, bar, bars, intensity, volume, cfg, band, nodes) {
+function playFrostShimmer(
+  ctx,
+  t,
+  beat,
+  bar,
+  bars,
+  intensity,
+  volume,
+  cfg,
+  band,
+  nodes,
+) {
   const pool = cfg.melodyPools[band];
   const shimmerVol = volume * 0.12;
 
@@ -564,7 +754,7 @@ function playFrostShimmer(ctx, t, beat, bar, bars, intensity, volume, cfg, band,
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freq, start);
       // Slight vibrato for icy shimmer
       osc.frequency.setValueAtTime(freq, start + dur * 0.3);
@@ -601,7 +791,7 @@ function playHeartbeat(ctx, t, beat, bar, bars, intensity, volume, nodes) {
 
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freq, pStart);
       osc.frequency.linearRampToValueAtTime(freq * 0.7, pStart + 0.15);
 
