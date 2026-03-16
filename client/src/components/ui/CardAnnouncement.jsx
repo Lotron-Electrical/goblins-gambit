@@ -34,12 +34,12 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
 
   const isMajor = announcement && MAJOR_EVENTS.includes(announcement.type);
 
-  // Position at the center zone midpoint; fall back to 30%/35%
+  // Position at the center zone midpoint; fall back to 50% (true center) on mobile
   const centerTop =
     mobileCenterY || centerZoneY
       ? `${mobileCenterY || centerZoneY}px`
       : isMobile
-        ? "30%"
+        ? "50%"
         : "35%";
 
   return (

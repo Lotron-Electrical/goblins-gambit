@@ -142,7 +142,7 @@ export default function ChatPanel({ expanded, onClose }) {
       )}
 
       {/* Emote row */}
-      <div className="flex gap-0.5 px-2 py-1 overflow-x-auto border-t border-gray-800 shrink-0">
+      <div className="flex gap-1 px-2 py-1 justify-center border-t border-gray-800 shrink-0">
         {CHAT_EMOTES.map((e) => (
           <button
             key={e.key}

@@ -258,11 +258,12 @@ export default function PlayerField({
 
       {/* SP progress bar */}
       {gameState?.winSP && (
-        <div className="h-1 rounded-full bg-gray-800 mx-1 mb-1">
+        <div className={`${isMobile ? "h-1.5" : "h-1"} rounded-full bg-gray-800 mx-1 mb-1`}>
           <div
             className="h-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-500"
             style={{
               width: `${Math.min(100, (player.sp / gameState.winSP) * 100)}%`,
+              minWidth: player.sp > 0 ? "4px" : undefined,
             }}
           />
         </div>
@@ -321,7 +322,7 @@ export default function PlayerField({
         </div>
         <div
           className={`flex gap-0.5 justify-center bg-[#141808]/50 rounded border border-[#2a3018]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] p-0.5 md:p-1 overflow-hidden ${
-            isMobile ? "min-h-[64px]" : "min-h-[100px] max-w-[600px] mx-auto"
+            isMobile ? "min-h-[92px]" : "min-h-[156px] max-w-[600px] mx-auto"
           }`}
         >
           {Array.from({ length: 5 }).map((_, slotIdx) => {

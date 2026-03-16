@@ -278,8 +278,18 @@ export default function CardOnField({
         </div>
       )}
 
-      {/* Selected card name overlay */}
-      {isSelected && !invisible && (
+      {/* Creature name — always visible at bottom above stats */}
+      {!invisible && card.type === "Creature" && (
+        <div
+          className={`absolute left-0 right-0 bg-black/60 text-center font-bold truncate px-0.5 ${
+            isSelected ? "text-[var(--color-gold-bright)]" : "text-gray-200"
+          } ${isMobile ? "text-[7px] py-0 bottom-[30px]" : "text-[9px] py-0.5 bottom-[36px]"}`}
+        >
+          {card.name}
+        </div>
+      )}
+      {/* Selected non-creature name overlay */}
+      {isSelected && !invisible && card.type !== "Creature" && (
         <div
           className={`absolute top-1/2 left-0 right-0 -translate-y-1/2 bg-black/70 text-[var(--color-gold-bright)] text-center font-bold truncate px-0.5 ${
             isMobile ? "text-[7px] py-0" : "text-[9px] py-0.5"
@@ -308,7 +318,7 @@ export default function CardOnField({
       {!invisible && card.type === "Creature" && (
         <div className="absolute bottom-0 left-0 right-0">
           <div
-            className={`bg-black/80 grid grid-cols-3 ${isMobile ? "text-[9px] py-0.5" : "text-[12px] py-0.5"}`}
+            className={`bg-black/80 grid grid-cols-3 ${isMobile ? (effectiveAtk >= 1000 || currentDef >= 1000 || (card.sp ?? 0) >= 1000 ? "text-[7px]" : "text-[9px]") + " py-0.5" : "text-[12px] py-0.5"}`}
           >
             <span
               className={`font-bold text-center ${atkGlow ? "text-yellow-300 animate-pulse drop-shadow-[0_0_6px_rgba(253,224,71,0.8)]" : "text-red-400"}`}

@@ -157,14 +157,8 @@ export const EVENTS = {
 export const CHAT_EMOTES = [
   { key: "gg", label: "GG", emoji: "\u2694\uFE0F" },
   { key: "heh", label: "Heh heh heh", emoji: "\uD83D\uDE08" },
-  { key: "raid", label: "RAID!", emoji: "\uD83D\uDCA5" },
-  { key: "shiny", label: "Shiny!", emoji: "\uD83D\uDC8E" },
-  { key: "stinky", label: "Stinky...", emoji: "\uD83E\uDDA8" },
   { key: "rage", label: "WAAGH!", emoji: "\uD83E\uDD2C" },
-  { key: "scared", label: "Eep!", emoji: "\uD83D\uDE31" },
-  { key: "smug", label: "Too easy", emoji: "\uD83D\uDE0F" },
-  { key: "think", label: "Hmm...", emoji: "\uD83E\uDD14" },
-  { key: "cry", label: "Waaah!", emoji: "\uD83D\uDE2D" },
   { key: "skull", label: "Yer dead!", emoji: "\uD83D\uDC80" },
+  { key: "smug", label: "Too easy", emoji: "\uD83D\uDE0F" },
   { key: "goblin", label: "Goblin time", emoji: "\uD83D\uDC7A" },
 ];

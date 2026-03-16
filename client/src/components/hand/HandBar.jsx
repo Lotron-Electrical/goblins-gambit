@@ -325,7 +325,9 @@ function CircularCardRow({
         currentIndexRef.current = next;
         setCurrentIndex(next);
         // Play tick sound as we pass each card
-        const rounded = Math.round(Math.max(0, Math.min(next, sortedHand.length - 1)));
+        const rounded = Math.round(
+          Math.max(0, Math.min(next, sortedHand.length - 1)),
+        );
         if (rounded !== scrollTickIdx.current) {
           scrollTickIdx.current = rounded;
           soundManager.play("card_tick");
@@ -336,9 +338,10 @@ function CircularCardRow({
     }
   }, [scrollToIndex, stopInertia, sortedHand.length]);
 
-  // Auto-select the centred card — only when the rounded index changes
+  // Auto-select the centred card — only when the rounded index changes AND not mid-swipe
   useEffect(() => {
     if (reorderMode || sortedHand.length === 0) return;
+    if (isDragging.current) return; // skip while actively swiping (#106)
     const idx = Math.round(
       Math.max(0, Math.min(currentIndex, sortedHand.length - 1)),
     );
@@ -857,9 +860,19 @@ export default function HandBar() {
       <div
         className={`relative shrink-0 ${tutorialHighlightUid ? "z-50" : "z-30"}`}
       >
-        {/* Reaction banner — always visible */}
+        {/* Reaction banner — always visible, tappable to select first reaction card */}
         {hasReaction && (
-          <div className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mb-0.5 text-center animate-[pulse_0.6s_ease-in-out_2]">
+          <div
+            className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mb-0.5 text-center animate-[pulse_0.6s_ease-in-out_2] cursor-pointer"
+            onClick={() => {
+              const reactionCard = sortedHand.find((c) => REACTION_ABILITIES.includes(c.abilityId));
+              if (reactionCard) {
+                const idx = sortedHand.indexOf(reactionCard);
+                if (idx >= 0) scrollToIndex(idx);
+                handleMobileSelect(reactionCard);
+              }
+            }}
+          >
             <span className="text-orange-300 text-[9px] font-bold">
               REACT to {currentPlayerName}'s turn!
             </span>
@@ -1088,7 +1101,7 @@ export default function HandBar() {
 
   // Desktop layout — rotation around distant origin creates natural arc
   const desktopArcTransforms = useMemo(() => {
-    if (!handArc || hand.length <= 1) return null;
+    if (handArc == null || hand.length <= 1) return null;
     const n = hand.length;
     const mid = (n - 1) / 2;
     const intensity = handArc / 100;
@@ -1103,9 +1116,15 @@ export default function HandBar() {
 
   return (
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0 overflow-visible z-30">
-      {/* Reaction banner */}
+      {/* Reaction banner — click to select first reaction card */}
       {hasReaction && (
-        <div className="bg-orange-600/20 border border-orange-500/40 rounded px-3 py-1.5 mb-2 text-center animate-[pulse_0.6s_ease-in-out_2] shadow-[0_0_8px_rgba(234,88,12,0.3)]">
+        <div
+          className="bg-orange-600/20 border border-orange-500/40 rounded px-3 py-1.5 mb-2 text-center animate-[pulse_0.6s_ease-in-out_2] shadow-[0_0_8px_rgba(234,88,12,0.3)] cursor-pointer"
+          onClick={() => {
+            const reactionCard = hand.find((c) => REACTION_ABILITIES.includes(c.abilityId));
+            if (reactionCard) selectCard(reactionCard);
+          }}
+        >
           <span className="text-orange-300 text-sm font-bold">
             You can react to {currentPlayerName}'s turn! Click a REACT card to
             interrupt.

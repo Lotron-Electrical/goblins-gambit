@@ -93,11 +93,11 @@ export default function CenterZone({
   const cardW = isMobile ? 60 : 90;
   const cardH = isMobile ? 84 : 126;
   // On mobile, scale the card stacks down to save vertical space
-  const mobileScale = 0.5;
+  const mobileScale = 0.65;
   // Scaled dimensions for layout reservations on mobile
   const layoutW = isMobile ? Math.round(cardW * mobileScale) : cardW;
   const layoutH = isMobile ? Math.round(cardH * mobileScale) : cardH;
-  const zoneH = isMobile ? "h-[48px]" : "h-[140px]";
+  const zoneH = isMobile ? "h-[60px]" : "h-[140px]";
 
   return (
     <div

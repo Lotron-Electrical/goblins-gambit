@@ -12,6 +12,7 @@ export function setupSocketHandlers(io, lobby) {
   const botIds = new Set();
   const botDifficulty = new Map(); // botId -> 'easy' | 'medium' | 'hard'
   const lastChatTime = new Map(); // socketId -> timestamp
+  const disconnectTimers = new Map(); // socketId -> timeout handle for grace period
 
   function broadcastState(roomId, engine) {
     const room = lobby.getRoom(roomId);
@@ -266,6 +267,12 @@ export function setupSocketHandlers(io, lobby) {
 
       const game = lobby.getGame(roomId);
       if (game) {
+        // Cancel disconnect grace period timer if active
+        if (disconnectTimers.has(oldId)) {
+          clearTimeout(disconnectTimers.get(oldId));
+          disconnectTimers.delete(oldId);
+        }
+
         // Remap player in game state
         const playerState = game.state.players[oldId];
         if (playerState) {
@@ -627,13 +634,19 @@ export function setupSocketHandlers(io, lobby) {
             }
           }
 
-          // If it was this player's turn, skip to next (they'll get their turn back on rejoin)
+          // If it was this player's turn, give 15s grace period before force-ending
           if (game.getCurrentPlayerId() === socket.id) {
-            // Force end turn for disconnected player so game doesn't stall
-            game.handleAction(socket.id, { type: ACTION.END_TURN });
-            broadcastState(roomId, game);
-            // Check if next player is a bot
-            runBotTurn(roomId, game);
+            const timer = setTimeout(() => {
+              disconnectTimers.delete(socket.id);
+              // Only force end turn if still this player's turn and still disconnected
+              const p = game.state.players[socket.id];
+              if (p && !p.connected && game.getCurrentPlayerId() === socket.id) {
+                game.handleAction(socket.id, { type: ACTION.END_TURN });
+                broadcastState(roomId, game);
+                runBotTurn(roomId, game);
+              }
+            }, 15000);
+            disconnectTimers.set(socket.id, timer);
           }
         }
       } else {

@@ -316,10 +316,27 @@ export default function GameScreen() {
           : cardPositionCache.current[currentAnimation.defender];
       }
 
+      // For direct attacks, find the attacker's owner SP counter for the return line
+      let ownerSpPos = null;
+      if (isDirect) {
+        // The attacker creature belongs to whichever player's swamp it's in
+        for (const [pid, p] of Object.entries(gameState.players)) {
+          if (p.swamp?.some((c) => c.uid === currentAnimation.attacker)) {
+            const ownerSpEl = document.querySelector(`[data-player-sp="${pid}"]`);
+            if (ownerSpEl) {
+              const r = ownerSpEl.getBoundingClientRect();
+              ownerSpPos = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+            }
+            break;
+          }
+        }
+      }
+
       if (fromPos && toPos) {
         setAttackLine({
           from: fromPos,
           to: toPos,
+          ownerPos: ownerSpPos, // SP counter of the attacking player
           killshot: !!currentAnimation.killshot,
           direct: isDirect,
         });
@@ -841,83 +858,89 @@ export default function GameScreen() {
                     />
                   </circle>
                 ))}
-              {/* Direct attack: SP return line (white-to-yellow, defender back to attacker) */}
-              {d && (
-                <>
-                  {/* Return glow line */}
-                  <line
-                    x1={attackLine.to.x}
-                    y1={attackLine.to.y}
-                    x2={attackLine.from.x}
-                    y2={attackLine.from.y}
-                    stroke="url(#return-grad)"
-                    strokeWidth="10"
-                    strokeLinecap="round"
-                    filter="url(#return-glow)"
-                    opacity="0"
-                  >
-                    <animate
-                      attributeName="opacity"
-                      values="0;0.5;0"
-                      dur="0.4s"
-                      begin="0.35s"
-                      fill="freeze"
-                    />
-                  </line>
-                  {/* Return main line */}
-                  <line
-                    x1={attackLine.to.x}
-                    y1={attackLine.to.y}
-                    x2={attackLine.from.x}
-                    y2={attackLine.from.y}
-                    stroke="url(#return-grad)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeDasharray={`${len}`}
-                    strokeDashoffset={len}
-                  >
-                    <animate
-                      attributeName="stroke-dashoffset"
-                      from={len}
-                      to="0"
-                      dur="0.2s"
-                      begin="0.35s"
-                      fill="freeze"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0;1;1;0"
-                      keyTimes="0;0.1;0.5;1"
-                      dur="0.45s"
-                      begin="0.35s"
-                      fill="freeze"
-                    />
-                  </line>
-                  {/* SP burst at attacker (gold) */}
-                  <circle
-                    cx={attackLine.from.x}
-                    cy={attackLine.from.y}
-                    r="0"
-                    fill="#fbbf24"
-                    opacity="0"
-                  >
-                    <animate
-                      attributeName="r"
-                      values="0;18;0"
-                      dur="0.35s"
-                      begin="0.5s"
-                      fill="freeze"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0;0.8;0"
-                      dur="0.35s"
-                      begin="0.5s"
-                      fill="freeze"
-                    />
-                  </circle>
-                </>
-              )}
+              {/* Direct attack: SP return line (white-to-yellow, defender SP to attacker's owner SP) */}
+              {d && (() => {
+                const retTarget = attackLine.ownerPos || attackLine.from;
+                const rdx = retTarget.x - attackLine.to.x;
+                const rdy = retTarget.y - attackLine.to.y;
+                const retLen = Math.sqrt(rdx * rdx + rdy * rdy);
+                return (
+                  <>
+                    {/* Return glow line */}
+                    <line
+                      x1={attackLine.to.x}
+                      y1={attackLine.to.y}
+                      x2={retTarget.x}
+                      y2={retTarget.y}
+                      stroke="url(#return-grad)"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      filter="url(#return-glow)"
+                      opacity="0"
+                    >
+                      <animate
+                        attributeName="opacity"
+                        values="0;0.5;0"
+                        dur="0.4s"
+                        begin="0.35s"
+                        fill="freeze"
+                      />
+                    </line>
+                    {/* Return main line */}
+                    <line
+                      x1={attackLine.to.x}
+                      y1={attackLine.to.y}
+                      x2={retTarget.x}
+                      y2={retTarget.y}
+                      stroke="url(#return-grad)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray={`${retLen}`}
+                      strokeDashoffset={retLen}
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        from={retLen}
+                        to="0"
+                        dur="0.2s"
+                        begin="0.35s"
+                        fill="freeze"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0;1;1;0"
+                        keyTimes="0;0.1;0.5;1"
+                        dur="0.45s"
+                        begin="0.35s"
+                        fill="freeze"
+                      />
+                    </line>
+                    {/* SP burst at owner SP counter (gold) */}
+                    <circle
+                      cx={retTarget.x}
+                      cy={retTarget.y}
+                      r="0"
+                      fill="#fbbf24"
+                      opacity="0"
+                    >
+                      <animate
+                        attributeName="r"
+                        values="0;18;0"
+                        dur="0.35s"
+                        begin="0.5s"
+                        fill="freeze"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0;0.8;0"
+                        dur="0.35s"
+                        begin="0.5s"
+                        fill="freeze"
+                      />
+                    </circle>
+                  </>
+                );
+              })()}
             </svg>
           );
         })()}
