@@ -237,7 +237,7 @@ function ToggleRow({ label, icon, active, onToggle }) {
 }
 
 function FeedbackModalInline({ onClose, onCloseMenu }) {
-  const { gameState } = useStore();
+  const { gameState, authToken } = useStore();
   const [type, setType] = useState("bug");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -312,7 +312,10 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
         body: JSON.stringify({
           title,
           body,
