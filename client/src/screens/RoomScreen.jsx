@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useStore } from "../store.js";
 import { socket } from "../socket.js";
+import GameMenu from "../components/ui/GameMenu.jsx";
+import { ICONS } from "../components/ui/icons.js";
 
 const THEME_OPTIONS = [
   {
@@ -45,6 +47,7 @@ export default function RoomScreen() {
     removeBot,
     setRoomTheme,
     setRoomSettings,
+    setMenuOpen,
   } = useStore();
   const [showSettings, setShowSettings] = useState(false);
   const roomTheme = currentRoom?.theme || "swamp";
@@ -83,7 +86,13 @@ export default function RoomScreen() {
           <h2 className="text-3xl font-display text-[var(--color-gold-bright)]">
             Game Lobby
           </h2>
-          <div className="w-16" /> {/* spacer for centering */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="text-gray-400 hover:text-white transition text-lg w-16 text-right"
+            title="Settings"
+          >
+            {ICONS.gear}
+          </button>
         </div>
         <p className="text-gray-400 text-center mb-1 font-display">
           {currentRoom.name || currentRoom.id}
@@ -383,6 +392,9 @@ export default function RoomScreen() {
           </div>
         )}
       </div>
+
+      {/* Settings menu */}
+      <GameMenu />
     </div>
   );
 }

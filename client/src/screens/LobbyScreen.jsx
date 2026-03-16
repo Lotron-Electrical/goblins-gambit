@@ -3,6 +3,8 @@ import { useStore } from "../store.js";
 import { soundManager } from "../audio/SoundManager.js";
 import SparkleParticles from "../components/ui/SparkleParticles.jsx";
 import LeaderboardModal from "../components/ui/LeaderboardModal.jsx";
+import GameMenu from "../components/ui/GameMenu.jsx";
+import { ICONS } from "../components/ui/icons.js";
 
 const WELCOME_LINES = [
   "{name} is ready to destroy",
@@ -38,6 +40,7 @@ export default function LobbyScreen() {
     savedGameInfo,
     loadSavedGame,
     deleteSavedGame,
+    setMenuOpen,
   } = useStore();
   const [name, setName] = useState(playerName || "");
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -136,6 +139,13 @@ export default function LobbyScreen() {
           className="text-gray-400 hover:text-[var(--color-gold)] text-[12px] transition-colors duration-200"
         >
           Leaderboard
+        </button>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="text-gray-400 hover:text-[var(--color-gold)] text-[14px] transition-colors duration-200"
+          title="Settings"
+        >
+          {ICONS.gear}
         </button>
         <button
           onClick={logout}
@@ -396,6 +406,9 @@ export default function LobbyScreen() {
       {showLeaderboard && (
         <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
       )}
+
+      {/* Settings menu */}
+      <GameMenu />
     </div>
   );
 }

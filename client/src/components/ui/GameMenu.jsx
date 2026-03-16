@@ -122,12 +122,15 @@ export default function GameMenu() {
         <div className="mb-5">
           <div className="flex items-center justify-between mb-1">
             <span className="text-gray-300 text-sm">Hand Arc</span>
-            <span className="text-gray-500 text-xs">{handArc}%</span>
+            <span className="text-gray-500 text-xs">
+              {Math.round(handArc / 10)}/10
+            </span>
           </div>
           <input
             type="range"
             min="0"
             max="100"
+            step="10"
             value={handArc}
             onChange={(e) => setHandArc(parseInt(e.target.value, 10))}
             className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[var(--color-gold)]"
@@ -136,16 +139,38 @@ export default function GameMenu() {
             <span>Flat</span>
             <span>Fan</span>
           </div>
+          {/* Arc preview */}
+          <div className="flex justify-center items-end gap-0 mt-2 h-8">
+            {[0, 1, 2, 3, 4].map((i) => {
+              const mid = 2;
+              const t = (i - mid) / mid; // -1 to 1
+              const intensity = handArc / 100;
+              const rotation = t * 20 * intensity;
+              return (
+                <div
+                  key={i}
+                  className="w-3 h-5 rounded-[2px] border border-gray-600 bg-gray-800"
+                  style={{
+                    transform: `rotate(${rotation}deg)`,
+                    transformOrigin: "center bottom",
+                    marginLeft: i === 0 ? 0 : "-2px",
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
 
         {/* Actions */}
         <div className="space-y-2">
-          <button
-            onClick={() => setFeedbackOpen(true)}
-            className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white py-2 rounded-lg text-sm font-bold transition"
-          >
-            {ICONS.bug} Report Bug / Feature
-          </button>
+          {gameState && (
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white py-2 rounded-lg text-sm font-bold transition"
+            >
+              {ICONS.bug} Report Bug / Feature
+            </button>
+          )}
 
           {canSave && (
             <button
@@ -175,16 +200,18 @@ export default function GameMenu() {
             </button>
           )}
 
-          <button
-            onClick={handleLeave}
-            className={`w-full py-2 rounded-lg text-sm font-bold transition ${
-              confirmLeave
-                ? "bg-red-700 hover:bg-red-600 text-white"
-                : "bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white"
-            }`}
-          >
-            {confirmLeave ? "Confirm Leave Game?" : "Leave Game"}
-          </button>
+          {gameState && (
+            <button
+              onClick={handleLeave}
+              className={`w-full py-2 rounded-lg text-sm font-bold transition ${
+                confirmLeave
+                  ? "bg-red-700 hover:bg-red-600 text-white"
+                  : "bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white"
+              }`}
+            >
+              {confirmLeave ? "Confirm Leave Game?" : "Leave Game"}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -222,10 +249,14 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
 
   const captureScreenshot = async () => {
     setCapturing(true);
+    setSubmitError(null);
     try {
       // Temporarily hide the modal overlay so it doesn't appear in screenshot
       const modalEl = document.querySelector("[data-feedback-modal]");
-      if (modalEl) modalEl.style.display = "none";
+      if (modalEl) modalEl.style.visibility = "hidden";
+
+      // Small delay to let the browser repaint without the modal
+      await new Promise((r) => setTimeout(r, 100));
 
       const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(document.body, {
@@ -235,15 +266,27 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
         useCORS: true,
       });
 
-      if (modalEl) modalEl.style.display = "";
+      if (modalEl) modalEl.style.visibility = "";
       const dataUrl = canvas.toDataURL("image/png", 0.8);
       setScreenshot(dataUrl);
     } catch (e) {
       console.error("Screenshot capture failed:", e);
-      setSubmitError("Failed to capture screenshot");
+      const modalEl = document.querySelector("[data-feedback-modal]");
+      if (modalEl) modalEl.style.visibility = "";
+      setSubmitError(
+        "Screenshot capture failed. Try attaching a file instead.",
+      );
     } finally {
       setCapturing(false);
     }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setScreenshot(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async () => {
@@ -370,15 +413,26 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={captureScreenshot}
-                  disabled={capturing}
-                  className="w-full bg-gray-800 border border-gray-700 hover:border-gray-500 text-gray-300 text-sm py-2 rounded-lg transition flex items-center justify-center gap-2"
-                >
-                  {capturing
-                    ? "Capturing..."
-                    : `${ICONS.camera || "📸"} Attach Screenshot`}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={captureScreenshot}
+                    disabled={capturing}
+                    className="flex-1 bg-gray-800 border border-gray-700 hover:border-gray-500 text-gray-300 text-sm py-2 rounded-lg transition flex items-center justify-center gap-1"
+                  >
+                    {capturing
+                      ? "Capturing..."
+                      : `${ICONS.camera} Capture Screen`}
+                  </button>
+                  <label className="flex-1 bg-gray-800 border border-gray-700 hover:border-gray-500 text-gray-300 text-sm py-2 rounded-lg transition flex items-center justify-center gap-1 cursor-pointer">
+                    {ICONS.upload} Choose File
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               )}
             </div>
             <p className="text-gray-500 text-[11px] mb-4">

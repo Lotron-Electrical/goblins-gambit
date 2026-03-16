@@ -66,6 +66,7 @@ const SOUND_MAP = {
   dragon_attack: "dragon_roar",
   dragon_killed: "victory",
   jargon_arrival: "jargon_chime",
+  card_discarded: "discard",
   volcano_deposit: "sp_gain",
   volcano_withdraw: "sp_gain",
 };
@@ -162,6 +163,16 @@ export function useAnimationQueue(animations) {
         flavor: `STOLE ${evt.card.name.toUpperCase()}!`,
       });
       setTimeout(() => setAnnouncement(null), 1500);
+    }
+
+    // Show announcement for card discarded
+    if (evt.type === "card_discarded" && evt.card) {
+      setAnnouncement({
+        name: evt.card.name,
+        type: evt.card.type,
+        flavor: "DISCARDED",
+      });
+      setTimeout(() => setAnnouncement(null), 1000);
     }
 
     // Show announcement for card plays

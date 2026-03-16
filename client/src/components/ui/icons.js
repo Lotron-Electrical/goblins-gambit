@@ -18,6 +18,8 @@ export const ICONS = {
   musicOff: "\uD83D\uDD15", // 🔕
   bug: "\uD83D\uDC1B", // 🐛
   gear: "\u2699", // ⚙
+  camera: "\uD83D\uDCF7", // 📷
+  upload: "\uD83D\uDCC1", // 📁
 };
 
 export const TYPE_ICON = {

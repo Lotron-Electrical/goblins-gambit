@@ -107,15 +107,13 @@ export default function GameHUD({
               ?
             </button>
           )}
-          {!tutorialMode && (
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
-              title="Settings"
-            >
-              {ICONS.gear}
-            </button>
-          )}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition w-7 h-7 text-[12px]"
+            title="Settings"
+          >
+            {ICONS.gear}
+          </button>
         </div>
       ) : (
         <div className="relative flex items-center px-4 py-2 bg-gradient-to-b from-gray-950/95 to-gray-900/90 border-b border-gray-700/40 pointer-events-auto backdrop-blur-sm">
@@ -183,15 +181,13 @@ export default function GameHUD({
                 ?
               </button>
             )}
-            {!tutorialMode && (
-              <button
-                onClick={() => setMenuOpen(true)}
-                className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800/80 hover:bg-gray-700 rounded-lg transition-all duration-150 w-8 h-8 text-[14px]"
-                title="Settings"
-              >
-                {ICONS.gear}
-              </button>
-            )}
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="flex items-center justify-center text-gray-400 hover:text-white bg-gray-800/80 hover:bg-gray-700 rounded-lg transition-all duration-150 w-8 h-8 text-[14px]"
+              title="Settings"
+            >
+              {ICONS.gear}
+            </button>
           </div>
         </div>
       )}

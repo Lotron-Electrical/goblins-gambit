@@ -34,6 +34,18 @@ class SoundManager {
       }
       this.initialized = true;
       console.log("[SoundManager] initialized, state:", this.ctx.state);
+
+      // Pause audio when tab/app is backgrounded (fixes music playing after minimise)
+      document.addEventListener("visibilitychange", () => {
+        if (!this.ctx) return;
+        if (document.hidden) {
+          this._suspendedByVisibility = true;
+          this.ctx.suspend();
+        } else if (this._suspendedByVisibility) {
+          this._suspendedByVisibility = false;
+          this.ctx.resume();
+        }
+      });
     } catch (e) {
       console.warn("[SoundManager] failed to init:", e);
     }
@@ -639,6 +651,11 @@ const SOUNDS = {
   },
   card_tick: (ctx) => {
     playTone(ctx, 1800, 0.03, "triangle", 0.12);
+  },
+  discard: (ctx) => {
+    // Swooshy downward sweep — card tossed away
+    playTone(ctx, 600, 0.2, "triangle", 0.2, 150);
+    playNoise(ctx, 0.1, 0.15);
   },
   hand_whoosh: (ctx) => {
     // Soft whoosh — bandpass-filtered noise with rising frequency sweep
