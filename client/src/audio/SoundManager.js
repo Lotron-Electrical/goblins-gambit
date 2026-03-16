@@ -610,6 +610,31 @@ const SOUNDS = {
   card_tick: (ctx) => {
     playTone(ctx, 1800, 0.03, 'triangle', 0.12);
   },
+  hand_whoosh: (ctx) => {
+    // Soft whoosh — bandpass-filtered noise with rising frequency sweep
+    const duration = 0.2;
+    const bufferSize = ctx.sampleRate * duration;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = 0.8;
+    filter.frequency.setValueAtTime(400, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + duration);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.04);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    source.start(ctx.currentTime);
+  },
   // Event system sounds
   volcano_rumble: (ctx) => {
     playTone(ctx, 60, 0.8, 'sawtooth', 0.25, 40);

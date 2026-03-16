@@ -556,6 +556,7 @@ export default function HandBar() {
     if (!isMobile || !tutorialEngine || tutorialPaused) return;
     const config = tutorialEngine.getStepConfig();
     if (config.highlightCardUid || config.tabHint) {
+      soundManager.play('hand_whoosh');
       setHandExpanded(true);
       // Scroll fan to highlighted card after expansion
       if (config.highlightCardUid) {
@@ -672,7 +673,7 @@ export default function HandBar() {
             className={`bg-gray-950/90 border-t border-gray-800 px-2 py-1 ${
               stripFlash ? 'ring-2 ring-[var(--color-gold)] animate-[pulse_0.3s_ease-in-out_2]' : ''
             }`}
-            onClick={() => { if (hand.length > 0) { setHandExpanded(true); selectCard(null); } }}
+            onClick={() => { if (hand.length > 0) { soundManager.play('hand_whoosh'); setHandExpanded(true); selectCard(null); } }}
           >
             {/* Action buttons row — right-aligned above strip */}
             <div className="flex items-center justify-between mb-1">
