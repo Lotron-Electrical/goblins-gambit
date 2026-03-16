@@ -3,8 +3,8 @@
  * All sounds generated programmatically — no audio files needed.
  */
 
-import { playDynamicLoop, getLoopDurationMs } from './MusicLayers.js';
-import { playMenuLoop, MENU_LOOP_MS } from './MenuMusic.js';
+import { playDynamicLoop, getLoopDurationMs } from "./MusicLayers.js";
+import { playMenuLoop, MENU_LOOP_MS } from "./MenuMusic.js";
 
 class SoundManager {
   constructor() {
@@ -21,7 +21,7 @@ class SoundManager {
     this.menuMusicPlaying = false;
     this.menuMusicNodes = null;
     this._menuMusicTimer = null;
-    this.theme = 'swamp';
+    this.theme = "swamp";
   }
 
   /** Must be called from a user gesture (click/tap) to unlock AudioContext */
@@ -29,13 +29,13 @@ class SoundManager {
     if (this.initialized) return;
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      if (this.ctx.state === 'suspended') {
+      if (this.ctx.state === "suspended") {
         this.ctx.resume();
       }
       this.initialized = true;
-      console.log('[SoundManager] initialized, state:', this.ctx.state);
+      console.log("[SoundManager] initialized, state:", this.ctx.state);
     } catch (e) {
-      console.warn('[SoundManager] failed to init:', e);
+      console.warn("[SoundManager] failed to init:", e);
     }
   }
 
@@ -45,7 +45,7 @@ class SoundManager {
     if (!this.ctx) this.init();
     if (!this.ctx) return;
     // Resume if suspended (can happen after tab switch)
-    if (this.ctx.state === 'suspended') {
+    if (this.ctx.state === "suspended") {
       this.ctx.resume();
     }
     try {
@@ -60,7 +60,7 @@ class SoundManager {
     if (this.musicPlaying) return;
     if (!this.ctx) this.init();
     if (!this.ctx) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state === "suspended") this.ctx.resume();
     this.musicPlaying = true;
     this._scheduleLoop();
   }
@@ -68,7 +68,11 @@ class SoundManager {
   stopMusic() {
     this.musicPlaying = false;
     if (this.musicNodes) {
-      this.musicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+      this.musicNodes.forEach((n) => {
+        try {
+          n.stop();
+        } catch (e) {}
+      });
       this.musicNodes = null;
     }
     if (this._musicTimer) {
@@ -82,7 +86,7 @@ class SoundManager {
   }
 
   setTheme(theme) {
-    const newTheme = theme || 'swamp';
+    const newTheme = theme || "swamp";
     if (newTheme === this.theme) return;
     this.theme = newTheme;
     // Crossfade: stop current loops and restart with new theme
@@ -113,7 +117,11 @@ class SoundManager {
     this.musicNodes = null;
     setTimeout(() => {
       if (oldNodes) {
-        oldNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+        oldNodes.forEach((n) => {
+          try {
+            n.stop();
+          } catch (e) {}
+        });
       }
     }, 500);
     // Start new loop after fade-out
@@ -126,7 +134,7 @@ class SoundManager {
     if (this.menuMusicPlaying) return;
     if (!this.ctx) this.init();
     if (!this.ctx) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state === "suspended") this.ctx.resume();
     this.menuMusicPlaying = true;
     this._scheduleMenuLoop();
   }
@@ -134,7 +142,11 @@ class SoundManager {
   stopMenuMusic() {
     this.menuMusicPlaying = false;
     if (this.menuMusicNodes) {
-      this.menuMusicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+      this.menuMusicNodes.forEach((n) => {
+        try {
+          n.stop();
+        } catch (e) {}
+      });
       this.menuMusicNodes = null;
     }
     if (this._menuMusicTimer) {
@@ -145,21 +157,24 @@ class SoundManager {
 
   _scheduleMenuLoop() {
     if (!this.menuMusicPlaying || !this.ctx) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state === "suspended") this.ctx.resume();
     try {
       const nodes = playMenuLoop(this.ctx, this.muted ? 0 : this.musicVolume);
       this.menuMusicNodes = nodes;
     } catch (e) {
-      console.warn('[SoundManager] menu music error:', e);
+      console.warn("[SoundManager] menu music error:", e);
     }
-    this._menuMusicTimer = setTimeout(() => this._scheduleMenuLoop(), MENU_LOOP_MS);
+    this._menuMusicTimer = setTimeout(
+      () => this._scheduleMenuLoop(),
+      MENU_LOOP_MS,
+    );
   }
 
   startAmbient() {
     if (this.ambientPlaying) return;
     if (!this.ctx) this.init();
     if (!this.ctx) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state === "suspended") this.ctx.resume();
     this.ambientPlaying = true;
     this._scheduleAmbient();
   }
@@ -183,7 +198,7 @@ class SoundManager {
   _scheduleLoop() {
     if (!this.musicPlaying || !this.ctx) return;
     // Resume suspended context (e.g. after tab switch)
-    if (this.ctx.state === 'suspended') {
+    if (this.ctx.state === "suspended") {
       this.ctx.resume();
     }
     // Smooth interpolation toward target
@@ -191,11 +206,16 @@ class SoundManager {
     // Guard against NaN intensity
     if (!isFinite(this.intensity)) this.intensity = 0;
     try {
-      const nodes = playDynamicLoop(this.ctx, this.intensity, this.musicVolume, this.theme);
+      const nodes = playDynamicLoop(
+        this.ctx,
+        this.intensity,
+        this.musicVolume,
+        this.theme,
+      );
       this.musicNodes = nodes;
     } catch (e) {
       // Prevent loop chain from breaking on audio errors
-      console.warn('[SoundManager] music loop error:', e);
+      console.warn("[SoundManager] music loop error:", e);
     }
     const loopMs = getLoopDurationMs(this.theme);
     this._musicTimer = setTimeout(() => {
@@ -211,7 +231,14 @@ class SoundManager {
 // --- Sound definitions ---
 // Each is a function that takes an AudioContext and plays immediately.
 
-function playTone(ctx, freq, duration, type = 'sine', volume = 0.3, endFreq = null) {
+function playTone(
+  ctx,
+  freq,
+  duration,
+  type = "sine",
+  volume = 0.3,
+  endFreq = null,
+) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -232,7 +259,7 @@ function playNoise(ctx, duration, volume = 0.3) {
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1);
+    data[i] = Math.random() * 2 - 1;
   }
   const source = ctx.createBufferSource();
   source.buffer = buffer;
@@ -244,7 +271,7 @@ function playNoise(ctx, duration, volume = 0.3) {
   source.start(ctx.currentTime);
 }
 
-function playChord(ctx, freqs, duration, type = 'sine', volume = 0.15) {
+function playChord(ctx, freqs, duration, type = "sine", volume = 0.15) {
   for (const f of freqs) {
     playTone(ctx, f, duration, type, volume);
   }
@@ -264,7 +291,7 @@ function playSwampAmbient(ctx, volume) {
     const dur = 0.08 + Math.random() * 0.12;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
+    osc.type = "sine";
     osc.frequency.setValueAtTime(freq, start);
     osc.frequency.linearRampToValueAtTime(freq * 1.8, start + dur);
     gain.gain.setValueAtTime(volume * 0.4, start);
@@ -283,10 +310,10 @@ function playSwampAmbient(ctx, volume) {
       const cStart = start + j * 0.18;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'square';
+      osc.type = "square";
       osc.frequency.setValueAtTime(120 + Math.random() * 40, cStart);
       const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
+      filter.type = "lowpass";
       filter.frequency.setValueAtTime(300, cStart);
       gain.gain.setValueAtTime(volume * 0.2, cStart);
       gain.gain.linearRampToValueAtTime(0, cStart + 0.12);
@@ -305,11 +332,11 @@ function playSwampAmbient(ctx, volume) {
     const bufLen = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const hpf = ctx.createBiquadFilter();
-    hpf.type = 'highpass';
+    hpf.type = "highpass";
     hpf.frequency.setValueAtTime(6000 + Math.random() * 3000, start);
     const gain = ctx.createGain();
     const insVol = volume * (0.03 + Math.random() * 0.04);
@@ -337,11 +364,11 @@ function playBloodAmbient(ctx, volume) {
     const bufLen = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const bpf = ctx.createBiquadFilter();
-    bpf.type = 'bandpass';
+    bpf.type = "bandpass";
     bpf.frequency.setValueAtTime(400 + Math.random() * 300, start);
     bpf.Q.setValueAtTime(2, start);
     const gain = ctx.createGain();
@@ -361,7 +388,7 @@ function playBloodAmbient(ctx, volume) {
     const start = t + 2 + Math.random() * 5;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
+    osc.type = "sine";
     osc.frequency.setValueAtTime(280, start);
     osc.frequency.linearRampToValueAtTime(420, start + 0.8);
     osc.frequency.linearRampToValueAtTime(350, start + 1.5);
@@ -380,10 +407,10 @@ function playBloodAmbient(ctx, volume) {
   const droneStart = t;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-  osc.type = 'sawtooth';
+  osc.type = "sawtooth";
   osc.frequency.setValueAtTime(55, droneStart);
   const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
+  filter.type = "lowpass";
   filter.frequency.setValueAtTime(120, droneStart);
   gain.gain.setValueAtTime(volume * 0.08, droneStart);
   gain.gain.setValueAtTime(volume * 0.08, droneStart + 9);
@@ -408,11 +435,11 @@ function playFrostAmbient(ctx, volume) {
     const bufLen = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const hpf = ctx.createBiquadFilter();
-    hpf.type = 'highpass';
+    hpf.type = "highpass";
     hpf.frequency.setValueAtTime(3000, start);
     const gain = ctx.createGain();
     const windVol = volume * (0.08 + Math.random() * 0.06);
@@ -433,7 +460,7 @@ function playFrostAmbient(ctx, volume) {
     const dur = 0.3 + Math.random() * 0.5;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
+    osc.type = "sine";
     osc.frequency.setValueAtTime(freq, start);
     const chimeVol = volume * (0.04 + Math.random() * 0.04);
     gain.gain.setValueAtTime(0, start);
@@ -452,11 +479,11 @@ function playFrostAmbient(ctx, volume) {
     const bufLen = Math.floor(ctx.sampleRate * 0.04);
     const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let j = 0; j < bufLen; j++) data[j] = (Math.random() * 2 - 1);
+    for (let j = 0; j < bufLen; j++) data[j] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const bpf = ctx.createBiquadFilter();
-    bpf.type = 'bandpass';
+    bpf.type = "bandpass";
     bpf.frequency.setValueAtTime(4000 + Math.random() * 2000, start);
     bpf.Q.setValueAtTime(5, start);
     const gain = ctx.createGain();
@@ -477,28 +504,28 @@ const AMBIENT_BY_THEME = {
 
 const SOUNDS = {
   draw: (ctx) => {
-    playTone(ctx, 440, 0.12, 'triangle', 0.25, 880);
+    playTone(ctx, 440, 0.12, "triangle", 0.25, 880);
   },
   creature_play: (ctx) => {
     playNoise(ctx, 0.15, 0.3);
-    playTone(ctx, 150, 0.2, 'sawtooth', 0.2, 80);
+    playTone(ctx, 150, 0.2, "sawtooth", 0.2, 80);
   },
   magic_cast: (ctx) => {
-    playTone(ctx, 600, 0.3, 'sine', 0.2, 1200);
-    playTone(ctx, 900, 0.3, 'sine', 0.1, 1800);
+    playTone(ctx, 600, 0.3, "sine", 0.2, 1200);
+    playTone(ctx, 900, 0.3, "sine", 0.1, 1800);
   },
   trick_play: (ctx) => {
-    playTone(ctx, 523, 0.08, 'triangle', 0.25);
-    setTimeout(() => playTone(ctx, 659, 0.08, 'triangle', 0.25), 80);
-    setTimeout(() => playTone(ctx, 784, 0.12, 'triangle', 0.25), 160);
+    playTone(ctx, 523, 0.08, "triangle", 0.25);
+    setTimeout(() => playTone(ctx, 659, 0.08, "triangle", 0.25), 80);
+    setTimeout(() => playTone(ctx, 784, 0.12, "triangle", 0.25), 160);
   },
   armour_equip: (ctx) => {
     playNoise(ctx, 0.08, 0.4);
-    playTone(ctx, 200, 0.15, 'square', 0.15);
+    playTone(ctx, 200, 0.15, "square", 0.15);
   },
   attack: (ctx) => {
     playNoise(ctx, 0.12, 0.5);
-    playTone(ctx, 100, 0.15, 'sawtooth', 0.3, 50);
+    playTone(ctx, 100, 0.15, "sawtooth", 0.3, 50);
   },
   direct_attack: (ctx) => {
     // Ethereal choir — layered sine harmonics with slow attack, reverb-like decay
@@ -507,7 +534,7 @@ const SOUNDS = {
     for (const freq of freqs) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freq, t);
       osc.frequency.linearRampToValueAtTime(freq * 1.01, t + 0.6); // subtle shimmer
       gain.gain.setValueAtTime(0, t);
@@ -522,7 +549,7 @@ const SOUNDS = {
     // Upper octave shimmer
     const osc2 = ctx.createOscillator();
     const g2 = ctx.createGain();
-    osc2.type = 'triangle';
+    osc2.type = "triangle";
     osc2.frequency.setValueAtTime(1046.5, t + 0.1); // C6
     osc2.frequency.linearRampToValueAtTime(1318.5, t + 0.5); // E6
     g2.gain.setValueAtTime(0, t + 0.1);
@@ -533,60 +560,60 @@ const SOUNDS = {
     osc2.start(t + 0.1);
     osc2.stop(t + 0.7);
     // Bass impact underneath
-    playTone(ctx, 80, 0.3, 'sine', 0.25, 40);
+    playTone(ctx, 80, 0.3, "sine", 0.25, 40);
   },
   killshot: (ctx) => {
     // Heavy impact — layered noise burst + deep bass hit + metallic ring
     playNoise(ctx, 0.25, 0.6);
-    playTone(ctx, 60, 0.3, 'sawtooth', 0.4, 25);
-    playTone(ctx, 180, 0.2, 'square', 0.2, 60);
+    playTone(ctx, 60, 0.3, "sawtooth", 0.4, 25);
+    playTone(ctx, 180, 0.2, "square", 0.2, 60);
     setTimeout(() => {
-      playTone(ctx, 800, 0.15, 'triangle', 0.15, 200);
+      playTone(ctx, 800, 0.15, "triangle", 0.15, 200);
       playNoise(ctx, 0.15, 0.3);
     }, 80);
-    setTimeout(() => playTone(ctx, 40, 0.4, 'sine', 0.2, 20), 150);
+    setTimeout(() => playTone(ctx, 40, 0.4, "sine", 0.2, 20), 150);
   },
   death: (ctx) => {
     // Creature death — descending low pitched rumble
     playNoise(ctx, 0.4, 0.35);
-    playTone(ctx, 280, 0.5, 'sawtooth', 0.25, 25);
-    setTimeout(() => playTone(ctx, 120, 0.3, 'sine', 0.15, 40), 120);
+    playTone(ctx, 280, 0.5, "sawtooth", 0.25, 25);
+    setTimeout(() => playTone(ctx, 120, 0.3, "sine", 0.15, 40), 120);
   },
   armour_break: (ctx) => {
     // Metallic crack — high clang + filtered noise burst
-    playTone(ctx, 1600, 0.3, 'square', 0.1, 600);
-    playTone(ctx, 900, 0.25, 'triangle', 0.08, 400);
+    playTone(ctx, 1600, 0.3, "square", 0.1, 600);
+    playTone(ctx, 900, 0.25, "triangle", 0.08, 400);
     playNoise(ctx, 0.1, 0.45);
   },
   damage: (ctx) => {
     // Short impact thud — distinct from full death
     playNoise(ctx, 0.07, 0.35);
-    playTone(ctx, 90, 0.1, 'sawtooth', 0.18, 55);
+    playTone(ctx, 90, 0.1, "sawtooth", 0.18, 55);
   },
   sp_gain: (ctx) => {
-    playTone(ctx, 880, 0.1, 'sine', 0.2);
-    setTimeout(() => playTone(ctx, 1100, 0.1, 'sine', 0.2), 100);
-    setTimeout(() => playTone(ctx, 1320, 0.15, 'sine', 0.2), 200);
+    playTone(ctx, 880, 0.1, "sine", 0.2);
+    setTimeout(() => playTone(ctx, 1100, 0.1, "sine", 0.2), 100);
+    setTimeout(() => playTone(ctx, 1320, 0.15, "sine", 0.2), 200);
   },
   coin_clink: (ctx) => {
     // Metallic coin clink — two bright pings with harmonic shimmer
     const t = ctx.currentTime;
     // First clink
-    playTone(ctx, 2400, 0.06, 'triangle', 0.2);
-    playTone(ctx, 3600, 0.04, 'sine', 0.1);
+    playTone(ctx, 2400, 0.06, "triangle", 0.2);
+    playTone(ctx, 3600, 0.04, "sine", 0.1);
     // Second clink (slightly higher, slight delay)
     setTimeout(() => {
-      playTone(ctx, 2800, 0.06, 'triangle', 0.18);
-      playTone(ctx, 4200, 0.04, 'sine', 0.08);
+      playTone(ctx, 2800, 0.06, "triangle", 0.18);
+      playTone(ctx, 4200, 0.04, "sine", 0.08);
     }, 90);
     // Subtle rising shimmer
     setTimeout(() => {
-      playTone(ctx, 1600, 0.08, 'sine', 0.1, 3200);
+      playTone(ctx, 1600, 0.08, "sine", 0.1, 3200);
     }, 50);
   },
   turn_start: (ctx) => {
-    playTone(ctx, 220, 0.15, 'sawtooth', 0.2, 440);
-    setTimeout(() => playTone(ctx, 330, 0.25, 'triangle', 0.2), 150);
+    playTone(ctx, 220, 0.15, "sawtooth", 0.2, 440);
+    setTimeout(() => playTone(ctx, 330, 0.25, "triangle", 0.2), 150);
   },
   dice_roll: (ctx) => {
     // Rapid clicks
@@ -595,20 +622,23 @@ const SOUNDS = {
     }
   },
   set_complete: (ctx) => {
-    playChord(ctx, [440, 554, 659], 0.5, 'triangle', 0.15);
-    setTimeout(() => playChord(ctx, [523, 659, 784], 0.6, 'triangle', 0.2), 300);
+    playChord(ctx, [440, 554, 659], 0.5, "triangle", 0.15);
+    setTimeout(
+      () => playChord(ctx, [523, 659, 784], 0.6, "triangle", 0.2),
+      300,
+    );
   },
   victory: (ctx) => {
     const notes = [523, 659, 784, 1047];
     notes.forEach((f, i) => {
-      setTimeout(() => playTone(ctx, f, 0.3, 'triangle', 0.25), i * 200);
+      setTimeout(() => playTone(ctx, f, 0.3, "triangle", 0.25), i * 200);
     });
   },
   ability_used: (ctx) => {
-    playTone(ctx, 550, 0.15, 'sine', 0.2, 1100);
+    playTone(ctx, 550, 0.15, "sine", 0.2, 1100);
   },
   card_tick: (ctx) => {
-    playTone(ctx, 1800, 0.03, 'triangle', 0.12);
+    playTone(ctx, 1800, 0.03, "triangle", 0.12);
   },
   hand_whoosh: (ctx) => {
     // Soft whoosh — bandpass-filtered noise with rising frequency sweep
@@ -622,10 +652,13 @@ const SOUNDS = {
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
+    filter.type = "bandpass";
     filter.Q.value = 0.8;
     filter.frequency.setValueAtTime(400, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + duration);
+    filter.frequency.exponentialRampToValueAtTime(
+      2000,
+      ctx.currentTime + duration,
+    );
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0, ctx.currentTime);
     gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.04);
@@ -635,22 +668,50 @@ const SOUNDS = {
     gain.connect(ctx.destination);
     source.start(ctx.currentTime);
   },
+  hand_whoosh_close: (ctx) => {
+    // Reverse whoosh — descending frequency sweep, slightly shorter
+    const duration = 0.15;
+    const bufferSize = ctx.sampleRate * duration;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.Q.value = 0.8;
+    filter.frequency.setValueAtTime(1800, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(
+      300,
+      ctx.currentTime + duration,
+    );
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.03);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    source.start(ctx.currentTime);
+  },
   // Event system sounds
   volcano_rumble: (ctx) => {
-    playTone(ctx, 60, 0.8, 'sawtooth', 0.25, 40);
+    playTone(ctx, 60, 0.8, "sawtooth", 0.25, 40);
     playNoise(ctx, 0.5, 0.2);
-    setTimeout(() => playTone(ctx, 80, 0.6, 'sine', 0.15, 50), 200);
+    setTimeout(() => playTone(ctx, 80, 0.6, "sine", 0.15, 50), 200);
   },
   dragon_roar: (ctx) => {
-    playTone(ctx, 120, 0.6, 'sawtooth', 0.35, 200);
-    setTimeout(() => playTone(ctx, 200, 0.5, 'sawtooth', 0.25, 80), 150);
+    playTone(ctx, 120, 0.6, "sawtooth", 0.35, 200);
+    setTimeout(() => playTone(ctx, 200, 0.5, "sawtooth", 0.25, 80), 150);
     setTimeout(() => playNoise(ctx, 0.3, 0.3), 300);
   },
   jargon_chime: (ctx) => {
-    playTone(ctx, 660, 0.15, 'triangle', 0.2);
-    setTimeout(() => playTone(ctx, 880, 0.15, 'triangle', 0.2), 120);
-    setTimeout(() => playTone(ctx, 1100, 0.2, 'triangle', 0.2), 240);
-    setTimeout(() => playTone(ctx, 1320, 0.3, 'triangle', 0.15), 360);
+    playTone(ctx, 660, 0.15, "triangle", 0.2);
+    setTimeout(() => playTone(ctx, 880, 0.15, "triangle", 0.2), 120);
+    setTimeout(() => playTone(ctx, 1100, 0.2, "triangle", 0.2), 240);
+    setTimeout(() => playTone(ctx, 1320, 0.3, "triangle", 0.15), 360);
   },
 };
 
