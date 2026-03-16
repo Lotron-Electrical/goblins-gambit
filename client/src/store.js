@@ -417,7 +417,24 @@ export const useStore = create((set, get) => ({
       screen: "tutorial",
       selectedCard: null,
       targetMode: false,
+      chatMessages: [],
+      chatUnread: 0,
     });
+    // Gnarl's opening taunt after a short delay
+    setTimeout(() => {
+      const msg = {
+        id: "tut-chat-0",
+        playerId: "tutorial-opponent",
+        playerName: "Gnarl the Goblin",
+        timestamp: Date.now(),
+        text: "Welcome to the swamp, smoothskin! Try not to embarrass yourself.",
+      };
+      const { chatMessages, chatOpen } = get();
+      set({
+        chatMessages: [...chatMessages, msg],
+        ...(!chatOpen ? { chatUnread: (get().chatUnread || 0) + 1 } : {}),
+      });
+    }, 2000);
   },
 
   tutorialAction: (actionType, payload = {}) => {
@@ -450,6 +467,33 @@ export const useStore = create((set, get) => ({
       // Clear animations from engine state after they've been set so they don't replay
       if (newState.animations?.length) {
         engine.gameState = { ...engine.gameState, animations: [] };
+      }
+      // Tutorial bot chat — Gnarl reacts to player actions
+      const GNARL_CHAT = {
+        "play-trick": "A trick? Pfft, that won't save you!",
+        "play-creature": "Oh look, a creature! How cute. Mine's bigger.",
+        "end-turn": "Finally! Watch THIS!",
+        attack: "OI! That was me best one! You'll pay for that!",
+        "equip-armour-3": "All that armour?! That's not fair!",
+        "play-magic": "Magic?! Goblins don't need magic... usually.",
+        "final-attack": "NO! IMPOSSIBLE! How did you—",
+      };
+      const stepId = prevStep?.id;
+      if (stepId && GNARL_CHAT[stepId]) {
+        setTimeout(() => {
+          const chatMsg = {
+            id: `tut-chat-${stepId}`,
+            playerId: "tutorial-opponent",
+            playerName: "Gnarl the Goblin",
+            timestamp: Date.now(),
+            text: GNARL_CHAT[stepId],
+          };
+          const { chatMessages: msgs, chatOpen: isOpen } = get();
+          set({
+            chatMessages: [...msgs, chatMsg],
+            ...(!isOpen ? { chatUnread: (get().chatUnread || 0) + 1 } : {}),
+          });
+        }, 1500);
       }
       // Auto-select the highlighted card for the next step (after optional delay)
       const nextConfig = engine.getStepConfig();

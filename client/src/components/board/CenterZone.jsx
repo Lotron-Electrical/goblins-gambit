@@ -92,14 +92,14 @@ export default function CenterZone({
 
   const cardW = isMobile ? 60 : 60;
   const cardH = isMobile ? 84 : 84;
-  // Scale card stacks down to save vertical space
-  const mobileScale = 0.65;
-  const desktopScale = 0.85;
+  // Scale card stacks — doubled from original 0.65/0.85
+  const mobileScale = 1.3;
+  const desktopScale = 1.7;
   const scale = isMobile ? mobileScale : desktopScale;
   // Scaled dimensions for layout reservations
   const layoutW = Math.round(cardW * scale);
   const layoutH = Math.round(cardH * scale);
-  const zoneH = isMobile ? "h-[60px]" : "h-[85px]";
+  const zoneH = isMobile ? "h-[115px]" : "h-[150px]";
 
   return (
     <div
@@ -162,7 +162,7 @@ export default function CenterZone({
           </div>
         </div>
         <span
-          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[9px]"}`}
+          className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
         >
           Deck {deckCount}
         </span>
@@ -342,7 +342,7 @@ export default function CenterZone({
                     );
                   })}
                   {/* Count badge */}
-                  <div className="absolute -top-1 -right-1 bg-red-700 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center z-10">
+                  <div className="absolute -top-2 -right-2 bg-red-700 text-white text-[14px] font-bold w-7 h-7 rounded-full flex items-center justify-center z-10">
                     {graveyardCount}
                   </div>
                 </>
@@ -358,7 +358,7 @@ export default function CenterZone({
           </div>
         </div>
         <span
-          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[9px]"}`}
+          className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
         >
           Grave
         </span>
