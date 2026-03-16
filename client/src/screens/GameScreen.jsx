@@ -523,7 +523,7 @@ export default function GameScreen() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto p-2.5 pt-14 min-h-0">
+        <div className="flex-1 overflow-hidden p-2 pt-12 min-h-0">
           <div
             className="grid gap-2.5"
             style={{

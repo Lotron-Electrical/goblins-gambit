@@ -90,14 +90,16 @@ export default function CenterZone({
 
   const deckRotations = useMemo(() => getDeckRotations(deckCount), [deckCount]);
 
-  const cardW = isMobile ? 60 : 90;
-  const cardH = isMobile ? 84 : 126;
-  // On mobile, scale the card stacks down to save vertical space
+  const cardW = isMobile ? 60 : 60;
+  const cardH = isMobile ? 84 : 84;
+  // Scale card stacks down to save vertical space
   const mobileScale = 0.65;
-  // Scaled dimensions for layout reservations on mobile
-  const layoutW = isMobile ? Math.round(cardW * mobileScale) : cardW;
-  const layoutH = isMobile ? Math.round(cardH * mobileScale) : cardH;
-  const zoneH = isMobile ? "h-[60px]" : "h-[140px]";
+  const desktopScale = 0.85;
+  const scale = isMobile ? mobileScale : desktopScale;
+  // Scaled dimensions for layout reservations
+  const layoutW = Math.round(cardW * scale);
+  const layoutH = Math.round(cardH * scale);
+  const zoneH = isMobile ? "h-[60px]" : "h-[85px]";
 
   return (
     <div
@@ -108,18 +110,14 @@ export default function CenterZone({
       <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
       {/* Deck stack — left side */}
       <div
-        className={`flex ${isMobile ? "flex-row items-center gap-1" : "flex-col items-center gap-1"}`}
+        className="flex flex-row items-center gap-1"
       >
         <div className="relative" style={{ width: layoutW, height: layoutH }}>
           <div
-            style={
-              isMobile
-                ? {
-                    transform: `scale(${mobileScale})`,
-                    transformOrigin: "top left",
-                  }
-                : undefined
-            }
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+            }}
           >
             <div className="relative" style={{ width: cardW, height: cardH }}>
               {deckCount > 0 ? (
@@ -166,7 +164,7 @@ export default function CenterZone({
           </div>
         </div>
         <span
-          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[11px]"}`}
+          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[9px]"}`}
         >
           Deck {deckCount}
         </span>
@@ -177,17 +175,16 @@ export default function CenterZone({
         <div
           className="relative z-10"
           style={{
-            width: isMobile ? 70 : 110,
-            height: isMobile ? 98 : 154,
+            width: isMobile ? 70 : 80,
+            height: isMobile ? 98 : 112,
             overflow: "visible",
           }}
         >
           <div
-            style={
-              isMobile
-                ? { transform: "scale(0.85)", transformOrigin: "center center" }
-                : undefined
-            }
+            style={{
+              transform: isMobile ? "scale(0.85)" : "scale(0.7)",
+              transformOrigin: "center center",
+            }}
           >
             <div
               className="relative"
@@ -308,7 +305,7 @@ export default function CenterZone({
 
       {/* Graveyard — right side, messy stack of card faces */}
       <div
-        className={`flex ${isMobile ? "flex-row-reverse items-center gap-1" : "flex-col items-center gap-1"}`}
+        className="flex flex-row-reverse items-center gap-1"
       >
         <div
           className="relative cursor-pointer"
@@ -316,14 +313,10 @@ export default function CenterZone({
           onClick={() => graveyardCount > 0 && setGraveyardOpen(true)}
         >
           <div
-            style={
-              isMobile
-                ? {
-                    transform: `scale(${mobileScale})`,
-                    transformOrigin: "top left",
-                  }
-                : undefined
-            }
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+            }}
           >
             <div className="relative" style={{ width: cardW, height: cardH }}>
               {graveyard && graveyard.length > 0 ? (
@@ -369,7 +362,7 @@ export default function CenterZone({
           </div>
         </div>
         <span
-          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[11px]"}`}
+          className={`text-gray-500 font-display ${isMobile ? "text-[9px]" : "text-[9px]"}`}
         >
           Grave
         </span>

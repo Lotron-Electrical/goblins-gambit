@@ -156,7 +156,7 @@ export default function PlayerField({
 
   return (
     <div
-      className={`relative rounded-xl ${isMobile ? "p-1.5" : "p-2.5"} transition-all duration-300 border ${
+      className={`relative rounded-xl ${isMobile ? "p-1.5" : isOpponent ? "p-1.5" : "p-2.5"} transition-all duration-300 border ${
         isCurrentTurn
           ? "bg-[var(--color-swamp)]/70 border-[var(--color-gold)]/30 animate-turn-glow"
           : "bg-gray-900/50 border-gray-800/40"
@@ -186,7 +186,7 @@ export default function PlayerField({
           ) : null;
         })()}
       {/* Player info bar */}
-      <div className="flex items-center justify-between mb-1.5 px-1.5 rounded-lg">
+      <div className={`flex items-center justify-between ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5 rounded-lg`}>
         <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
           {!(isMobile && isOpponent) && (
             <span
@@ -262,7 +262,7 @@ export default function PlayerField({
       {/* SP progress bar */}
       {gameState?.winSP && (
         <div
-          className={`${isMobile ? "h-2" : "h-1.5"} rounded-full bg-gray-800/80 mx-1.5 mb-1.5 overflow-hidden relative`}
+          className={`${isMobile ? "h-2" : isOpponent ? "h-1" : "h-1.5"} rounded-full bg-gray-800/80 mx-1.5 ${isOpponent ? "mb-1" : "mb-1.5"} overflow-hidden relative`}
         >
           <div
             className={`h-full rounded-full transition-all duration-700 ease-out relative ${
@@ -289,7 +289,7 @@ export default function PlayerField({
       )}
 
       {/* Gear zone -- horizontal strip */}
-      <div className="flex gap-1 md:gap-1.5 mb-1.5 px-1.5">
+      <div className={`flex gap-1 md:gap-1.5 ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5`}>
         <div
           className={`text-gray-600 flex items-center font-display ${isMobile ? "text-[9px] mr-0.5" : "text-[11px] mr-1"}`}
         >
@@ -301,7 +301,7 @@ export default function PlayerField({
           return (
             <div
               key={slot}
-              className={`flex-1 ${isMobile ? "h-7" : "h-8"} rounded-lg border cursor-pointer transition-all duration-200 ${
+              className={`flex-1 ${isMobile ? "h-7" : isOpponent ? "h-6" : "h-8"} rounded-lg border cursor-pointer transition-all duration-200 ${
                 armour
                   ? `border-purple-500/60 bg-purple-950/50 hover:border-purple-400 hover:bg-purple-950/70 ${turnsLeft > 1 ? "animate-gear-shimmer" : ""}`
                   : "border-gray-800/60 bg-gray-900/30 border-dashed"
@@ -336,13 +336,13 @@ export default function PlayerField({
       {/* Swamp zone -- full width */}
       <div>
         <div
-          className={`text-gray-600 text-center font-display tracking-wider uppercase ${isMobile ? "text-[8px] mb-0.5" : "text-[10px] mb-1"}`}
+          className={`text-gray-600 text-center font-display tracking-wider uppercase ${isMobile ? "text-[8px] mb-0.5" : `text-[10px] ${isOpponent ? "mb-0.5" : "mb-1"}`}`}
         >
           {THEME_FIELD_NAME[theme] || "The Swamp"}
         </div>
         <div
           className={`relative flex gap-0.5 justify-center bg-gradient-to-b from-[#141808]/60 to-[#0c1004]/70 rounded-lg border border-[#2a3018]/40 shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)] p-1 md:p-1.5 overflow-hidden ${
-            isMobile ? "min-h-[92px]" : "min-h-[156px] max-w-[620px] mx-auto"
+            isMobile ? "min-h-[92px]" : `${isOpponent ? "min-h-[120px]" : "min-h-[140px]"} max-w-[620px] mx-auto`
           }`}
         >
           {/* Fog overlay */}
@@ -375,7 +375,7 @@ export default function PlayerField({
                       : canPlace
                         ? "border-dashed border-[var(--color-gold)]/50 bg-[var(--color-gold)]/5 cursor-pointer hover:bg-[var(--color-gold)]/15 hover:border-[var(--color-gold)]/70 hover:shadow-[inset_0_0_8px_rgba(212,160,23,0.1)]"
                         : "border-dashed border-gray-700/30 bg-gray-900/15"
-                } ${isMobile ? "min-h-[56px]" : "min-h-[90px]"} flex items-center justify-center transition-all duration-200`}
+                } ${isMobile ? "min-h-[56px]" : `${isOpponent ? "min-h-[70px]" : "min-h-[90px]"}`} flex items-center justify-center transition-all duration-200`}
                 onClick={() => {
                   if (canPlace) {
                     playCard(selectedCard.uid, { slotIndex: slotIdx });
