@@ -165,11 +165,24 @@ export default function TutorialOverlay() {
     ? `0 0 0 9999px rgba(0,0,0,0.6)`
     : 'none';
 
-  // Position prompt above center zone so it doesn't cover player UI
-  // For attack steps, always position at bottom so opponent's creature is visible
+  // Position prompt so it never covers the element the player needs to tap
+  // Attack steps have two phases: tap own creature (bottom), then tap opponent creature (top)
   const isAttackStep = config.expectedAction === 'attack';
-  const promptTop = isAttackStep && isMobile ? undefined : (isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%'));
-  const promptBottom = isAttackStep && isMobile ? '140px' : undefined;
+  const attackPhase2 = isAttackStep && selectedCard; // Attacker selected, now targeting opponent
+  let promptTop, promptBottom;
+  if (attackPhase2) {
+    // Phase 2: opponent creature is at top — push panel to bottom
+    promptTop = undefined;
+    promptBottom = isMobile ? '140px' : '120px';
+  } else if (isAttackStep) {
+    // Phase 1: own creature is at bottom — put panel at top
+    promptTop = isMobile ? '80px' : '60px';
+    promptBottom = undefined;
+  } else {
+    // Normal steps: above center zone
+    promptTop = isMobile ? '80px' : (centerY ? `${centerY - 40}px` : '35%');
+    promptBottom = undefined;
+  }
 
   return (
     <>
@@ -195,9 +208,9 @@ export default function TutorialOverlay() {
         </div>
       )}
 
-      {/* Instruction panel — positioned above center zone */}
+      {/* Instruction panel — no interactive elements, so pointer-events-none */}
       {config.instruction && !hideInstruction && (
-        <div className={`fixed z-50 pointer-events-auto left-1/2 -translate-x-1/2 ${
+        <div className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 ${
           isMobile ? 'w-[calc(100%-16px)]' : 'max-w-md w-full -translate-y-1/2'
         }`}
           style={{ top: promptTop, bottom: promptBottom }}
