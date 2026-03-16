@@ -16,9 +16,22 @@ export default function GameMenu() {
     handArc,
     setHandArc,
     leaveRoom,
+    gameState,
+    currentRoom,
+    authToken,
+    saveGame,
   } = useStore();
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmSave, setConfirmSave] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  // Can save: logged in (not guest), game in progress (not finished), bot-only game
+  const isLoggedIn = authToken && authToken !== "guest";
+  const isPlaying = gameState?.phase === "playing";
+  const isBotOnly =
+    currentRoom && currentRoom.players.filter((p) => !p.isBot).length === 1;
+  const canSave = isLoggedIn && isPlaying && isBotOnly;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -133,6 +146,34 @@ export default function GameMenu() {
           >
             {ICONS.bug} Report Bug / Feature
           </button>
+
+          {canSave && (
+            <button
+              disabled={saving}
+              onClick={() => {
+                if (!confirmSave) {
+                  setConfirmSave(true);
+                  return;
+                }
+                setSaving(true);
+                saveGame((success) => {
+                  setSaving(false);
+                  if (!success) setConfirmSave(false);
+                });
+              }}
+              className={`w-full py-2 rounded-lg text-sm font-bold transition ${
+                confirmSave
+                  ? "bg-[var(--color-card-blue)] hover:bg-blue-600 text-white"
+                  : "bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white"
+              }`}
+            >
+              {saving
+                ? "Saving..."
+                : confirmSave
+                  ? "Confirm Save & Quit?"
+                  : "Save & Quit"}
+            </button>
+          )}
 
           <button
             onClick={handleLeave}

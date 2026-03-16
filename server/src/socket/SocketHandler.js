@@ -1,4 +1,9 @@
-import { EVENTS, ACTION, CHAT_EMOTES } from "../../../shared/src/constants.js";
+import {
+  EVENTS,
+  ACTION,
+  CHAT_EMOTES,
+  GAME_PHASE,
+} from "../../../shared/src/constants.js";
 import {
   createBotId,
   getBotName,
@@ -12,6 +17,13 @@ import {
   clearBotChat,
 } from "../bot/BotChat.js";
 import { validateToken, updateStatsAfterGame } from "../accounts.js";
+import {
+  saveGame,
+  loadGame,
+  deleteSavedGame,
+  getSavedGameInfo,
+} from "../savedGames.js";
+import { GameEngine } from "../game/GameEngine.js";
 
 export function setupSocketHandlers(io, lobby) {
   // Track which rooms have bots and bot IDs + difficulty
@@ -72,6 +84,81 @@ export function setupSocketHandlers(io, lobby) {
     }
     lobby.rooms.delete(roomId);
     lobby.games.delete(roomId);
+  }
+
+  /** Remap all player IDs in game state from old IDs to new IDs */
+  function remapPlayerIds(state, oldToNewMap) {
+    // Remap players object
+    for (const [oldId, newId] of Object.entries(oldToNewMap)) {
+      if (state.players[oldId]) {
+        state.players[oldId].id = newId;
+        state.players[newId] = state.players[oldId];
+        delete state.players[oldId];
+      }
+    }
+
+    // Remap turn order
+    state.turnOrder = state.turnOrder.map((id) => oldToNewMap[id] || id);
+
+    // Remap stats tracking
+    for (const [oldId, newId] of Object.entries(oldToNewMap)) {
+      if (state.stats[oldId]) {
+        state.stats[newId] = state.stats[oldId];
+        delete state.stats[oldId];
+      }
+    }
+
+    // Remap pending target/choice
+    if (
+      state.pendingTarget?.playerId &&
+      oldToNewMap[state.pendingTarget.playerId]
+    ) {
+      state.pendingTarget.playerId = oldToNewMap[state.pendingTarget.playerId];
+    }
+    if (
+      state.pendingChoice?.playerId &&
+      oldToNewMap[state.pendingChoice.playerId]
+    ) {
+      state.pendingChoice.playerId = oldToNewMap[state.pendingChoice.playerId];
+    }
+
+    // Remap creature references (_controller, _originalOwner, _harambeOwner)
+    for (const p of Object.values(state.players)) {
+      for (const c of p.swamp || []) {
+        if (c._controller && oldToNewMap[c._controller])
+          c._controller = oldToNewMap[c._controller];
+        if (c._originalOwner && oldToNewMap[c._originalOwner])
+          c._originalOwner = oldToNewMap[c._originalOwner];
+        if (c._harambeOwner && oldToNewMap[c._harambeOwner])
+          c._harambeOwner = oldToNewMap[c._harambeOwner];
+      }
+    }
+
+    // Remap _revealedHands (AMA ability)
+    if (state._revealedHands) {
+      const newRevealed = {};
+      for (const [oldId, targets] of Object.entries(state._revealedHands)) {
+        const newKey = oldToNewMap[oldId] || oldId;
+        newRevealed[newKey] = targets.map((t) => oldToNewMap[t] || t);
+      }
+      state._revealedHands = newRevealed;
+    }
+
+    // Remap event system IDs (volcano deposits, dragon damage)
+    if (state.volcano?.deposits) {
+      const newDeposits = {};
+      for (const [oldId, deps] of Object.entries(state.volcano.deposits)) {
+        newDeposits[oldToNewMap[oldId] || oldId] = deps;
+      }
+      state.volcano.deposits = newDeposits;
+    }
+    if (state.dragon?.damageByPlayer) {
+      const newDmg = {};
+      for (const [oldId, dmg] of Object.entries(state.dragon.damageByPlayer)) {
+        newDmg[oldToNewMap[oldId] || oldId] = dmg;
+      }
+      state.dragon.damageByPlayer = newDmg;
+    }
   }
 
   async function botTick(roomId, engine, botId) {
@@ -590,6 +677,233 @@ export function setupSocketHandlers(io, lobby) {
 
       // After human action, check if a bot needs to respond or if it's bot's turn
       setTimeout(() => runBotTurn(roomId, engine), 500);
+    });
+
+    // --- Saved Games ---
+    socket.on(EVENTS.SAVE_GAME, async (_, callback) => {
+      try {
+        const username = socketAccounts.get(socket.id);
+        if (!username) {
+          callback?.({ error: "Must be logged in to save" });
+          return;
+        }
+
+        const roomId = lobby.getPlayerRoom(socket.id);
+        if (!roomId) {
+          callback?.({ error: "Not in a game" });
+          return;
+        }
+        const engine = lobby.getGame(roomId);
+        if (!engine || engine.state.phase !== GAME_PHASE.PLAYING) {
+          callback?.({ error: "No active game to save" });
+          return;
+        }
+
+        // Verify bot-only game (only 1 human player)
+        const room = lobby.getRoom(roomId);
+        const humanPlayers = room.players.filter((p) => !botIds.has(p.id));
+        if (humanPlayers.length !== 1) {
+          callback?.({ error: "Can only save bot-only games" });
+          return;
+        }
+
+        // Deep clone and clean transient state
+        const gameState = JSON.parse(JSON.stringify(engine.state));
+        gameState.pendingTarget = null;
+        gameState.pendingChoice = null;
+        gameState.animations = [];
+
+        // Mark which players are bots in saved state
+        for (const p of room.players) {
+          if (botIds.has(p.id) && gameState.players[p.id]) {
+            gameState.players[p.id].isBot = true;
+            gameState.players[p.id]._botDifficulty =
+              botDifficulty.get(p.id) || "medium";
+          }
+        }
+
+        // Save room settings needed to recreate the game
+        const roomSettings = {
+          theme: room.theme || "swamp",
+          winSP: room.winSP,
+          startingSP: room.startingSP,
+          startingHandSize: room.startingHandSize,
+          baseAP: room.baseAP,
+          eventsEnabled: room.eventsEnabled,
+          maxPlayers: room.maxPlayers,
+        };
+
+        await saveGame(username, gameState, roomSettings);
+
+        // Clean up the room/game and return player to lobby
+        socket.leave(roomId);
+        cleanupFinishedGame(roomId);
+        lobby.playerRooms.delete(socket.id);
+
+        callback?.({ success: true });
+      } catch (err) {
+        console.error("[SaveGame] Error:", err);
+        callback?.({ error: "Failed to save game" });
+      }
+    });
+
+    socket.on(EVENTS.LOAD_GAME, async (_, callback) => {
+      try {
+        const username = socketAccounts.get(socket.id);
+        if (!username) {
+          callback?.({ error: "Must be logged in" });
+          return;
+        }
+
+        // Don't load if already in a room
+        if (lobby.getPlayerRoom(socket.id)) {
+          callback?.({ error: "Already in a game" });
+          return;
+        }
+
+        const save = await loadGame(username);
+        if (!save) {
+          callback?.({ error: "No saved game found" });
+          return;
+        }
+
+        const { gameState, roomSettings } = save;
+
+        // Find the human player and bot players in saved state
+        const savedPlayers = Object.values(gameState.players);
+        const humanPlayer = savedPlayers.find((p) => !p.isBot);
+        const savedBots = savedPlayers.filter((p) => p.isBot);
+
+        if (!humanPlayer) {
+          callback?.({ error: "Corrupted save — no human player" });
+          await deleteSavedGame(username);
+          return;
+        }
+
+        // Create fresh room
+        const room = lobby.createRoom(socket.id, humanPlayer.name, {
+          maxPlayers: roomSettings.maxPlayers || 6,
+        });
+        room.theme = roomSettings.theme || "swamp";
+        room.winSP = roomSettings.winSP;
+        room.startingSP = roomSettings.startingSP;
+        room.startingHandSize = roomSettings.startingHandSize;
+        room.baseAP = roomSettings.baseAP;
+        room.eventsEnabled = roomSettings.eventsEnabled;
+        room.started = true;
+        socket.join(room.id);
+
+        // Build old-to-new ID mapping
+        const oldToNewMap = {};
+        oldToNewMap[humanPlayer.id] = socket.id;
+
+        // Register bots with fresh IDs, preserving names and difficulty
+        for (const bot of savedBots) {
+          const newBotId = createBotId();
+          oldToNewMap[bot.id] = newBotId;
+          botIds.add(newBotId);
+          botDifficulty.set(newBotId, bot._botDifficulty || "medium");
+
+          room.players.push({
+            id: newBotId,
+            name: bot.name,
+            ready: true,
+            isBot: true,
+            difficulty: bot._botDifficulty || "medium",
+          });
+          lobby.playerRooms.set(newBotId, room.id);
+        }
+
+        // Remap all IDs in saved state
+        remapPlayerIds(gameState, oldToNewMap);
+
+        // Clean up transient bot metadata from saved state
+        for (const p of Object.values(gameState.players)) {
+          delete p.isBot;
+          delete p._botDifficulty;
+        }
+
+        // Create engine with dummy data — we'll replace its state
+        const playerIds = room.players.map((p) => p.id);
+        const playerNames = room.players.map((p) => p.name);
+        const engine = new GameEngine(
+          playerIds,
+          playerNames,
+          roomSettings.winSP,
+          roomSettings.theme,
+          {
+            startingSP: roomSettings.startingSP || 0,
+            startingHandSize: roomSettings.startingHandSize,
+            baseAP: roomSettings.baseAP,
+            eventsEnabled: roomSettings.eventsEnabled || false,
+          },
+        );
+
+        // Replace engine state with saved state
+        engine.state = gameState;
+
+        // Re-attach account username
+        if (engine.state.players[socket.id]) {
+          engine.state.players[socket.id]._accountUsername = username;
+          engine.state.players[socket.id].connected = true;
+        }
+
+        // Wire up timeout callbacks
+        engine._onPendingChoiceTimeout = () => {
+          broadcastState(room.id, engine);
+          runBotTurn(room.id, engine);
+        };
+        engine._onPendingTargetTimeout = () => {
+          broadcastState(room.id, engine);
+          runBotTurn(room.id, engine);
+        };
+
+        lobby.games.set(room.id, engine);
+
+        // Delete the save (consumed)
+        await deleteSavedGame(username);
+
+        // Send state to the human player
+        const state = engine.getStateForPlayer(socket.id);
+        callback?.({ success: true, room, gameState: state });
+        socket.emit(EVENTS.GAME_STATE, state);
+
+        // If it's a bot's turn, start bot turns
+        runBotTurn(room.id, engine);
+      } catch (err) {
+        console.error("[LoadGame] Error:", err);
+        callback?.({ error: "Failed to load game" });
+      }
+    });
+
+    socket.on(EVENTS.SAVED_GAME_INFO, async (_, callback) => {
+      const username = socketAccounts.get(socket.id);
+      if (!username) {
+        callback?.({ hasSave: false });
+        return;
+      }
+      try {
+        const info = await getSavedGameInfo(username);
+        callback?.(info);
+      } catch (err) {
+        console.error("[SavedGameInfo] Error:", err);
+        callback?.({ hasSave: false });
+      }
+    });
+
+    socket.on(EVENTS.DELETE_SAVE, async (_, callback) => {
+      const username = socketAccounts.get(socket.id);
+      if (!username) {
+        callback?.({ error: "Must be logged in" });
+        return;
+      }
+      try {
+        await deleteSavedGame(username);
+        callback?.({ success: true });
+      } catch (err) {
+        console.error("[DeleteSave] Error:", err);
+        callback?.({ error: "Failed to delete save" });
+      }
     });
 
     // --- Chat ---

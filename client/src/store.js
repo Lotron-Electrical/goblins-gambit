@@ -57,6 +57,9 @@ export const useStore = create((set, get) => ({
   hoverPosition: null,
   graveyardOpen: false,
 
+  // Saved game
+  savedGameInfo: null,
+
   // Tutorial
   tutorialMode: false,
   tutorialEngine: null,
@@ -372,6 +375,58 @@ export const useStore = create((set, get) => ({
     });
   },
 
+  // Saved game actions
+  fetchSavedGameInfo: () => {
+    socket.emit(EVENTS.SAVED_GAME_INFO, null, (info) => {
+      set({ savedGameInfo: info || { hasSave: false } });
+    });
+  },
+
+  saveGame: (callback) => {
+    socket.emit(EVENTS.SAVE_GAME, null, (res) => {
+      if (res?.error) {
+        set({ error: res.error });
+        callback?.(false);
+      } else {
+        sessionStorage.removeItem("gg_roomId");
+        set({
+          currentRoom: null,
+          screen: "lobby",
+          gameState: null,
+          chatMessages: [],
+          chatUnread: 0,
+          chatOpen: false,
+          menuOpen: false,
+        });
+        // Refresh saved game info for lobby
+        get().fetchSavedGameInfo();
+        callback?.(true);
+      }
+    });
+  },
+
+  loadSavedGame: () => {
+    socket.emit(EVENTS.LOAD_GAME, null, (res) => {
+      if (res?.error) {
+        set({ error: res.error });
+      } else if (res?.room) {
+        sessionStorage.setItem("gg_roomId", res.room.id);
+        set({ currentRoom: res.room, savedGameInfo: { hasSave: false } });
+        // Game state arrives via GAME_STATE event
+      }
+    });
+  },
+
+  deleteSavedGame: () => {
+    socket.emit(EVENTS.DELETE_SAVE, null, (res) => {
+      if (res?.error) {
+        set({ error: res.error });
+      } else {
+        set({ savedGameInfo: { hasSave: false } });
+      }
+    });
+  },
+
   // Tutorial actions
   startTutorial: () => {
     const engine = new TutorialEngine();
@@ -524,7 +579,10 @@ socket.on("connect", () => {
   // Re-authenticate if we have a token
   const { authToken } = useStore.getState();
   if (authToken && authToken !== "guest") {
-    socket.emit("authenticate", { token: authToken });
+    socket.emit("authenticate", { token: authToken }, () => {
+      // After auth, check for saved games
+      useStore.getState().fetchSavedGameInfo();
+    });
   }
 
   // Attempt to rejoin if we were in a room/game before disconnect

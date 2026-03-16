@@ -35,11 +35,15 @@ export default function LobbyScreen() {
     authToken,
     logout,
     startTutorial,
+    savedGameInfo,
+    loadSavedGame,
+    deleteSavedGame,
   } = useStore();
   const [name, setName] = useState(playerName || "");
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [confirmDeleteSave, setConfirmDeleteSave] = useState(false);
   const isGuest = authToken === "guest";
   const showTutorialBanner =
     !localStorage.getItem("gg_tutorial_complete") && !bannerDismissed;
@@ -172,6 +176,51 @@ export default function LobbyScreen() {
             >
               Skip — I'll learn as I go
             </button>
+          </div>
+        )}
+
+        {savedGameInfo?.hasSave && (
+          <div className="bg-gray-900/90 border-2 border-[var(--color-card-blue)] rounded-xl p-5">
+            <p className="font-display text-[var(--color-card-blue)] text-lg mb-1">
+              Continue Game
+            </p>
+            <div className="text-gray-400 text-[13px] mb-4 space-y-0.5">
+              <p>
+                Turn {savedGameInfo.turnNumber} &middot;{" "}
+                {savedGameInfo.botCount} bot
+                {savedGameInfo.botCount !== 1 ? "s" : ""} &middot;{" "}
+                {{
+                  swamp: "The Swamp",
+                  blood: "Blood Moon",
+                  frost: "Frozen Wastes",
+                }[savedGameInfo.theme] || "The Swamp"}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={loadSavedGame}
+                className="flex-1 bg-[var(--color-card-blue)] hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition text-lg"
+              >
+                Continue
+              </button>
+              <button
+                onClick={() => {
+                  if (!confirmDeleteSave) {
+                    setConfirmDeleteSave(true);
+                    return;
+                  }
+                  deleteSavedGame();
+                  setConfirmDeleteSave(false);
+                }}
+                className={`px-4 py-3 rounded-lg font-bold transition text-sm ${
+                  confirmDeleteSave
+                    ? "bg-red-700 hover:bg-red-600 text-white"
+                    : "bg-gray-800 hover:bg-gray-700 text-gray-400"
+                }`}
+              >
+                {confirmDeleteSave ? "Confirm?" : "Delete"}
+              </button>
+            </div>
           </div>
         )}
 

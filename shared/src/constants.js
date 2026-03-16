@@ -148,6 +148,12 @@ export const EVENTS = {
   // Chat
   CHAT_MESSAGE: "chat_message",
 
+  // Saved games
+  SAVE_GAME: "save_game",
+  LOAD_GAME: "load_game",
+  DELETE_SAVE: "delete_save",
+  SAVED_GAME_INFO: "saved_game_info",
+
   // System
   PLAYER_DISCONNECTED: "player_disconnected",
   PLAYER_RECONNECTED: "player_reconnected",

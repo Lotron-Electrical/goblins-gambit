@@ -14,6 +14,7 @@ import {
   getLeaderboard,
   validateToken,
 } from "./accounts.js";
+import { initSavedGames } from "./savedGames.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
@@ -185,6 +186,7 @@ app.get("*", (req, res, next) => {
 const PORT = process.env.PORT || 3001;
 
 await initDatabase();
+await initSavedGames();
 
 httpServer.listen(PORT, () => {
   console.log(`Goblin's Gambit server running on port ${PORT}`);
