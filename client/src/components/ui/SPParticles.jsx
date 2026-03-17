@@ -20,9 +20,9 @@ function ParticleBurst({ x, y, amount }) {
     const count = Math.min(12, Math.max(4, Math.floor(amount / 100)));
     return Array.from({ length: count }, (_, i) => ({
       id: i,
-      offsetX: (Math.random() - 0.5) * 60,
-      offsetY: -30 - Math.random() * 80,
-      delay: Math.random() * 0.15,
+      offsetX: (Math.random() - 0.5) * 80,
+      offsetY: -40 - Math.random() * 100,
+      delay: Math.random() * 0.3,
       size: 4 + Math.random() * 4,
     }));
   });
@@ -49,7 +49,7 @@ function ParticleBurst({ x, y, amount }) {
             scale: 0.3,
           }}
           transition={{
-            duration: 0.7,
+            duration: 1.8,
             delay: p.delay,
             ease: "easeOut",
           }}
@@ -65,8 +65,8 @@ function ParticleBurst({ x, y, amount }) {
           transform: "translate(-50%, -50%)",
         }}
         initial={{ opacity: 1, y: -30 }}
-        animate={{ opacity: 0, y: -70 }}
-        transition={{ duration: 0.9 }}
+        animate={{ opacity: 0, y: -90 }}
+        transition={{ duration: 2.2 }}
       >
         +{amount} SP
       </motion.div>
