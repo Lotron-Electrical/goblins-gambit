@@ -484,7 +484,7 @@ export default function GameScreen() {
         if (spEl) {
           const rect = spEl.getBoundingClientRect();
           x = rect.right;
-          y = rect.top;
+          y = rect.top - 20;
         }
       }
       const id = ++spIdRef.current;

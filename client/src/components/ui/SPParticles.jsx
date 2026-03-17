@@ -64,8 +64,8 @@ function ParticleBurst({ x, y, amount }) {
           textShadow: "0 0 8px rgba(251, 191, 36, 0.6)",
           transform: "translate(-50%, -50%)",
         }}
-        initial={{ opacity: 1, y: -30 }}
-        animate={{ opacity: 0, y: -90 }}
+        initial={{ opacity: 1, y: 0 }}
+        animate={{ opacity: 0, y: -70 }}
         transition={{ duration: 2.2 }}
       >
         +{amount} SP
