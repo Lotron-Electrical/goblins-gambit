@@ -377,15 +377,18 @@ export default function PlayerField({
                   <div
                     className={`bg-red-900/90 border border-red-600 rounded px-2 py-1 text-center ${isMobile ? "text-[10px]" : "text-xs"}`}
                   >
-                    <span className="text-white font-bold">
-                      Direct Attack: {pred.effectiveDmg} dmg
+                    <span className="font-bold">
+                      Direct Attack:{" "}
+                      <span className="text-red-400">
+                        {pred.effectiveDmg} dmg
+                      </span>
                     </span>
                     {pred.shield > 0 && (
                       <span className="text-red-300"> (-{pred.shield} Sh)</span>
                     )}
                     <span className="text-white"> / </span>
                     <span className="text-[var(--color-gold)] font-bold">
-                      {pred.effectiveDmg} SP gain
+                      {Math.floor(pred.effectiveDmg / 2)} SP gain
                     </span>
                   </div>
                 </div>
