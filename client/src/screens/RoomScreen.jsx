@@ -183,7 +183,9 @@ export default function RoomScreen() {
         {/* Add Bot buttons — right below player list */}
         {isHost && !isFull && (
           <div className="mb-6">
-            <div className="text-xs uppercase tracking-widest text-gray-400 mb-1">Add Bot</div>
+            <div className="text-xs uppercase tracking-widest text-gray-400 mb-1">
+              Add Bot
+            </div>
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => addBot("easy")}

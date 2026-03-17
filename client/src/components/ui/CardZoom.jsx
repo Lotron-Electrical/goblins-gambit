@@ -213,18 +213,25 @@ export default function CardZoom() {
               </div>
             )}
 
-            {card.effect && (
+            {card.effect && !card.abilityId && (
               <div className="text-[13px] text-gray-200 leading-relaxed border-t border-gray-800 pt-2">
                 {card.effect}
               </div>
             )}
 
             {card.abilityId && (
-              <div className="text-[11px] text-yellow-400 flex items-center gap-1">
-                <span>{ICONS.lightning}</span>
-                {hasActivatedAbility(card.abilityId)
-                  ? "Activated ability (use on your turn)"
-                  : "Special ability"}
+              <div className="text-[11px] text-yellow-400 flex flex-col gap-0.5 border-t border-gray-800 pt-2">
+                <div className="flex items-center gap-1">
+                  <span>{ICONS.lightning}</span>
+                  {hasActivatedAbility(card.abilityId)
+                    ? "Activated ability (use on your turn)"
+                    : "Special ability"}
+                </div>
+                {card.effect && (
+                  <div className="text-gray-200 leading-snug">
+                    {card.effect}
+                  </div>
+                )}
               </div>
             )}
 
@@ -494,7 +501,7 @@ export default function CardZoom() {
         )}
 
         {/* Effect text */}
-        {card.effect && (
+        {card.effect && !card.abilityId && (
           <div className="text-[14px] text-gray-200 leading-relaxed border-t border-gray-800 pt-2">
             {card.effect}
           </div>
@@ -502,11 +509,16 @@ export default function CardZoom() {
 
         {/* Ability indicator */}
         {card.abilityId && (
-          <div className="text-[12px] text-yellow-400 flex items-center gap-1">
-            <span>{ICONS.lightning}</span>
-            {hasActivatedAbility(card.abilityId)
-              ? "Activated ability (use on your turn)"
-              : "Special ability"}
+          <div className="text-[12px] text-yellow-400 flex flex-col gap-0.5 border-t border-gray-800 pt-2">
+            <div className="flex items-center gap-1">
+              <span>{ICONS.lightning}</span>
+              {hasActivatedAbility(card.abilityId)
+                ? "Activated ability (use on your turn)"
+                : "Special ability"}
+            </div>
+            {card.effect && (
+              <div className="text-gray-200 leading-snug">{card.effect}</div>
+            )}
           </div>
         )}
 

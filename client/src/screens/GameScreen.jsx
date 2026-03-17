@@ -23,6 +23,7 @@ import FieldParticles from "../components/ui/FieldParticles.jsx";
 import SPParticles from "../components/ui/SPParticles.jsx";
 import MobileActivityLog from "../components/ui/MobileActivityLog.jsx";
 import ChatPanel from "../components/ui/ChatPanel.jsx";
+import ChatBubbles from "../components/ui/ChatBubbles.jsx";
 import DragOverlay from "../components/ui/DragOverlay.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -686,6 +687,7 @@ export default function GameScreen() {
 
       {/* Chat panel */}
       <ChatPanel expanded={chatOpen} onClose={() => handleSetChatOpen(false)} />
+      <ChatBubbles />
 
       {/* Card play announcement */}
       <CardAnnouncement

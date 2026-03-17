@@ -112,34 +112,35 @@ export function resolveAttack(
     };
   }
 
-  // --- Catfish mimic: first attack copies attacker's stats ---
-  if (
-    defenderCard.abilityId === "catfish_mimic" &&
-    !defenderCard._silenced &&
-    !defenderCard._hasMimicked
-  ) {
-    defenderCard._hasMimicked = true;
-    defenderCard.attack = attackerCard.attack || 0;
-    defenderCard.defence = attackerCard.defence || 0;
-    defenderCard.sp = attackerCard.sp || 0;
+  // --- Catfish mimic: any opponent attack copies attacker's stats ---
+  const catfish = defender.swamp.find(
+    (c) => c.abilityId === "catfish_mimic" && !c._silenced && !c._hasMimicked,
+  );
+  if (catfish) {
+    catfish._hasMimicked = true;
+    catfish.attack = attackerCard.attack || 0;
+    catfish.defence = attackerCard.defence || 0;
+    catfish.sp = attackerCard.sp || 0;
     events.push({
       type: "buff",
-      cardUid: defenderUid,
-      text: `Catfish mimicked ${attackerCard.name}! ATK:${defenderCard.attack} DEF:${defenderCard.defence}`,
+      cardUid: catfish.uid,
+      text: `Catfish mimicked ${attackerCard.name}! ATK:${catfish.attack} DEF:${catfish.defence}`,
     });
-    // Recalculate dStats after mimic
-    const newDStats = getEffectiveStats(state, defenderOwnerId, defenderCard);
-    // Continue attack with new stats
-    return resolveAttackDamage(
-      state,
-      attackerId,
-      defenderOwnerId,
-      attackerCard,
-      defenderCard,
-      aStats,
-      newDStats,
-      events,
-    );
+    // If Catfish IS the target, recalc and resolve with new stats
+    if (defenderCard.uid === catfish.uid) {
+      const newDStats = getEffectiveStats(state, defenderOwnerId, catfish);
+      return resolveAttackDamage(
+        state,
+        attackerId,
+        defenderOwnerId,
+        attackerCard,
+        defenderCard,
+        aStats,
+        newDStats,
+        events,
+      );
+    }
+    // Otherwise fall through — normal attack continues against actual target
   }
 
   // --- Viper sting: attacker loses 1 AP next round ---
