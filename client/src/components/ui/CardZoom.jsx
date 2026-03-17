@@ -110,15 +110,15 @@ export default function CardZoom() {
             <img
               src={`/cards/${card.image}`}
               alt={card.name}
-              className="w-full shrink-0 max-h-[30dvh] object-cover object-top"
+              className="w-full shrink-0 max-h-[22dvh] object-cover object-top"
               draggable={false}
             />
           )}
 
           {/* Card info — scrollable */}
-          <div className="p-3 space-y-2 overflow-y-auto flex-1 min-h-0">
+          <div className="p-2 space-y-1.5 overflow-y-auto flex-1 min-h-0">
             <div>
-              <h3 className="font-display text-[16px] text-white leading-tight">
+              <h3 className="font-display text-[15px] text-white leading-tight">
                 {card.name}
               </h3>
               <div className="flex items-center gap-2 mt-1">
@@ -146,7 +146,7 @@ export default function CardZoom() {
                 );
                 const baseHP = card.defence || 0;
                 return (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <StatBar
                       label="Attack"
                       value={currentAtk}
@@ -294,7 +294,7 @@ export default function CardZoom() {
                         selectCard({ ...card, _zone: "swamp" });
                         setZoomedCard(null);
                       }}
-                      className="flex-1 bg-red-800 hover:bg-red-700 border border-red-600 text-white font-bold py-2 rounded-lg text-[13px] transition"
+                      className="flex-1 bg-red-800 hover:bg-red-700 border border-red-600 text-white font-bold py-1.5 rounded-lg text-[13px] transition"
                     >
                       Attack
                     </button>
@@ -309,7 +309,7 @@ export default function CardZoom() {
                         }
                         setZoomedCard(null);
                       }}
-                      className="flex-1 bg-green-800 hover:bg-green-700 border border-green-600 text-white font-bold py-2 rounded-lg text-[13px] transition"
+                      className="flex-1 bg-green-800 hover:bg-green-700 border border-green-600 text-white font-bold py-1.5 rounded-lg text-[13px] transition"
                     >
                       {card.type === "Creature" ? "Select to Place" : "Play"}
                     </button>
@@ -317,7 +317,7 @@ export default function CardZoom() {
                   {canDiscard && (
                     <button
                       onClick={() => setConfirmAction("discard")}
-                      className="flex-1 bg-red-900/80 hover:bg-red-800 border border-red-700 text-red-200 font-bold py-2 rounded-lg text-[13px] transition"
+                      className="flex-1 bg-red-900/80 hover:bg-red-800 border border-red-700 text-red-200 font-bold py-1.5 rounded-lg text-[13px] transition"
                     >
                       Discard
                     </button>
@@ -326,7 +326,7 @@ export default function CardZoom() {
                     <button
                       onClick={() => setConfirmAction("recycle")}
                       disabled={!canAffordRecycle}
-                      className={`flex-1 border font-bold py-2 rounded-lg text-[13px] transition ${
+                      className={`flex-1 border font-bold py-1.5 rounded-lg text-[13px] transition ${
                         canAffordRecycle
                           ? "bg-purple-900/80 hover:bg-purple-800 border-purple-700 text-purple-200"
                           : "bg-gray-800 border-gray-600 text-gray-500 cursor-not-allowed"
@@ -351,7 +351,7 @@ export default function CardZoom() {
           {/* Close button */}
           <button
             onClick={() => setZoomedCard(null)}
-            className="w-full shrink-0 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 text-[14px] transition"
+            className="w-full shrink-0 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 text-[14px] transition"
           >
             Close
           </button>
