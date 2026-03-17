@@ -312,7 +312,6 @@ export default function CardOnField({
                     transition: { type: "spring", stiffness: 300, damping: 22 },
                   }
       }
-      layout
     >
       {/* Card art — cropped to artwork only, hiding text portion */}
       {card.image && !invisible && (
