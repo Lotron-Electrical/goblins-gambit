@@ -624,7 +624,11 @@ export class GameEngine {
       const cur = getCurrentPlayer(this.state);
       const curId = this.getCurrentPlayerId();
       const skipLagg = cur._drawSkip && cur._drawSkip > 0;
-      const skipDisconnected = cur.connected === false;
+      // Don't skip disconnected players in bot games — game should pause instead
+      const allOpponentsBots = this.state.turnOrder
+        .filter(id => id !== curId)
+        .every(id => this.state.players[id]?.isBot);
+      const skipDisconnected = cur.connected === false && !allOpponentsBots;
       if (!skipLagg && !skipDisconnected) break;
 
       if (skipLagg) cur._drawSkip--;

@@ -171,6 +171,11 @@ export function setupSocketHandlers(io, lobby) {
     try {
       if (!botIds.has(botId)) return;
 
+      // Pause bot if any human opponent is disconnected (PvE pause)
+      const humanDisconnected = Object.entries(engine.state.players)
+        .some(([id, p]) => !botIds.has(id) && !p.connected);
+      if (humanDisconnected) return;
+
       const botState = engine.getStateForPlayer(botId);
       if (botState.phase !== "playing") return;
 
@@ -473,9 +478,14 @@ export function setupSocketHandlers(io, lobby) {
         // Also emit GAME_STATE so the client's listener picks it up
         socket.emit(EVENTS.GAME_STATE, state);
 
-        // If it's this player's turn and they were being skipped, they can now play
         // Broadcast updated state to all players
         broadcastState(roomId, game);
+
+        // If it's a bot's turn (was paused due to our disconnect), resume bot play
+        const currentId = game.getCurrentPlayerId();
+        if (botIds.has(currentId)) {
+          runBotTurn(roomId, game);
+        }
       } else {
         // Game hasn't started yet — just rejoin the room
         callback?.({ success: true, room });
@@ -667,11 +677,14 @@ export function setupSocketHandlers(io, lobby) {
         return;
       }
 
-      // Attach account usernames to player state for stat tracking
+      // Attach account usernames and bot flags to player state
       for (const p of result.room.players) {
         const username = socketAccounts.get(p.id);
         if (username && result.engine.state.players[p.id]) {
           result.engine.state.players[p.id]._accountUsername = username;
+        }
+        if (botIds.has(p.id) && result.engine.state.players[p.id]) {
+          result.engine.state.players[p.id].isBot = true;
         }
       }
 
@@ -875,9 +888,8 @@ export function setupSocketHandlers(io, lobby) {
         // Remap all IDs in saved state
         remapPlayerIds(gameState, oldToNewMap);
 
-        // Clean up transient bot metadata from saved state
+        // Clean up transient bot metadata from saved state (keep isBot for turn-skip logic)
         for (const p of Object.values(gameState.players)) {
-          delete p.isBot;
           delete p._botDifficulty;
         }
 
@@ -1060,25 +1072,34 @@ export function setupSocketHandlers(io, lobby) {
           }
 
           // If it was this player's turn, give 15s grace period before force-ending
+          // But only for PvP — in bot games, just pause (no human opponent waiting)
           if (game.getCurrentPlayerId() === socket.id) {
-            const timer = setTimeout(() => {
-              disconnectTimers.delete(socket.id);
-              // Verify game/room still exists before acting
-              const currentGame = lobby.getGame(roomId);
-              if (!currentGame) return;
-              // Only force end turn if still this player's turn and still disconnected
-              const p = currentGame.state.players[socket.id];
-              if (
-                p &&
-                !p.connected &&
-                currentGame.getCurrentPlayerId() === socket.id
-              ) {
-                currentGame.handleAction(socket.id, { type: ACTION.END_TURN });
-                broadcastState(roomId, currentGame);
-                runBotTurn(roomId, currentGame);
-              }
-            }, 15000);
-            disconnectTimers.set(socket.id, timer);
+            const allOpponentsBots = Object.keys(game.state.players)
+              .filter(id => id !== socket.id)
+              .every(id => botIds.has(id));
+
+            if (!allOpponentsBots) {
+              // PvP: start 15s grace timer
+              const timer = setTimeout(() => {
+                disconnectTimers.delete(socket.id);
+                // Verify game/room still exists before acting
+                const currentGame = lobby.getGame(roomId);
+                if (!currentGame) return;
+                // Only force end turn if still this player's turn and still disconnected
+                const p = currentGame.state.players[socket.id];
+                if (
+                  p &&
+                  !p.connected &&
+                  currentGame.getCurrentPlayerId() === socket.id
+                ) {
+                  currentGame.handleAction(socket.id, { type: ACTION.END_TURN });
+                  broadcastState(roomId, currentGame);
+                  runBotTurn(roomId, currentGame);
+                }
+              }, 15000);
+              disconnectTimers.set(socket.id, timer);
+            }
+            // PvE: no timer — game pauses until player reconnects
           }
         }
       } else {
