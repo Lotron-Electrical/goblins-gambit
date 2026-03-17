@@ -317,7 +317,8 @@ export default function PlayerField({
 
       {/* Ability slot + Swamp zone */}
       <div>
-        {/* Ability slots (own field only) — one per creature slot, aligned with swamp grid */}
+        {/* Ability slots — one per creature slot, aligned with swamp grid */}
+        {/* Own field: above swamp, clickable for activated. Opponent field: below swamp, read-only */}
         {!isOpponent && (
           <div className={`flex gap-0.5 px-1 ${isMobile ? "mb-0.5" : "mb-1"}`}>
             {Array.from({ length: 5 }).map((_, slotIdx) => {
@@ -464,6 +465,49 @@ export default function PlayerField({
             );
           })}
         </div>
+        {/* Opponent ability indicators — below their swamp */}
+        {isOpponent && (
+          <div className={`flex gap-0.5 px-1 ${isMobile ? "mt-0.5" : "mt-1"}`}>
+            {Array.from({ length: 5 }).map((_, slotIdx) => {
+              const creature =
+                player.swamp.find((c) => c._slot === slotIdx) || null;
+              const hasActivated =
+                creature &&
+                hasActivatedAbility(creature.abilityId) &&
+                !creature._silenced;
+              const isPassive =
+                creature &&
+                creature.abilityId &&
+                !hasActivatedAbility(creature.abilityId);
+              return (
+                <div
+                  key={slotIdx}
+                  className={`flex-1 min-w-0 ${isMobile ? "h-6" : "h-7"} rounded-lg border flex items-center justify-center transition-all duration-200 ${
+                    hasActivated
+                      ? "border-yellow-500/50 bg-yellow-950/40"
+                      : isPassive
+                        ? "border-purple-500/50 bg-purple-950/40"
+                        : "border-gray-800/60 bg-gray-900/30 border-dashed"
+                  }`}
+                >
+                  {hasActivated ? (
+                    <span
+                      className={`text-yellow-400 font-bold truncate px-0.5 ${isMobile ? "text-[7px]" : "text-[9px]"}`}
+                    >
+                      ⚡ Ability
+                    </span>
+                  ) : isPassive ? (
+                    <span
+                      className={`text-purple-400 font-bold truncate px-0.5 ${isMobile ? "text-[7px]" : "text-[9px]"}`}
+                    >
+                      ⚡ Passive
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Revealed hand (AMA) */}
