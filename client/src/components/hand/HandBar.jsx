@@ -374,7 +374,6 @@ function CircularCardRow({
   // Auto-select the centred card — only when the rounded index changes AND not mid-swipe
   useEffect(() => {
     if (reorderMode || sortedHand.length === 0) return;
-    if (isDragging.current) return; // skip while actively swiping (#106)
     const idx = Math.round(
       Math.max(0, Math.min(currentIndex, sortedHand.length - 1)),
     );

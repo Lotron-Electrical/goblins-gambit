@@ -840,6 +840,7 @@ export default function GameScreen() {
           const lineW = d ? 4 : k ? 5 : 3;
           return (
             <svg
+              key={attackLine.phase || "default"}
               style={{
                 position: "fixed",
                 inset: 0,
