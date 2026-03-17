@@ -349,21 +349,32 @@ export default function GameScreen() {
       }
 
       if (fromPos && toPos) {
-        setAttackLine({
+        const lineData = {
           from: fromPos,
           to: toPos,
           ownerPos: ownerSpPos, // SP counter of the attacking player
           killshot: !!currentAnimation.killshot,
           direct: isDirect,
-        });
-        // Direct attack needs longer for the SP return line animation
-        setTimeout(
-          () => setAttackLine(null),
-          isDirect ? 900 : currentAnimation.killshot ? 600 : 400,
-        );
-        // Play coin clink when the return line reaches the attacker
+          phase: isDirect ? "out" : null, // direct attacks: "out" then "return"
+        };
+        setAttackLine(lineData);
+
         if (isDirect) {
+          // Phase 1 (0-300ms): cyan line out. Phase 2 (300ms+): gold return only.
+          setTimeout(
+            () =>
+              setAttackLine((prev) =>
+                prev ? { ...prev, phase: "return" } : null,
+              ),
+            300,
+          );
+          setTimeout(() => setAttackLine(null), 900);
           setTimeout(() => soundManager.play("coin_clink"), 500);
+        } else {
+          setTimeout(
+            () => setAttackLine(null),
+            currentAnimation.killshot ? 600 : 400,
+          );
         }
       }
 
@@ -784,6 +795,9 @@ export default function GameScreen() {
         (() => {
           const k = attackLine.killshot;
           const d = attackLine.direct;
+          const phase = attackLine.phase; // "out", "return", or null (non-direct)
+          const showCyan = !d || phase === "out"; // cyan elements: non-direct always, direct only during "out"
+          const showReturn = d && phase === "return"; // gold return: only during "return" phase
           const dx = attackLine.to.x - attackLine.from.x;
           const dy = attackLine.to.y - attackLine.from.y;
           const len = Math.sqrt(dx * dx + dy * dy);
@@ -847,7 +861,7 @@ export default function GameScreen() {
                 )}
               </defs>
               {/* Direct attack: vertical light pillar at target */}
-              {d && (
+              {d && showCyan && (
                 <>
                   <rect
                     x={attackLine.to.x - 20}
@@ -882,74 +896,80 @@ export default function GameScreen() {
                 </>
               )}
               {/* Glow line */}
-              <line
-                x1={attackLine.from.x}
-                y1={attackLine.from.y}
-                x2={attackLine.to.x}
-                y2={attackLine.to.y}
-                stroke="url(#attack-grad)"
-                strokeWidth={glowW}
-                strokeLinecap="round"
-                filter="url(#attack-glow)"
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="opacity"
-                  values={d ? "0;0.6;0" : k ? "0;0.7;0" : "0;0.5;0"}
-                  dur={d ? "0.3s" : dur}
-                  fill="freeze"
-                />
-              </line>
+              {showCyan && (
+                <line
+                  x1={attackLine.from.x}
+                  y1={attackLine.from.y}
+                  x2={attackLine.to.x}
+                  y2={attackLine.to.y}
+                  stroke="url(#attack-grad)"
+                  strokeWidth={glowW}
+                  strokeLinecap="round"
+                  filter="url(#attack-glow)"
+                  opacity="0.5"
+                >
+                  <animate
+                    attributeName="opacity"
+                    values={d ? "0;0.6;0" : k ? "0;0.7;0" : "0;0.5;0"}
+                    dur={d ? "0.3s" : dur}
+                    fill="freeze"
+                  />
+                </line>
+              )}
               {/* Main slash line */}
-              <line
-                x1={attackLine.from.x}
-                y1={attackLine.from.y}
-                x2={attackLine.to.x}
-                y2={attackLine.to.y}
-                stroke="url(#attack-grad)"
-                strokeWidth={lineW}
-                strokeLinecap="round"
-                strokeDasharray={`${len}`}
-                strokeDashoffset={len}
-              >
-                <animate
-                  attributeName="stroke-dashoffset"
-                  from={len}
-                  to="0"
-                  dur={drawDur}
-                  fill="freeze"
-                />
-                <animate
-                  attributeName="opacity"
-                  values="1;1;0"
-                  keyTimes={d ? "0;0.8;1" : "0;0.5;1"}
-                  dur={d ? "0.3s" : dur}
-                  fill="freeze"
-                />
-              </line>
+              {showCyan && (
+                <line
+                  x1={attackLine.from.x}
+                  y1={attackLine.from.y}
+                  x2={attackLine.to.x}
+                  y2={attackLine.to.y}
+                  stroke="url(#attack-grad)"
+                  strokeWidth={lineW}
+                  strokeLinecap="round"
+                  strokeDasharray={`${len}`}
+                  strokeDashoffset={len}
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from={len}
+                    to="0"
+                    dur={drawDur}
+                    fill="freeze"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="1;1;0"
+                    keyTimes={d ? "0;0.8;1" : "0;0.5;1"}
+                    dur={d ? "0.3s" : dur}
+                    fill="freeze"
+                  />
+                </line>
+              )}
               {/* Impact burst at endpoint */}
-              <circle
-                cx={attackLine.to.x}
-                cy={attackLine.to.y}
-                r="0"
-                fill={d ? "#67e8f9" : k ? "#fbbf24" : "#f97316"}
-                opacity="0"
-              >
-                <animate
-                  attributeName="r"
-                  values={d ? "0;30;0" : k ? "0;24;0" : "0;12;0"}
-                  dur={d ? "0.5s" : k ? "0.4s" : "0.3s"}
-                  begin="0.15s"
-                  fill="freeze"
-                />
-                <animate
-                  attributeName="opacity"
-                  values={d ? "0;0.9;0" : k ? "0;1;0" : "0;0.8;0"}
-                  dur={d ? "0.5s" : k ? "0.4s" : "0.3s"}
-                  begin="0.15s"
-                  fill="freeze"
-                />
-              </circle>
+              {showCyan && (
+                <circle
+                  cx={attackLine.to.x}
+                  cy={attackLine.to.y}
+                  r="0"
+                  fill={d ? "#67e8f9" : k ? "#fbbf24" : "#f97316"}
+                  opacity="0"
+                >
+                  <animate
+                    attributeName="r"
+                    values={d ? "0;30;0" : k ? "0;24;0" : "0;12;0"}
+                    dur={d ? "0.5s" : k ? "0.4s" : "0.3s"}
+                    begin="0.15s"
+                    fill="freeze"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values={d ? "0;0.9;0" : k ? "0;1;0" : "0;0.8;0"}
+                    dur={d ? "0.5s" : k ? "0.4s" : "0.3s"}
+                    begin="0.15s"
+                    fill="freeze"
+                  />
+                </circle>
+              )}
               {/* Killshot: shockwave ring */}
               {k && !d && (
                 <circle
@@ -986,6 +1006,7 @@ export default function GameScreen() {
               )}
               {/* Direct attack: expanding holy rings */}
               {d &&
+                showCyan &&
                 [0, 1, 2].map((i) => (
                   <circle
                     key={i}
@@ -1013,8 +1034,8 @@ export default function GameScreen() {
                     />
                   </circle>
                 ))}
-              {/* Direct attack: SP return line (white-to-yellow, defender SP to attacker's owner SP) */}
-              {d &&
+              {/* Direct attack: SP return line (gold, defender SP to attacker's owner SP) */}
+              {showReturn &&
                 (() => {
                   const retTarget = attackLine.ownerPos || attackLine.from;
                   const rdx = retTarget.x - attackLine.to.x;
@@ -1038,7 +1059,6 @@ export default function GameScreen() {
                           attributeName="opacity"
                           values="0;0.5;0"
                           dur="0.4s"
-                          begin="0.35s"
                           fill="freeze"
                         />
                       </line>
@@ -1059,7 +1079,6 @@ export default function GameScreen() {
                           from={retLen}
                           to="0"
                           dur="0.2s"
-                          begin="0.35s"
                           fill="freeze"
                         />
                         <animate
@@ -1067,7 +1086,6 @@ export default function GameScreen() {
                           values="0;1;1;0"
                           keyTimes="0;0.1;0.5;1"
                           dur="0.45s"
-                          begin="0.35s"
                           fill="freeze"
                         />
                       </line>
@@ -1083,14 +1101,14 @@ export default function GameScreen() {
                           attributeName="r"
                           values="0;18;0"
                           dur="0.35s"
-                          begin="0.5s"
+                          begin="0.2s"
                           fill="freeze"
                         />
                         <animate
                           attributeName="opacity"
                           values="0;0.8;0"
                           dur="0.35s"
-                          begin="0.5s"
+                          begin="0.2s"
                           fill="freeze"
                         />
                       </circle>
