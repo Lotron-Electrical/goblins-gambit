@@ -328,23 +328,35 @@ export default function PlayerField({
                 creature &&
                 hasActivatedAbility(creature.abilityId) &&
                 !creature._silenced;
+              const isPassive =
+                creature &&
+                creature.abilityId &&
+                !hasActivatedAbility(creature.abilityId);
               return (
                 <div
                   key={slotIdx}
                   className={`flex-1 min-w-0 ${isMobile ? "h-7" : "h-8"} rounded-lg border flex items-center justify-center transition-all duration-200 ${
                     canUse
                       ? "border-yellow-500/60 bg-yellow-950/50 cursor-pointer hover:border-yellow-400 hover:bg-yellow-950/70"
-                      : "border-gray-800/60 bg-gray-900/30 border-dashed"
+                      : isPassive
+                        ? "border-purple-500/50 bg-purple-950/40"
+                        : "border-gray-800/60 bg-gray-900/30 border-dashed"
                   }`}
                   onClick={() => canUse && handleAbilityClick(creature)}
                 >
-                  {canUse && (
+                  {canUse ? (
                     <span
                       className={`text-yellow-400 font-bold truncate px-0.5 ${isMobile ? "text-[8px]" : "text-[10px]"}`}
                     >
                       ⚡ Ability
                     </span>
-                  )}
+                  ) : isPassive ? (
+                    <span
+                      className={`text-purple-400 font-bold truncate px-0.5 ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+                    >
+                      ⚡ Passive
+                    </span>
+                  ) : null}
                 </div>
               );
             })}
