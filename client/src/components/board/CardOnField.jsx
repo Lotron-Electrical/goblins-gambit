@@ -324,9 +324,13 @@ export default function CardOnField({
         />
       )}
 
-      {/* Bottom vignette for stat/name readability */}
+      {/* Top vignette for name readability */}
       {!invisible && card.type === "Creature" && (
-        <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none z-[1]" />
+        <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-black/70 via-black/30 to-transparent pointer-events-none z-[1]" />
+      )}
+      {/* Bottom vignette for stat readability */}
+      {!invisible && card.type === "Creature" && (
+        <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-[1]" />
       )}
 
       {/* Has-attacked exhaustion overlay — subtle darkening with cross-hatch */}
@@ -361,13 +365,20 @@ export default function CardOnField({
         </div>
       )}
 
-      {/* Type letter badge */}
+      {/* Type letter + ability badges (top-left, stacked vertically) */}
       {!invisible && (
         <div
-          className={`absolute top-0.5 right-0.5 flex items-center gap-0.5 z-10 ${
-            isMobile ? "" : ""
+          className={`absolute left-0.5 flex flex-col items-center gap-0.5 z-10 ${
+            isMobile ? "top-[21px]" : "top-[26px]"
           }`}
         >
+          <div
+            className={`bg-black/70 rounded-full flex items-center justify-center font-bold ${
+              isMobile ? "w-3.5 h-3.5 text-[7px]" : "w-4.5 h-4.5 text-[9px]"
+            }`}
+          >
+            {TYPE_LETTER[card.type]}
+          </div>
           {card.abilityId && (
             <div
               className={`bg-yellow-600/80 rounded-full flex items-center justify-center ${
@@ -379,40 +390,33 @@ export default function CardOnField({
               </span>
             </div>
           )}
-          <div
-            className={`bg-black/70 rounded-full flex items-center justify-center font-bold ${
-              isMobile ? "w-3.5 h-3.5 text-[7px]" : "w-4.5 h-4.5 text-[9px]"
-            }`}
-          >
-            {TYPE_LETTER[card.type]}
-          </div>
         </div>
       )}
 
-      {/* Status indicators (top left) */}
+      {/* Status indicators (top right) */}
       {card._silenced && (
         <div
-          className={`absolute top-0.5 left-0.5 bg-red-800 text-white px-1 rounded ${isMobile ? "text-[6px]" : "text-[8px]"}`}
+          className={`absolute top-0.5 right-0.5 bg-red-800 text-white px-1 rounded z-10 ${isMobile ? "text-[6px]" : "text-[8px]"}`}
         >
           {ICONS.muted}
         </div>
       )}
       {card._stonerShield && !card._silenced && (
         <div
-          className={`absolute top-0.5 left-0.5 bg-green-800 text-white px-1 rounded ${isMobile ? "text-[6px]" : "text-[8px]"}`}
+          className={`absolute top-0.5 right-0.5 bg-green-800 text-white px-1 rounded z-10 ${isMobile ? "text-[6px]" : "text-[8px]"}`}
         >
           {ICONS.shield}
         </div>
       )}
 
-      {/* Creature name -- always visible at bottom above stats */}
+      {/* Creature name -- at top of card */}
       {!invisible && card.type === "Creature" && (
         <div
-          className={`absolute left-0 right-0 text-center font-bold truncate px-1 ${
+          className={`absolute left-0 right-0 top-0 text-center font-bold truncate px-1 z-[3] ${
             isSelected
               ? "bg-[var(--color-gold)]/20 text-[var(--color-gold-bright)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
               : "bg-gradient-to-r from-black/50 via-black/70 to-black/50 text-gray-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
-          } ${isMobile ? "text-[7px] py-0 bottom-[32px]" : "text-[9px] py-0.5 bottom-[38px]"}`}
+          } ${isMobile ? "text-[7px] py-0.5" : "text-[9px] py-0.5"}`}
         >
           {card.name}
         </div>
@@ -433,8 +437,8 @@ export default function CardOnField({
         <div
           className={`absolute left-0 right-0 z-20 text-center font-bold ${
             isMobile
-              ? "bottom-[22px] text-[7px] py-0"
-              : "bottom-[26px] text-[9px] py-0.5"
+              ? "bottom-[20px] text-[7px] py-0"
+              : "bottom-[24px] text-[9px] py-0.5"
           } ${prediction.kills ? "bg-green-900/90 text-green-300" : "bg-yellow-900/90 text-yellow-300"}`}
         >
           {prediction.kills
@@ -443,19 +447,25 @@ export default function CardOnField({
         </div>
       )}
 
-      {/* Stats + health bar at bottom */}
+      {/* Health bar below name at top */}
       {!invisible && card.type === "Creature" && (
-        <div className="absolute bottom-0 left-0 right-0">
-          {/* Health bar above stats */}
+        <div
+          className={`absolute left-0 right-0 z-[3] ${isMobile ? "top-[16px]" : "top-[20px]"}`}
+        >
           <div className={`${isMobile ? "h-[3px]" : "h-[4px]"} bg-gray-900/60`}>
             <div
               className={`h-full ${defColor} transition-all duration-500 ease-out relative`}
               style={{ width: `${defPct}%` }}
             >
-              {/* Bright edge on health bar */}
               <div className="absolute top-0 right-0 w-1 h-full bg-white/20 rounded-r" />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Stats at bottom */}
+      {!invisible && card.type === "Creature" && (
+        <div className="absolute bottom-0 left-0 right-0">
           <div
             className={`bg-gradient-to-t from-black/90 to-black/75 grid grid-cols-3 ${isMobile ? (effectiveAtk >= 1000 || currentDef >= 1000 || (card.sp ?? 0) >= 1000 ? "text-[7px]" : "text-[9px]") + " py-0.5" : "text-[12px] py-0.5"}`}
           >

@@ -167,44 +167,17 @@ export default function PlayerField({
       }`}
       onClick={canDirectAttack ? handleDirectAttack : undefined}
     >
-      {/* Direct attack prediction */}
-      {canDirectAttack &&
-        (() => {
-          const pred = getDirectPrediction();
-          return pred ? (
-            <div
-              className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
-            >
-              <div
-                className={`bg-red-900/90 border border-red-600 rounded px-2 py-1 text-center ${isMobile ? "text-[10px]" : "text-xs"}`}
-              >
-                <span className="text-red-400 font-bold">
-                  Direct Attack: {pred.effectiveDmg} dmg
-                </span>
-                {pred.shield > 0 && (
-                  <span className="text-red-300"> (-{pred.shield} Sh)</span>
-                )}
-                <span className="text-white"> / </span>
-                <span className="text-[var(--color-gold)] font-bold">
-                  {pred.effectiveDmg} SP gain
-                </span>
-              </div>
-            </div>
-          ) : null;
-        })()}
       {/* Player info bar */}
       <div
         className={`flex items-center justify-between ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5 rounded-lg`}
       >
         <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
-          {!(isMobile && isOpponent) && (
-            <span
-              className={`font-display font-bold truncate ${isMobile ? "text-[12px] max-w-[140px]" : "text-[14px] max-w-[200px]"} ${isOpponent ? "text-red-400 drop-shadow-[0_0_4px_rgba(248,113,113,0.3)]" : "text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.3)]"}`}
-              title={player.name}
-            >
-              {player.name}
-            </span>
-          )}
+          <span
+            className={`font-display font-bold truncate ${isMobile ? "text-[12px] max-w-[140px]" : "text-[14px] max-w-[200px]"} ${isOpponent ? "text-red-400 drop-shadow-[0_0_4px_rgba(248,113,113,0.3)]" : "text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.3)]"}`}
+            title={player.name}
+          >
+            {player.name}
+          </span>
           {gameState?.berserkPlayerIds?.includes(playerId) && (
             <span
               className={`text-red-500 font-bold animate-pulse uppercase tracking-wider ${isMobile ? "text-[8px]" : "text-[10px]"}`}
@@ -300,13 +273,8 @@ export default function PlayerField({
 
       {/* Gear zone -- horizontal strip */}
       <div
-        className={`flex gap-1 md:gap-1.5 ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5`}
+        className={`flex gap-1.5 md:gap-2 ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5`}
       >
-        <div
-          className={`text-gray-600 flex items-center font-display ${isMobile ? "text-[9px] mr-0.5" : "text-[11px] mr-1"}`}
-        >
-          Gear
-        </div>
         {gearSlots.map((slot) => {
           const armour = player.gear[slot];
           const turnsLeft = armour
@@ -347,13 +315,50 @@ export default function PlayerField({
         })}
       </div>
 
-      {/* Swamp zone -- full width */}
+      {/* Ability slot + Swamp zone */}
       <div>
-        <div
-          className={`text-gray-600 text-center font-display tracking-wider uppercase ${isMobile ? "text-[8px] mb-0.5" : `text-[10px] ${isOpponent ? "mb-0.5" : "mb-1"}`}`}
-        >
-          {THEME_FIELD_NAME[theme] || "The Swamp"}
-        </div>
+        {/* Ability slot (own field only) — shows Use button when creature with activated ability is selected */}
+        {!isOpponent && (
+          <div
+            className={`flex gap-1.5 md:gap-2 px-1.5 ${isMobile ? "mb-0.5" : "mb-1"}`}
+          >
+            <div
+              className={`flex-1 ${isMobile ? "h-7" : "h-8"} rounded-lg border flex items-center justify-center transition-all duration-200 ${
+                isMyTurn &&
+                selectedCard?._zone === "swamp" &&
+                hasActivatedAbility(selectedCard?.abilityId) &&
+                !selectedCard?._silenced
+                  ? "border-yellow-500/60 bg-yellow-950/50 cursor-pointer hover:border-yellow-400 hover:bg-yellow-950/70"
+                  : "border-gray-800/60 bg-gray-900/30 border-dashed"
+              }`}
+              onClick={() => {
+                if (
+                  isMyTurn &&
+                  selectedCard?._zone === "swamp" &&
+                  hasActivatedAbility(selectedCard?.abilityId) &&
+                  !selectedCard?._silenced
+                ) {
+                  handleAbilityClick(selectedCard);
+                }
+              }}
+            >
+              {isMyTurn &&
+              selectedCard?._zone === "swamp" &&
+              hasActivatedAbility(selectedCard?.abilityId) &&
+              !selectedCard?._silenced ? (
+                <span
+                  className={`text-yellow-400 font-bold ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+                >
+                  ⚡ Use {selectedCard.name}
+                </span>
+              ) : (
+                <span
+                  className={`text-gray-700 italic ${isMobile ? "text-[7px]" : "text-[10px]"}`}
+                ></span>
+              )}
+            </div>
+          </div>
+        )}
         <div
           className={`relative flex gap-0.5 justify-center bg-gradient-to-b from-[#141808]/60 to-[#0c1004]/70 rounded-lg border border-[#2a3018]/40 shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)] p-1 md:p-1.5 overflow-hidden ${
             isMobile
@@ -363,6 +368,29 @@ export default function PlayerField({
         >
           {/* Fog overlay */}
           <div className="absolute inset-0 pointer-events-none animate-fog-drift bg-gradient-to-r from-transparent via-[#1a2410]/8 to-transparent rounded-lg" />
+          {/* Direct attack prediction */}
+          {canDirectAttack &&
+            (() => {
+              const pred = getDirectPrediction();
+              return pred ? (
+                <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                  <div
+                    className={`bg-red-900/90 border border-red-600 rounded px-2 py-1 text-center ${isMobile ? "text-[10px]" : "text-xs"}`}
+                  >
+                    <span className="text-white font-bold">
+                      Direct Attack: {pred.effectiveDmg} dmg
+                    </span>
+                    {pred.shield > 0 && (
+                      <span className="text-red-300"> (-{pred.shield} Sh)</span>
+                    )}
+                    <span className="text-white"> / </span>
+                    <span className="text-[var(--color-gold)] font-bold">
+                      {pred.effectiveDmg} SP gain
+                    </span>
+                  </div>
+                </div>
+              ) : null;
+            })()}
           {Array.from({ length: 5 }).map((_, slotIdx) => {
             const creature =
               player.swamp.find((c) => c._slot === slotIdx) || null;
@@ -418,26 +446,6 @@ export default function PlayerField({
                       isDefending={defendingCardUid === creature.uid}
                       prediction={getPrediction(creature)}
                     />
-                    {/* Activated ability button (own creatures only, on your turn) */}
-                    {!isOpponent &&
-                      isMyTurn &&
-                      hasActivatedAbility(creature.abilityId) &&
-                      !creature._silenced && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAbilityClick(creature);
-                          }}
-                          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 to-amber-500 hover:from-yellow-500 hover:to-amber-400 text-black font-bold rounded-md shadow-lg shadow-yellow-600/30 z-10 transition-all duration-150 hover:scale-105 ${
-                            isMobile
-                              ? "text-[7px] px-1.5 py-0"
-                              : "text-[9px] px-2 py-0.5"
-                          }`}
-                          title="Use ability"
-                        >
-                          {"\u26A1"} Use
-                        </button>
-                      )}
                   </div>
                 ) : (
                   <span

@@ -360,16 +360,16 @@ export default function GameScreen() {
         setAttackLine(lineData);
 
         if (isDirect) {
-          // Phase 1 (0-300ms): cyan line out. Phase 2 (300ms+): gold return only.
+          // Phase 1 (0-500ms): cyan line out. Phase 2 (500ms+): gold return only.
           setTimeout(
             () =>
               setAttackLine((prev) =>
                 prev ? { ...prev, phase: "return" } : null,
               ),
-            300,
+            500,
           );
-          setTimeout(() => setAttackLine(null), 900);
-          setTimeout(() => soundManager.play("coin_clink"), 500);
+          setTimeout(() => setAttackLine(null), 1200);
+          setTimeout(() => soundManager.play("coin_clink"), 700);
         } else {
           setTimeout(
             () => setAttackLine(null),
@@ -801,8 +801,8 @@ export default function GameScreen() {
           const dx = attackLine.to.x - attackLine.from.x;
           const dy = attackLine.to.y - attackLine.from.y;
           const len = Math.sqrt(dx * dx + dy * dy);
-          const dur = d ? "0.7s" : k ? "0.6s" : "0.4s";
-          const drawDur = d ? "0.25s" : k ? "0.15s" : "0.2s";
+          const dur = d ? "0.5s" : k ? "0.6s" : "0.4s";
+          const drawDur = d ? "0.2s" : k ? "0.15s" : "0.2s";
           // Colors: direct=holy white-cyan, killshot=white-gold, normal=red-orange
           const c1 = d ? "#ffffff" : k ? "#ffffff" : "#ef4444";
           const c2 = d ? "#67e8f9" : k ? "#fbbf24" : "#f97316";
@@ -876,7 +876,7 @@ export default function GameScreen() {
                   <animate
                     attributeName="opacity"
                     values={d ? "0;0.6;0" : k ? "0;0.7;0" : "0;0.5;0"}
-                    dur={d ? "0.3s" : dur}
+                    dur={d ? "0.45s" : dur}
                     fill="freeze"
                   />
                 </line>
@@ -905,7 +905,7 @@ export default function GameScreen() {
                     attributeName="opacity"
                     values="1;1;0"
                     keyTimes={d ? "0;0.8;1" : "0;0.5;1"}
-                    dur={d ? "0.3s" : dur}
+                    dur={d ? "0.45s" : dur}
                     fill="freeze"
                   />
                 </line>
@@ -922,15 +922,15 @@ export default function GameScreen() {
                   <animate
                     attributeName="r"
                     values={d ? "0;30;0" : k ? "0;24;0" : "0;12;0"}
-                    dur={d ? "0.5s" : k ? "0.4s" : "0.3s"}
-                    begin="0.15s"
+                    dur={d ? "0.6s" : k ? "0.4s" : "0.3s"}
+                    begin={d ? "0.1s" : "0.15s"}
                     fill="freeze"
                   />
                   <animate
                     attributeName="opacity"
                     values={d ? "0;0.9;0" : k ? "0;1;0" : "0;0.8;0"}
-                    dur={d ? "0.5s" : k ? "0.4s" : "0.3s"}
-                    begin="0.15s"
+                    dur={d ? "0.6s" : k ? "0.4s" : "0.3s"}
+                    begin={d ? "0.1s" : "0.15s"}
                     fill="freeze"
                   />
                 </circle>
@@ -986,15 +986,15 @@ export default function GameScreen() {
                     <animate
                       attributeName="r"
                       values="0;30;50"
-                      dur="0.5s"
-                      begin={`${0.15 + i * 0.12}s`}
+                      dur="0.6s"
+                      begin={`${0.1 + i * 0.15}s`}
                       fill="freeze"
                     />
                     <animate
                       attributeName="opacity"
                       values={`0;${0.5 - i * 0.15};0`}
-                      dur="0.5s"
-                      begin={`${0.15 + i * 0.12}s`}
+                      dur="0.6s"
+                      begin={`${0.1 + i * 0.15}s`}
                       fill="freeze"
                     />
                   </circle>
@@ -1023,7 +1023,7 @@ export default function GameScreen() {
                         <animate
                           attributeName="opacity"
                           values="0;0.5;0"
-                          dur="0.4s"
+                          dur="0.5s"
                           fill="freeze"
                         />
                       </line>
@@ -1043,14 +1043,14 @@ export default function GameScreen() {
                           attributeName="stroke-dashoffset"
                           from={retLen}
                           to="0"
-                          dur="0.2s"
+                          dur="0.25s"
                           fill="freeze"
                         />
                         <animate
                           attributeName="opacity"
                           values="0;1;1;0"
-                          keyTimes="0;0.1;0.5;1"
-                          dur="0.45s"
+                          keyTimes="0;0.1;0.6;1"
+                          dur="0.55s"
                           fill="freeze"
                         />
                       </line>
@@ -1065,15 +1065,15 @@ export default function GameScreen() {
                         <animate
                           attributeName="r"
                           values="0;18;0"
-                          dur="0.35s"
-                          begin="0.2s"
+                          dur="0.4s"
+                          begin="0.25s"
                           fill="freeze"
                         />
                         <animate
                           attributeName="opacity"
                           values="0;0.8;0"
-                          dur="0.35s"
-                          begin="0.2s"
+                          dur="0.4s"
+                          begin="0.25s"
                           fill="freeze"
                         />
                       </circle>
