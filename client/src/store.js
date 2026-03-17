@@ -682,8 +682,8 @@ socket.on(EVENTS.GAME_STATE, (state) => {
 
   useStore.setState({
     gameState: state,
-    // Don't switch screen during story battles — StoryScreen handles its own routing
-    ...(current.storyBattle ? {} : { screen: "game" }),
+    // Don't switch screen during story battles or if player has left the room
+    ...(current.storyBattle || !current.currentRoom ? {} : { screen: "game" }),
     ...(clearHover ? { hoveredCard: null, hoverPosition: null } : {}),
     ...(state.stats
       ? { gameStats: state.stats }

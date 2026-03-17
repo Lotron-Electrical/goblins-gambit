@@ -107,6 +107,7 @@ function AppInner() {
   return (
     <div className="min-h-screen">
       {error &&
+        screen !== "game" &&
         (() => {
           const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
           return (

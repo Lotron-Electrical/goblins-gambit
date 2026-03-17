@@ -85,6 +85,8 @@ function OpponentBar({
 export default function GameScreen() {
   const { gameState, musicMuted, theme, tutorialMode, setCenterZoneY } =
     useStore();
+  const error = useStore((s) => s.error);
+  const clearError = useStore((s) => s.clearError);
   const boardRef = useRef(null);
   const midZoneRef = useRef(null);
   const isMobile = useIsMobile();
@@ -376,10 +378,18 @@ export default function GameScreen() {
       !animationsOff
     ) {
       setDrawnCard({ card: currentAnimation.card, phase: "reveal" });
-      setTimeout(
-        () => setDrawnCard((prev) => (prev ? { ...prev, phase: "fly" } : null)),
-        600,
-      );
+      setTimeout(() => {
+        // Calculate fly target: hand strip on mobile, card row on desktop
+        let flyTarget = null;
+        const stripEl = document.querySelector("[data-hand-strip]");
+        if (stripEl) {
+          const r = stripEl.getBoundingClientRect();
+          flyTarget = { x: r.left + r.width * 0.3, y: r.top + r.height / 2 };
+        }
+        setDrawnCard((prev) =>
+          prev ? { ...prev, phase: "fly", flyTarget } : null,
+        );
+      }, 600);
       setTimeout(() => setDrawnCard(null), 1100);
     }
 
@@ -654,6 +664,41 @@ export default function GameScreen() {
           mobileCenterY={isMobile ? centerZoneY : null}
         />
       )}
+
+      {/* In-game error toast — centered between deck and grave */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            key="game-error"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            className="fixed left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
+            style={{ top: centerZoneY ? centerZoneY - 20 : "50%" }}
+          >
+            {(() => {
+              const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
+              return (
+                <div
+                  className={`px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm whitespace-nowrap ${
+                    isInfo
+                      ? "bg-blue-900/90 border border-blue-500 text-blue-100"
+                      : "bg-amber-900/90 border border-amber-500 text-amber-100"
+                  }`}
+                  onClick={clearError}
+                  style={{ cursor: "pointer" }}
+                >
+                  <span className={isInfo ? "text-blue-300" : "text-amber-300"}>
+                    {isInfo ? "\u2139" : "!"}
+                  </span>
+                  <span>{error}</span>
+                </div>
+              );
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Drag and drop overlay */}
       <DragOverlay />
@@ -1055,6 +1100,40 @@ export default function GameScreen() {
             </svg>
           );
         })()}
+      {/* Direct attack text overlay */}
+      <AnimatePresence>
+        {attackLine?.direct && (
+          <motion.div
+            key="direct-attack-text"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{
+              position: "fixed",
+              left: attackLine.to.x,
+              top: attackLine.to.y - 50,
+              transform: "translate(-50%, -50%)",
+              zIndex: 52,
+              pointerEvents: "none",
+            }}
+          >
+            <div className="text-center">
+              <div
+                className="font-display text-xl md:text-2xl font-bold text-transparent bg-clip-text"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to right, #22d3ee, #ffffff, #22d3ee)",
+                  textShadow: "0 0 20px rgba(34,211,238,0.5)",
+                  filter: "drop-shadow(0 0 8px rgba(34,211,238,0.6))",
+                }}
+              >
+                Direct Attack!
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Draw card reveal overlay */}
       <AnimatePresence>
         {drawnCard && (
@@ -1065,10 +1144,13 @@ export default function GameScreen() {
               inset: 0,
               zIndex: 50,
               pointerEvents: "none",
-              display: "flex",
-              alignItems: drawnCard.phase === "fly" ? "flex-end" : "center",
-              justifyContent: "center",
-              paddingBottom: drawnCard.phase === "fly" ? "60px" : 0,
+              ...(drawnCard.phase === "fly" && drawnCard.flyTarget
+                ? {}
+                : {
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }),
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1088,7 +1170,14 @@ export default function GameScreen() {
               animate={
                 drawnCard.phase === "reveal"
                   ? { scale: 1, opacity: 1, y: 0 }
-                  : { scale: 0.25, opacity: 0.6, y: 0 }
+                  : drawnCard.flyTarget
+                    ? {
+                        scale: 0.15,
+                        opacity: 0,
+                        x: drawnCard.flyTarget.x - window.innerWidth / 2,
+                        y: drawnCard.flyTarget.y - window.innerHeight / 2,
+                      }
+                    : { scale: 0.25, opacity: 0.6, y: 0 }
               }
               transition={
                 drawnCard.phase === "reveal"

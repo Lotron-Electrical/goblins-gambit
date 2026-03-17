@@ -1022,7 +1022,7 @@ export default function HandBar() {
               </div>
             </div>
             {/* Overlapping card tops */}
-            <div className="flex items-center pl-1 h-[34px]">
+            <div data-hand-strip className="flex items-center pl-1 h-[34px]">
               {hand.length > 0 ? (
                 sortedHand.map((card) => (
                   <CardInHand key={card.uid} card={card} variant="collapsed" />

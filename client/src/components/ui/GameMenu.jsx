@@ -254,27 +254,62 @@ function FeedbackModalInline({ onClose, onCloseMenu }) {
       // Temporarily hide the modal overlay so it doesn't appear in screenshot
       const modalEl = document.querySelector("[data-feedback-modal]");
       if (modalEl) modalEl.style.visibility = "hidden";
-
-      // Small delay to let the browser repaint without the modal
       await new Promise((r) => setTimeout(r, 100));
 
-      const { default: html2canvas } = await import("html2canvas");
-      const canvas = await html2canvas(document.body, {
-        backgroundColor: "#000",
-        scale: 1,
-        logging: false,
-        useCORS: true,
-      });
+      let dataUrl = null;
+
+      // Try native getDisplayMedia first (browser screenshot API)
+      if (navigator.mediaDevices?.getDisplayMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { mediaSource: "screen" },
+          });
+          const track = stream.getVideoTracks()[0];
+          const canvas = document.createElement("canvas");
+          const video = document.createElement("video");
+          video.srcObject = stream;
+          await video.play();
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext("2d").drawImage(video, 0, 0);
+          track.stop();
+          dataUrl = canvas.toDataURL("image/png", 0.8);
+        } catch {
+          // User cancelled or API unavailable — fall through to html2canvas
+        }
+      }
+
+      // Fallback to html2canvas
+      if (!dataUrl) {
+        try {
+          const { default: html2canvas } = await import("html2canvas");
+          const canvas = await html2canvas(document.body, {
+            backgroundColor: "#000",
+            scale: 1,
+            logging: false,
+            useCORS: true,
+          });
+          dataUrl = canvas.toDataURL("image/png", 0.8);
+        } catch {
+          // html2canvas also failed
+        }
+      }
 
       if (modalEl) modalEl.style.visibility = "";
-      const dataUrl = canvas.toDataURL("image/png", 0.8);
-      setScreenshot(dataUrl);
+
+      if (dataUrl) {
+        setScreenshot(dataUrl);
+      } else {
+        setSubmitError(
+          "Screenshot capture failed. Use 'Choose File' or take a screenshot manually.",
+        );
+      }
     } catch (e) {
       console.error("Screenshot capture failed:", e);
       const modalEl = document.querySelector("[data-feedback-modal]");
       if (modalEl) modalEl.style.visibility = "";
       setSubmitError(
-        "Screenshot capture failed. Try attaching a file instead.",
+        "Screenshot capture failed. Use 'Choose File' or take a screenshot manually.",
       );
     } finally {
       setCapturing(false);

@@ -105,7 +105,12 @@ export default function CenterZone({
       <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 top-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
       <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
       {/* Deck stack — left side */}
-      <div className="flex flex-row items-center gap-1">
+      <div className="flex flex-col items-center gap-1">
+        <span
+          className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
+        >
+          Deck {deckCount}
+        </span>
         <div className="relative" style={{ width: layoutW, height: layoutH }}>
           {deckCount > 0 ? (
             <>
@@ -149,11 +154,6 @@ export default function CenterZone({
             </div>
           )}
         </div>
-        <span
-          className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
-        >
-          Deck {deckCount}
-        </span>
       </div>
 
       {/* Staged card stack — center, Uno-style */}
@@ -290,7 +290,12 @@ export default function CenterZone({
       )}
 
       {/* Graveyard — right side, messy stack of card faces */}
-      <div className="flex flex-row-reverse items-center gap-1">
+      <div className="flex flex-col items-center gap-1">
+        <span
+          className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
+        >
+          Grave
+        </span>
         <div
           className="relative cursor-pointer"
           style={{ width: layoutW, height: layoutH }}
@@ -336,11 +341,6 @@ export default function CenterZone({
             </div>
           )}
         </div>
-        <span
-          className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
-        >
-          Grave
-        </span>
       </div>
 
       {/* Event modals */}

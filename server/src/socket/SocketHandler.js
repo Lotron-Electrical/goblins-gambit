@@ -493,6 +493,9 @@ export function setupSocketHandlers(io, lobby) {
         disconnectTimers.delete(socket.id);
       }
 
+      // Leave the socket room BEFORE broadcasting so this player doesn't receive the state update
+      socket.leave(roomId);
+
       // If there's an active game, mark player as disconnected and force end their turn
       const game = lobby.getGame(roomId);
       if (game) {
@@ -506,8 +509,6 @@ export function setupSocketHandlers(io, lobby) {
           }
         }
       }
-
-      socket.leave(roomId);
       const result = lobby.leaveRoom(socket.id);
       if (result && !result.deleted) {
         io.to(roomId).emit(EVENTS.ROOM_UPDATE, result.room);
