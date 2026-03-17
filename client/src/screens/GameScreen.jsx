@@ -483,7 +483,7 @@ export default function GameScreen() {
         const spEl = document.querySelector(`[data-player-sp="${playerId}"]`);
         if (spEl) {
           const rect = spEl.getBoundingClientRect();
-          x = rect.left + rect.width / 2;
+          x = rect.right;
           y = rect.top;
         }
       }
@@ -494,7 +494,7 @@ export default function GameScreen() {
       ]);
       setTimeout(() => {
         setSPEvents((prev) => prev.filter((e) => e.id !== id));
-      }, 1000);
+      }, 2500);
     }
 
     if (currentAnimation.type === "dice_roll") {
