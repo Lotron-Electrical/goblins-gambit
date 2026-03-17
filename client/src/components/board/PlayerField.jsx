@@ -357,7 +357,13 @@ export default function PlayerField({
                     >
                       ⚡ Passive
                     </span>
-                  ) : null}
+                  ) : (
+                    <span
+                      className={`text-gray-700 italic ${isMobile ? "text-[7px]" : "text-[10px]"}`}
+                    >
+                      Ability
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -502,7 +508,13 @@ export default function PlayerField({
                     >
                       ⚡ Passive
                     </span>
-                  ) : null}
+                  ) : (
+                    <span
+                      className={`text-gray-700 italic ${isMobile ? "text-[6px]" : "text-[9px]"}`}
+                    >
+                      Ability
+                    </span>
+                  )}
                 </div>
               );
             })}
