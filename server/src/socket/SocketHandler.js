@@ -103,7 +103,7 @@ export function setupSocketHandlers(io, lobby) {
       if (!engine || !room) return;
 
       const username = socketAccounts.get(socketId);
-      if (!username || username.startsWith('guest_')) return;
+      if (!username || username.startsWith("guest_")) return;
 
       // Deep clone and clean transient state
       const gameState = JSON.parse(JSON.stringify(engine.state));
@@ -116,13 +116,13 @@ export function setupSocketHandlers(io, lobby) {
         if (botIds.has(p.id) && gameState.players[p.id]) {
           gameState.players[p.id].isBot = true;
           gameState.players[p.id]._botDifficulty =
-            botDifficulty.get(p.id) || 'medium';
+            botDifficulty.get(p.id) || "medium";
         }
       }
 
       // Save room settings needed to recreate the game
       const roomSettings = {
-        theme: room.theme || 'swamp',
+        theme: room.theme || "swamp",
         winSP: room.winSP,
         startingSP: room.startingSP,
         startingHandSize: room.startingHandSize,
@@ -139,7 +139,7 @@ export function setupSocketHandlers(io, lobby) {
       socketAccounts.delete(socketId);
       lobby.playerRooms.delete(socketId);
     } catch (err) {
-      console.error('[AutoSave] Error:', err);
+      console.error("[AutoSave] Error:", err);
     }
   }
 
@@ -576,7 +576,7 @@ export function setupSocketHandlers(io, lobby) {
             .every((id) => botIds.has(id));
           const username = socketAccounts.get(socket.id);
 
-          if (allOpponentsBots && username && !username.startsWith('guest_')) {
+          if (allOpponentsBots && username && !username.startsWith("guest_")) {
             // PvE + logged in: save immediately and clean up room
             player.connected = false;
             await autoSaveAndCleanup(roomId, socket.id);
@@ -1174,12 +1174,15 @@ export function setupSocketHandlers(io, lobby) {
           // PvE auto-save: start 30s timer (regardless of whose turn it is)
           if (allOpponentsBots) {
             const username = socketAccounts.get(socket.id);
-            if (username && !username.startsWith('guest_')) {
+            if (username && !username.startsWith("guest_")) {
               const saveTimer = setTimeout(async () => {
                 autoSaveTimers.delete(roomId);
                 await autoSaveAndCleanup(roomId, socket.id);
               }, 30000);
-              autoSaveTimers.set(roomId, { timer: saveTimer, socketId: socket.id });
+              autoSaveTimers.set(roomId, {
+                timer: saveTimer,
+                socketId: socket.id,
+              });
             }
           }
         }

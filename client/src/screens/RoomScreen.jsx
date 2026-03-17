@@ -183,24 +183,25 @@ export default function RoomScreen() {
         {/* Add Bot buttons — right below player list */}
         {isHost && !isFull && (
           <div className="mb-6">
+            <div className="text-xs uppercase tracking-widest text-gray-400 mb-1">Add Bot</div>
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => addBot("easy")}
                 className="bg-green-800 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg transition text-sm"
               >
-                + Easy Bot
+                Goblin Runt
               </button>
               <button
                 onClick={() => addBot("medium")}
                 className="bg-purple-700 hover:bg-purple-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
               >
-                + Medium Bot
+                Bog Shaman
               </button>
               <button
                 onClick={() => addBot("hard")}
                 className="bg-red-700 hover:bg-red-600 text-white font-bold py-2.5 rounded-lg transition text-sm"
               >
-                + Hard Bot
+                Warlord
               </button>
             </div>
           </div>
