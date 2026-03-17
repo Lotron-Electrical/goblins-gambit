@@ -360,16 +360,16 @@ export default function GameScreen() {
         setAttackLine(lineData);
 
         if (isDirect) {
-          // Phase 1 (0-500ms): cyan line out. Phase 2 (500ms+): gold return only.
+          // Phase 1 (0-700ms): cyan line out. Phase 2 (700ms+): gold return.
           setTimeout(
             () =>
               setAttackLine((prev) =>
                 prev ? { ...prev, phase: "return" } : null,
               ),
-            500,
+            700,
           );
-          setTimeout(() => setAttackLine(null), 1200);
-          setTimeout(() => soundManager.play("coin_clink"), 700);
+          setTimeout(() => setAttackLine(null), 2200);
+          setTimeout(() => soundManager.play("coin_clink"), 900);
         } else {
           setTimeout(
             () => setAttackLine(null),
@@ -830,8 +830,8 @@ export default function GameScreen() {
           const dx = attackLine.to.x - attackLine.from.x;
           const dy = attackLine.to.y - attackLine.from.y;
           const len = Math.sqrt(dx * dx + dy * dy);
-          const dur = d ? "0.5s" : k ? "0.6s" : "0.4s";
-          const drawDur = d ? "0.2s" : k ? "0.15s" : "0.2s";
+          const dur = d ? "1.2s" : k ? "0.6s" : "0.4s";
+          const drawDur = d ? "0.35s" : k ? "0.15s" : "0.2s";
           // Colors: direct=holy white-cyan, killshot=white-gold, normal=red-orange
           const c1 = d ? "#ffffff" : k ? "#ffffff" : "#ef4444";
           const c2 = d ? "#67e8f9" : k ? "#fbbf24" : "#f97316";
