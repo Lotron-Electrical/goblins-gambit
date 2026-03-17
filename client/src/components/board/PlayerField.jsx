@@ -513,7 +513,7 @@ export default function PlayerField({
                   <span
                     className={`${canDrop ? "text-[var(--color-gold)] font-display font-bold" : canPlace ? "text-[var(--color-gold)]/60 font-display" : "text-gray-700/40"} ${isMobile ? "text-[8px]" : "text-[10px]"}`}
                   >
-                    {canDrop ? "Drop" : canPlace ? "Place" : ""}
+                    {canDrop ? "Drop" : canPlace ? "Place" : "Empty"}
                   </span>
                 )}
               </div>
