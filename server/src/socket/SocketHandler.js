@@ -35,6 +35,7 @@ export function setupSocketHandlers(io, lobby) {
   const botDifficulty = new Map(); // botId -> 'easy' | 'medium' | 'hard'
   const lastChatTime = new Map(); // socketId -> timestamp
   const disconnectTimers = new Map(); // socketId -> timeout handle for grace period
+  const autoSaveTimers = new Map(); // roomId -> { timer, socketId }
 
   function broadcastState(roomId, engine) {
     const room = lobby.getRoom(roomId);
@@ -72,6 +73,11 @@ export function setupSocketHandlers(io, lobby) {
   const pendingBotTicks = new Set();
 
   function cleanupFinishedGame(roomId) {
+    // Cancel any pending auto-save timer for this room
+    if (autoSaveTimers.has(roomId)) {
+      clearTimeout(autoSaveTimers.get(roomId).timer);
+      autoSaveTimers.delete(roomId);
+    }
     const room = lobby.getRoom(roomId);
     if (room) {
       // Release bot names and clean up bot tracking
@@ -88,6 +94,53 @@ export function setupSocketHandlers(io, lobby) {
     }
     lobby.rooms.delete(roomId);
     lobby.games.delete(roomId);
+  }
+
+  async function autoSaveAndCleanup(roomId, socketId) {
+    try {
+      const engine = lobby.getGame(roomId);
+      const room = lobby.getRoom(roomId);
+      if (!engine || !room) return;
+
+      const username = socketAccounts.get(socketId);
+      if (!username || username.startsWith('guest_')) return;
+
+      // Deep clone and clean transient state
+      const gameState = JSON.parse(JSON.stringify(engine.state));
+      gameState.pendingTarget = null;
+      gameState.pendingChoice = null;
+      gameState.animations = [];
+
+      // Mark which players are bots in saved state
+      for (const p of room.players) {
+        if (botIds.has(p.id) && gameState.players[p.id]) {
+          gameState.players[p.id].isBot = true;
+          gameState.players[p.id]._botDifficulty =
+            botDifficulty.get(p.id) || 'medium';
+        }
+      }
+
+      // Save room settings needed to recreate the game
+      const roomSettings = {
+        theme: room.theme || 'swamp',
+        winSP: room.winSP,
+        startingSP: room.startingSP,
+        startingHandSize: room.startingHandSize,
+        baseAP: room.baseAP,
+        eventsEnabled: room.eventsEnabled,
+        maxPlayers: room.maxPlayers,
+      };
+
+      await saveGame(username, gameState, roomSettings);
+      console.log(`[AutoSave] Saved game for ${username} (room ${roomId})`);
+
+      // Clean up the room
+      cleanupFinishedGame(roomId);
+      socketAccounts.delete(socketId);
+      lobby.playerRooms.delete(socketId);
+    } catch (err) {
+      console.error('[AutoSave] Error:', err);
+    }
   }
 
   /** Remap all player IDs in game state from old IDs to new IDs */
@@ -172,8 +225,9 @@ export function setupSocketHandlers(io, lobby) {
       if (!botIds.has(botId)) return;
 
       // Pause bot if any human opponent is disconnected (PvE pause)
-      const humanDisconnected = Object.entries(engine.state.players)
-        .some(([id, p]) => !botIds.has(id) && !p.connected);
+      const humanDisconnected = Object.entries(engine.state.players).some(
+        ([id, p]) => !botIds.has(id) && !p.connected,
+      );
       if (humanDisconnected) return;
 
       const botState = engine.getStateForPlayer(botId);
@@ -425,6 +479,12 @@ export function setupSocketHandlers(io, lobby) {
           disconnectTimers.delete(oldId);
         }
 
+        // Cancel auto-save timer if active
+        if (autoSaveTimers.has(roomId)) {
+          clearTimeout(autoSaveTimers.get(roomId).timer);
+          autoSaveTimers.delete(roomId);
+        }
+
         // Remap player in game state
         const playerState = game.state.players[oldId];
         if (playerState) {
@@ -493,7 +553,7 @@ export function setupSocketHandlers(io, lobby) {
       }
     });
 
-    socket.on(EVENTS.LEAVE_ROOM, () => {
+    socket.on(EVENTS.LEAVE_ROOM, async () => {
       const roomId = lobby.getPlayerRoom(socket.id);
       if (!roomId) return;
 
@@ -506,11 +566,25 @@ export function setupSocketHandlers(io, lobby) {
       // Leave the socket room BEFORE broadcasting so this player doesn't receive the state update
       socket.leave(roomId);
 
-      // If there's an active game, mark player as disconnected and force end their turn
+      // If there's an active game, handle cleanup
       const game = lobby.getGame(roomId);
       if (game) {
         const player = game.state.players[socket.id];
         if (player) {
+          const allOpponentsBots = Object.keys(game.state.players)
+            .filter((id) => id !== socket.id)
+            .every((id) => botIds.has(id));
+          const username = socketAccounts.get(socket.id);
+
+          if (allOpponentsBots && username && !username.startsWith('guest_')) {
+            // PvE + logged in: save immediately and clean up room
+            player.connected = false;
+            await autoSaveAndCleanup(roomId, socket.id);
+            io.emit(EVENTS.ROOM_LIST, lobby.getRoomList());
+            return;
+          }
+
+          // PvP or guest: mark disconnected and force end turn
           player.connected = false;
           if (game.getCurrentPlayerId() === socket.id) {
             game.handleAction(socket.id, { type: ACTION.END_TURN });
@@ -1071,35 +1145,42 @@ export function setupSocketHandlers(io, lobby) {
             }
           }
 
-          // If it was this player's turn, give 15s grace period before force-ending
-          // But only for PvP — in bot games, just pause (no human opponent waiting)
-          if (game.getCurrentPlayerId() === socket.id) {
-            const allOpponentsBots = Object.keys(game.state.players)
-              .filter(id => id !== socket.id)
-              .every(id => botIds.has(id));
+          const allOpponentsBots = Object.keys(game.state.players)
+            .filter((id) => id !== socket.id)
+            .every((id) => botIds.has(id));
 
-            if (!allOpponentsBots) {
-              // PvP: start 15s grace timer
-              const timer = setTimeout(() => {
-                disconnectTimers.delete(socket.id);
-                // Verify game/room still exists before acting
-                const currentGame = lobby.getGame(roomId);
-                if (!currentGame) return;
-                // Only force end turn if still this player's turn and still disconnected
-                const p = currentGame.state.players[socket.id];
-                if (
-                  p &&
-                  !p.connected &&
-                  currentGame.getCurrentPlayerId() === socket.id
-                ) {
-                  currentGame.handleAction(socket.id, { type: ACTION.END_TURN });
-                  broadcastState(roomId, currentGame);
-                  runBotTurn(roomId, currentGame);
-                }
-              }, 15000);
-              disconnectTimers.set(socket.id, timer);
+          // If it was this player's turn, give 15s grace period before force-ending (PvP only)
+          if (game.getCurrentPlayerId() === socket.id && !allOpponentsBots) {
+            const timer = setTimeout(() => {
+              disconnectTimers.delete(socket.id);
+              const currentGame = lobby.getGame(roomId);
+              if (!currentGame) return;
+              const p = currentGame.state.players[socket.id];
+              if (
+                p &&
+                !p.connected &&
+                currentGame.getCurrentPlayerId() === socket.id
+              ) {
+                currentGame.handleAction(socket.id, {
+                  type: ACTION.END_TURN,
+                });
+                broadcastState(roomId, currentGame);
+                runBotTurn(roomId, currentGame);
+              }
+            }, 15000);
+            disconnectTimers.set(socket.id, timer);
+          }
+
+          // PvE auto-save: start 30s timer (regardless of whose turn it is)
+          if (allOpponentsBots) {
+            const username = socketAccounts.get(socket.id);
+            if (username && !username.startsWith('guest_')) {
+              const saveTimer = setTimeout(async () => {
+                autoSaveTimers.delete(roomId);
+                await autoSaveAndCleanup(roomId, socket.id);
+              }, 30000);
+              autoSaveTimers.set(roomId, { timer: saveTimer, socketId: socket.id });
             }
-            // PvE: no timer — game pauses until player reconnects
           }
         }
       } else {
