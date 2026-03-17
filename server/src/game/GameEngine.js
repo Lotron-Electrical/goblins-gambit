@@ -571,8 +571,11 @@ export class GameEngine {
       }
     }
 
-    this.state.turnPhase = TURN_PHASE.MAIN;
-    this.state.pendingTarget = null;
+    // Only clear turnPhase/pendingTarget if they belong to this player (preserve reaction targets)
+    if (!this.state.pendingTarget || this.state.pendingTarget.playerId === playerId) {
+      this.state.turnPhase = TURN_PHASE.MAIN;
+      this.state.pendingTarget = null;
+    }
     // Only clear pendingChoice if it belongs to the player ending their turn
     if (this.state.pendingChoice?.playerId === playerId) {
       this.state.pendingChoice = null;

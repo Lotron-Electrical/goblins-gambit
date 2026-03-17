@@ -930,20 +930,18 @@ export default function HandBar() {
       <div
         className={`relative shrink-0 ${tutorialHighlightUid ? "z-50" : "z-30"}`}
       >
-        {/* Reaction banner — always visible, tappable to select first reaction card */}
+        {/* Reaction banner — floats above hand bar without shifting layout */}
         {hasReaction && (
           <div
-            className="bg-orange-600/20 border border-orange-500/40 rounded px-2 py-0.5 mx-1 mb-0.5 text-center animate-[pulse_0.6s_ease-in-out_2] cursor-pointer"
+            className="absolute left-1 right-1 -top-8 z-40 bg-orange-600/90 border border-orange-400 rounded px-2 py-1 text-center animate-[pulse_1.5s_ease-in-out_infinite] cursor-pointer shadow-lg"
             onClick={() => {
               const reactionCard = sortedHand.find((c) =>
                 REACTION_ABILITIES.includes(c.abilityId),
               );
-              if (reactionCard) {
-                playCard(reactionCard.uid);
-              }
+              if (reactionCard) playCard(reactionCard.uid);
             }}
           >
-            <span className="text-orange-300 text-[9px] font-bold">
+            <span className="text-white text-[11px] font-bold">
               REACT to {currentPlayerName}'s turn!
             </span>
           </div>
@@ -1194,10 +1192,10 @@ export default function HandBar() {
 
   return (
     <div className="relative bg-gray-950/90 border-t border-gray-800 px-2 py-2 shrink-0 overflow-visible z-30">
-      {/* Reaction banner — click to select first reaction card */}
+      {/* Reaction banner — floats above hand bar without shifting layout */}
       {hasReaction && (
         <div
-          className="bg-orange-600/20 border border-orange-500/40 rounded px-3 py-1.5 mb-2 text-center animate-[pulse_0.6s_ease-in-out_2] shadow-[0_0_8px_rgba(234,88,12,0.3)] cursor-pointer"
+          className="absolute left-1/2 -translate-x-1/2 -top-10 z-40 bg-orange-600/90 border border-orange-400 rounded-lg px-4 py-2 text-center animate-[pulse_1.5s_ease-in-out_infinite] cursor-pointer shadow-lg"
           onClick={() => {
             const reactionCard = hand.find((c) =>
               REACTION_ABILITIES.includes(c.abilityId),
@@ -1205,8 +1203,8 @@ export default function HandBar() {
             if (reactionCard) playCard(reactionCard.uid);
           }}
         >
-          <span className="text-orange-300 text-sm font-bold">
-            Tap to react to {currentPlayerName}'s turn!
+          <span className="text-white text-sm font-bold">
+            REACT to {currentPlayerName}'s turn!
           </span>
         </div>
       )}
