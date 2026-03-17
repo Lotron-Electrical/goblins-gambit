@@ -686,7 +686,7 @@ export default function GameScreen() {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             className="fixed left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
-            style={{ top: centerZoneY ? centerZoneY - 20 : "50%" }}
+            style={{ top: centerZoneY ? `${centerZoneY}px` : "50%" }}
           >
             {(() => {
               const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
@@ -860,41 +860,6 @@ export default function GameScreen() {
                   </filter>
                 )}
               </defs>
-              {/* Direct attack: vertical light pillar at target */}
-              {d && showCyan && (
-                <>
-                  <rect
-                    x={attackLine.to.x - 20}
-                    y={0}
-                    width="40"
-                    height="100%"
-                    fill="url(#attack-grad)"
-                    opacity="0"
-                  >
-                    <animate
-                      attributeName="opacity"
-                      values="0;0.15;0.1;0"
-                      dur="0.7s"
-                      fill="freeze"
-                    />
-                  </rect>
-                  <rect
-                    x={attackLine.to.x - 6}
-                    y={0}
-                    width="12"
-                    height="100%"
-                    fill="#ffffff"
-                    opacity="0"
-                  >
-                    <animate
-                      attributeName="opacity"
-                      values="0;0.3;0.15;0"
-                      dur="0.7s"
-                      fill="freeze"
-                    />
-                  </rect>
-                </>
-              )}
               {/* Glow line */}
               {showCyan && (
                 <line
@@ -1127,14 +1092,8 @@ export default function GameScreen() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            style={{
-              position: "fixed",
-              left: attackLine.to.x,
-              top: attackLine.to.y - 50,
-              transform: "translate(-50%, -50%)",
-              zIndex: 52,
-              pointerEvents: "none",
-            }}
+            className="fixed left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
+            style={{ top: centerZoneY ? `${centerZoneY}px` : "50%" }}
           >
             <div className="text-center">
               <div

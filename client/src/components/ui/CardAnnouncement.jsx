@@ -47,19 +47,15 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
       ? `${mobileCenterY || centerZoneY}px`
       : isMobile
         ? "50%"
-        : "35%";
+        : "50%";
 
   return (
     <AnimatePresence>
       {announcement && isMajor && (
         <motion.div
           key="major"
-          className={`fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2 ${
-            isMobile
-              ? ""
-              : "inset-0 !left-auto !top-auto !translate-x-0 !translate-y-0 flex items-center justify-center"
-          }`}
-          style={isMobile ? { top: centerTop } : undefined}
+          className="fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ top: centerTop }}
           initial={{ opacity: 0, scale: 0.4, filter: "blur(8px)" }}
           animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, scale: 1.15, filter: "blur(4px)" }}

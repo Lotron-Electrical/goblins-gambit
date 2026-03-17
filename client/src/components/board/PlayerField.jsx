@@ -173,15 +173,22 @@ export default function PlayerField({
           const pred = getDirectPrediction();
           return pred ? (
             <div
-              className={`absolute top-0 right-1 z-10 bg-red-900/90 border border-red-600 rounded px-1.5 py-0.5 ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+              className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
             >
-              <span className="text-red-300">
-                Direct: {pred.atk} ATK
-                {pred.shield > 0 ? ` (-${pred.shield} Sh)` : ""} ={" "}
-                <span className="text-white font-bold">
-                  {pred.effectiveDmg} dmg
+              <div
+                className={`bg-red-900/90 border border-red-600 rounded px-2 py-1 text-center ${isMobile ? "text-[10px]" : "text-xs"}`}
+              >
+                <span className="text-red-400 font-bold">
+                  Direct Attack: {pred.effectiveDmg} dmg
                 </span>
-              </span>
+                {pred.shield > 0 && (
+                  <span className="text-red-300"> (-{pred.shield} Sh)</span>
+                )}
+                <span className="text-white"> / </span>
+                <span className="text-[var(--color-gold)] font-bold">
+                  {pred.effectiveDmg} SP gain
+                </span>
+              </div>
             </div>
           ) : null;
         })()}
