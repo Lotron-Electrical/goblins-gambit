@@ -545,6 +545,17 @@ body::after {
       inset 0 0 12px 2px rgba(74, 222, 128, 0.15);
   }
 }
+@keyframes drawCardPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 8px 3px rgba(234, 179, 8, 0.7),
+      0 0 16px 6px rgba(234, 179, 8, 0.3);
+  }
+}
 .animate-glow-red {
   animation: glow-red 2s ease-in-out infinite;
 }

@@ -381,27 +381,56 @@ export default function GameScreen() {
       setTimeout(() => clearAttackAnimation(), 350);
     }
 
-    // Draw card reveal: show card in center then fly to hand
+    // Draw card reveal: show card in center, fly down to hand strip, pulse
     if (
       currentAnimation.type === "draw_card" &&
       currentAnimation.card &&
       currentAnimation.playerId === gameState?.myId &&
       !animationsOff
     ) {
+      const TYPE_ORDER = { Creature: 0, Magic: 1, Armour: 2, Tricks: 3 };
+      useStore.setState({ drawAnimActive: true });
+
       setDrawnCard({ card: currentAnimation.card, phase: "reveal" });
+
+      // Phase 2: fly down to hand strip
       setTimeout(() => {
-        // Calculate fly target: hand strip on mobile, card row on desktop
         let flyTarget = null;
         const stripEl = document.querySelector("[data-hand-strip]");
         if (stripEl) {
           const r = stripEl.getBoundingClientRect();
-          flyTarget = { x: r.left + r.width * 0.3, y: r.top + r.height / 2 };
+          // Find sorted index of drawn card in hand
+          const myHand = gameState?.players?.[gameState.myId]?.hand || [];
+          const sorted = [...myHand].sort(
+            (a, b) =>
+              (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9) ||
+              a.cost - b.cost,
+          );
+          const targetIndex = sorted.findIndex(
+            (c) => c.uid === currentAnimation.card.uid,
+          );
+          const idx = targetIndex >= 0 ? targetIndex : 0;
+          // Each collapsed card: 28px wide, -20px margin = 8px effective per card
+          flyTarget = {
+            x: r.left + 4 + idx * 8,
+            y: r.top + r.height / 2,
+          };
         }
         setDrawnCard((prev) =>
           prev ? { ...prev, phase: "fly", flyTarget } : null,
         );
       }, 600);
-      setTimeout(() => setDrawnCard(null), 1100);
+
+      // Phase 3: land + pulse
+      setTimeout(() => {
+        setDrawnCard((prev) => (prev ? { ...prev, phase: "land" } : null));
+      }, 1100);
+
+      // Cleanup
+      setTimeout(() => {
+        setDrawnCard(null);
+        useStore.setState({ drawAnimActive: false });
+      }, 1900);
     }
 
     // Stage played cards briefly in center
@@ -1113,7 +1142,7 @@ export default function GameScreen() {
       </AnimatePresence>
       {/* Draw card reveal overlay */}
       <AnimatePresence>
-        {drawnCard && (
+        {drawnCard && drawnCard.phase !== "land" && (
           <motion.div
             key="drawn-card-reveal"
             style={{
@@ -1149,10 +1178,11 @@ export default function GameScreen() {
                   ? { scale: 1, opacity: 1, y: 0 }
                   : drawnCard.flyTarget
                     ? {
-                        scale: 0.15,
-                        opacity: 0,
                         x: drawnCard.flyTarget.x - window.innerWidth / 2,
                         y: drawnCard.flyTarget.y - window.innerHeight / 2,
+                        width: 28,
+                        height: 30,
+                        opacity: 1,
                       }
                     : { scale: 0.25, opacity: 0.6, y: 0 }
               }
@@ -1164,7 +1194,7 @@ export default function GameScreen() {
                       damping: 20,
                       duration: 0.4,
                     }
-                  : { duration: 0.4, ease: "easeInOut" }
+                  : { duration: 0.45, ease: "easeInOut" }
               }
               style={{
                 width: isMobile ? 120 : 160,
@@ -1197,6 +1227,46 @@ export default function GameScreen() {
                 {drawnCard.card.name}
               </motion.div>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Draw card land + pulse overlay */}
+      <AnimatePresence>
+        {drawnCard && drawnCard.phase === "land" && drawnCard.flyTarget && (
+          <motion.div
+            key="drawn-card-land"
+            style={{
+              position: "fixed",
+              left: drawnCard.flyTarget.x,
+              top: drawnCard.flyTarget.y - 15,
+              zIndex: 50,
+              pointerEvents: "none",
+            }}
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+          >
+            <div
+              className={`w-[28px] h-[30px] rounded-sm border-2 ${
+                {
+                  Creature: "border-red-500",
+                  Magic: "border-blue-500",
+                  Armour: "border-gray-400",
+                  Tricks: "border-green-500",
+                }[drawnCard.card.type] || "border-gray-600"
+              } bg-gray-900 flex items-center justify-center`}
+              style={{
+                animation: "drawCardPulse 0.2s ease-in-out 3",
+              }}
+            >
+              <span className="text-[9px] font-bold text-gray-300">
+                {
+                  { Creature: "C", Magic: "M", Armour: "A", Tricks: "T" }[
+                    drawnCard.card.type
+                  ]
+                }
+              </span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

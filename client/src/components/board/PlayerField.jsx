@@ -321,8 +321,13 @@ export default function PlayerField({
         {!isOpponent && (
           <div className={`flex gap-0.5 px-1 ${isMobile ? "mb-0.5" : "mb-1"}`}>
             {Array.from({ length: 5 }).map((_, slotIdx) => {
-              const creature = player.swamp.find(c => c._slot === slotIdx) || null;
-              const canUse = isMyTurn && creature && hasActivatedAbility(creature.abilityId) && !creature._silenced;
+              const creature =
+                player.swamp.find((c) => c._slot === slotIdx) || null;
+              const canUse =
+                isMyTurn &&
+                creature &&
+                hasActivatedAbility(creature.abilityId) &&
+                !creature._silenced;
               return (
                 <div
                   key={slotIdx}
@@ -334,7 +339,9 @@ export default function PlayerField({
                   onClick={() => canUse && handleAbilityClick(creature)}
                 >
                   {canUse && (
-                    <span className={`text-yellow-400 font-bold truncate px-0.5 ${isMobile ? "text-[8px]" : "text-[10px]"}`}>
+                    <span
+                      className={`text-yellow-400 font-bold truncate px-0.5 ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+                    >
                       ⚡ Ability
                     </span>
                   )}

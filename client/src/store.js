@@ -54,6 +54,7 @@ export const useStore = create((set, get) => ({
   ),
   handArc: JSON.parse(localStorage.getItem("gg_handArc") || "0"),
   theme: "swamp",
+  drawAnimActive: false,
   hoveredCard: null,
   hoverPosition: null,
   graveyardOpen: false,

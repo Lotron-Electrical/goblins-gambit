@@ -110,6 +110,7 @@ export default function CardInHand({
   if (isMobile && variant === "collapsed") {
     return (
       <div
+        data-card-uid={card.uid}
         className={`w-[28px] h-[30px] rounded-sm border-2 ${TYPE_COLOR_SOLID[card.type] || "border-gray-600"} bg-gray-900 flex items-center justify-center shrink-0`}
         style={{ marginRight: "-20px" }}
       >

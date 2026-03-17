@@ -719,15 +719,20 @@ export default function HandBar() {
   // Track hand count for draw flash on collapsed strip
   const prevHandCount = useRef(hand.length);
   const [stripFlash, setStripFlash] = useState(false);
+  const drawAnimActive = useStore((s) => s.drawAnimActive);
   useEffect(() => {
-    if (hand.length > prevHandCount.current && !handExpanded) {
+    if (
+      hand.length > prevHandCount.current &&
+      !handExpanded &&
+      !drawAnimActive
+    ) {
       setStripFlash(true);
       const t = setTimeout(() => setStripFlash(false), 800);
       prevHandCount.current = hand.length;
       return () => clearTimeout(t);
     }
     prevHandCount.current = hand.length;
-  }, [hand.length, handExpanded]);
+  }, [hand.length, handExpanded, drawAnimActive]);
 
   // Sorting: null = custom/default order, 'type' = by category, 'cost' = by AP cost
   const [sortMode, setSortMode] = useState(null);
