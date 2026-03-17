@@ -383,6 +383,15 @@ function CircularCardRow({
     if (card) handleMobileSelect(card, true);
   }, [currentIndex, sortedHand, handleMobileSelect, reorderMode]);
 
+  // Reset auto-select guard when hand order changes (sort) so preview updates
+  const prevSortedRef = useRef(sortedHand);
+  useEffect(() => {
+    if (prevSortedRef.current !== sortedHand) {
+      prevSortedRef.current = sortedHand;
+      lastSelectedIdx.current = -1;
+    }
+  }, [sortedHand]);
+
   const handleTouchStart = useCallback(
     (e) => {
       if (reorderMode) return;
