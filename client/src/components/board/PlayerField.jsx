@@ -317,46 +317,30 @@ export default function PlayerField({
 
       {/* Ability slot + Swamp zone */}
       <div>
-        {/* Ability slot (own field only) — shows Use button when creature with activated ability is selected */}
+        {/* Ability slots (own field only) — one per creature slot, aligned with swamp grid */}
         {!isOpponent && (
-          <div
-            className={`flex gap-1.5 md:gap-2 px-1.5 ${isMobile ? "mb-0.5" : "mb-1"}`}
-          >
-            <div
-              className={`flex-1 ${isMobile ? "h-7" : "h-8"} rounded-lg border flex items-center justify-center transition-all duration-200 ${
-                isMyTurn &&
-                selectedCard?._zone === "swamp" &&
-                hasActivatedAbility(selectedCard?.abilityId) &&
-                !selectedCard?._silenced
-                  ? "border-yellow-500/60 bg-yellow-950/50 cursor-pointer hover:border-yellow-400 hover:bg-yellow-950/70"
-                  : "border-gray-800/60 bg-gray-900/30 border-dashed"
-              }`}
-              onClick={() => {
-                if (
-                  isMyTurn &&
-                  selectedCard?._zone === "swamp" &&
-                  hasActivatedAbility(selectedCard?.abilityId) &&
-                  !selectedCard?._silenced
-                ) {
-                  handleAbilityClick(selectedCard);
-                }
-              }}
-            >
-              {isMyTurn &&
-              selectedCard?._zone === "swamp" &&
-              hasActivatedAbility(selectedCard?.abilityId) &&
-              !selectedCard?._silenced ? (
-                <span
-                  className={`text-yellow-400 font-bold ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+          <div className={`flex gap-0.5 px-1 ${isMobile ? "mb-0.5" : "mb-1"}`}>
+            {Array.from({ length: 5 }).map((_, slotIdx) => {
+              const creature = player.swamp.find(c => c._slot === slotIdx) || null;
+              const canUse = isMyTurn && creature && hasActivatedAbility(creature.abilityId) && !creature._silenced;
+              return (
+                <div
+                  key={slotIdx}
+                  className={`flex-1 min-w-0 ${isMobile ? "h-7" : "h-8"} rounded-lg border flex items-center justify-center transition-all duration-200 ${
+                    canUse
+                      ? "border-yellow-500/60 bg-yellow-950/50 cursor-pointer hover:border-yellow-400 hover:bg-yellow-950/70"
+                      : "border-gray-800/60 bg-gray-900/30 border-dashed"
+                  }`}
+                  onClick={() => canUse && handleAbilityClick(creature)}
                 >
-                  ⚡ Use {selectedCard.name}
-                </span>
-              ) : (
-                <span
-                  className={`text-gray-700 italic ${isMobile ? "text-[7px]" : "text-[10px]"}`}
-                ></span>
-              )}
-            </div>
+                  {canUse && (
+                    <span className={`text-yellow-400 font-bold truncate px-0.5 ${isMobile ? "text-[8px]" : "text-[10px]"}`}>
+                      ⚡ Ability
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
         <div
