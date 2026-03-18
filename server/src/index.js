@@ -228,7 +228,10 @@ try {
   await initSavedGames();
   await initStoryPersistence();
 } catch (err) {
-  console.error("[Init] Database init failed, starting without DB:", err.message);
+  console.error(
+    "[Init] Database init failed, starting without DB:",
+    err.message,
+  );
 }
 
 httpServer.listen(PORT, () => {
