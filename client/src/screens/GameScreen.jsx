@@ -447,12 +447,17 @@ export default function GameScreen() {
       const rotation = (Math.random() - 0.5) * 10; // -5 to +5 degrees
       setStagedCards((prev) => [
         ...prev,
-        { ...currentAnimation.card, _stagedId: id, _rotation: rotation, _phase: "display" },
+        {
+          ...currentAnimation.card,
+          _stagedId: id,
+          _rotation: rotation,
+          _phase: "display",
+        },
       ]);
       // After 1500ms, switch to "fly" phase
       setTimeout(() => {
         setStagedCards((prev) =>
-          prev.map((c) => (c._stagedId === id ? { ...c, _phase: "fly" } : c))
+          prev.map((c) => (c._stagedId === id ? { ...c, _phase: "fly" } : c)),
         );
       }, 1500);
       // Remove after flight completes (1500 + 600ms flight)

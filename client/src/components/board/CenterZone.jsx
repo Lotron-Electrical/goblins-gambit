@@ -189,10 +189,14 @@ export default function CenterZone({
                     key={card._stagedId}
                     initial={{ opacity: 0, scale: 0.5, y: 20 }}
                     animate={
-                      card._phase === "fly" && graveRef.current && stagedRef.current
+                      card._phase === "fly" &&
+                      graveRef.current &&
+                      stagedRef.current
                         ? (() => {
-                            const graveRect = graveRef.current.getBoundingClientRect();
-                            const stagedRect = stagedRef.current.getBoundingClientRect();
+                            const graveRect =
+                              graveRef.current.getBoundingClientRect();
+                            const stagedRect =
+                              stagedRef.current.getBoundingClientRect();
                             return {
                               x: graveRect.left - stagedRect.left,
                               y: graveRect.top - stagedRect.top,
@@ -209,7 +213,11 @@ export default function CenterZone({
                         ? { duration: 0.5, ease: "easeInOut" }
                         : { duration: 0.3 }
                     }
-                    style={card._phase !== "fly" ? { rotate: `${card._rotation}deg` } : undefined}
+                    style={
+                      card._phase !== "fly"
+                        ? { rotate: `${card._rotation}deg` }
+                        : undefined
+                    }
                     className={`absolute inset-0 rounded-lg border-2 overflow-hidden shadow-2xl flex flex-col ${
                       TYPE_BORDER[card.type] || "border-gray-600"
                     }`}

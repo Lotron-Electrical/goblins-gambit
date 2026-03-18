@@ -1092,7 +1092,7 @@ export function setupSocketHandlers(io, lobby) {
       if (room) {
         for (const p of room.players) {
           if (!botIds.has(p.id)) continue;
-          const reply = generateBotReply(p.id);
+          const reply = generateBotReply(p.id, msg.text || "");
           if (reply) {
             // Delay bot reply 1-3 seconds for realism
             const delay = 1000 + Math.random() * 2000;
