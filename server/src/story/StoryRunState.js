@@ -53,6 +53,7 @@ export function createStoryRun(username, customCard, nightmare = false) {
       creaturesKilled: 0,
       levelsCompleted: 0,
     },
+    dungeonSeed: Math.floor(Math.random() * 2 ** 32),
     startedAt: Date.now(),
   };
 }

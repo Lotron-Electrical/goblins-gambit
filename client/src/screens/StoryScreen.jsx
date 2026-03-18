@@ -7,7 +7,7 @@ import { useStoryStore } from "../storyStore.js";
 import { useStore } from "../store.js";
 import StoryMenuScreen from "../components/story/StoryMenuScreen.jsx";
 import CardCreationScreen from "../components/story/CardCreationScreen.jsx";
-import StoryMapScreen from "../components/story/StoryMapScreen.jsx";
+import DungeonScreen from "../components/story/dungeon/DungeonScreen.jsx";
 import EnhancementScreen from "../components/story/EnhancementScreen.jsx";
 import StoryBattleHUD from "../components/story/StoryBattleHUD.jsx";
 import RunOverScreen from "../components/story/RunOverScreen.jsx";
@@ -23,7 +23,7 @@ export default function StoryScreen() {
     case "creation":
       return <CardCreationScreen />;
     case "map":
-      return <StoryMapScreen />;
+      return <DungeonScreen />;
     case "enhancement":
       return <EnhancementScreen />;
     case "battle":
