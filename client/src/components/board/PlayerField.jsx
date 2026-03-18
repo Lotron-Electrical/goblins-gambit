@@ -232,6 +232,11 @@ export default function PlayerField({
         <div
           className={`flex items-center gap-2 justify-end ${isMobile ? "text-[10px]" : "text-[13px]"}`}
         >
+          {handCount >= 10 && (
+            <span className={`text-orange-400 font-bold uppercase tracking-wider animate-pulse ${isMobile ? "text-[8px]" : "text-[10px]"}`}>
+              ENCUMBERED
+            </span>
+          )}
           <span className="text-blue-300 font-medium">{player.ap} AP</span>
         </div>
       </div>
@@ -554,21 +559,18 @@ export default function PlayerField({
           </div>
         </div>
       )}
-      {/* Card count + encumbered indicator */}
-      <div
-        className={`flex items-center gap-1.5 px-2 mt-0.5 ${isMobile ? "text-[9px]" : "text-[11px]"}`}
-      >
-        <span
-          className={`font-medium ${handCount >= 10 ? "text-orange-400" : "text-gray-500"}`}
+      {/* Card count — hide on mobile for own field */}
+      {(isOpponent || !isMobile) && (
+        <div
+          className={`flex items-center gap-1.5 px-2 mt-0.5 ${isMobile ? "text-[9px]" : "text-[11px]"}`}
         >
-          {handCount} cards
-        </span>
-        {handCount >= 10 && (
-          <span className="text-orange-400 font-bold uppercase tracking-wider">
-            ENCUMBERED
+          <span
+            className={`font-medium ${handCount >= 10 ? "text-orange-400" : "text-gray-500"}`}
+          >
+            {handCount} cards
           </span>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -11,7 +11,11 @@ import {
 } from "../../../../../shared/src/constants.js";
 import { generateDungeon, TILE } from "./dungeonGenerator.js";
 import { TILE_SIZE, generateTileCache } from "./tilesets.js";
-import { renderDungeon, pixelToTile, computeVisibleTiles } from "./dungeonRenderer.js";
+import {
+  renderDungeon,
+  pixelToTile,
+  computeVisibleTiles,
+} from "./dungeonRenderer.js";
 import { generateGoblinSprites } from "./playerSprite.js";
 import { findPath } from "./pathfinding.js";
 
@@ -95,7 +99,11 @@ export default function DungeonScreen() {
         if (node.completed) {
           for (const connId of node.connections) {
             const connNode = currentMap.nodes[connId];
-            if (connNode && !connNode.completed && connNode.row >= highestCompletedRow) {
+            if (
+              connNode &&
+              !connNode.completed &&
+              connNode.row >= highestCompletedRow
+            ) {
               selectableNodes.add(connId);
             }
           }
@@ -126,8 +134,10 @@ export default function DungeonScreen() {
         for (const dp of grid.doorPositions) {
           // Check if door is adjacent to this room
           if (
-            dp.x >= room.x - 1 && dp.x <= room.x + room.w &&
-            dp.y >= room.y - 1 && dp.y <= room.y + room.h
+            dp.x >= room.x - 1 &&
+            dp.x <= room.x + room.w &&
+            dp.y >= room.y - 1 &&
+            dp.y <= room.y + room.h
           ) {
             locked.add(`${dp.x},${dp.y}`);
           }
@@ -139,10 +149,14 @@ export default function DungeonScreen() {
 
   // Initialize / regenerate dungeon
   useEffect(() => {
-    const seed = (storyRun.dungeonSeed || 42) + storyRun.currentLevelIndex * 1000;
+    const seed =
+      (storyRun.dungeonSeed || 42) + storyRun.currentLevelIndex * 1000;
 
     // Detect level change for transition effect
-    if (prevLevelRef.current !== null && prevLevelRef.current !== storyRun.currentLevelIndex) {
+    if (
+      prevLevelRef.current !== null &&
+      prevLevelRef.current !== storyRun.currentLevelIndex
+    ) {
       // Level transition
       setTransitioning(true);
       setFadeOpacity(1);
@@ -157,7 +171,12 @@ export default function DungeonScreen() {
     prevLevelRef.current = storyRun.currentLevelIndex;
 
     function buildDungeon(s) {
-      const grid = generateDungeon(currentMap, s, completedNodes, selectableNodes);
+      const grid = generateDungeon(
+        currentMap,
+        s,
+        completedNodes,
+        selectableNodes,
+      );
       gridRef.current = grid;
       tileCacheRef.current = generateTileCache(levelKey, s);
       spritesRef.current = generateGoblinSprites();
@@ -166,7 +185,8 @@ export default function DungeonScreen() {
 
       // Restore player to last completed room center, or spawn point
       let spawnPos = grid.playerSpawn;
-      const lastCompleted = storyRun.completedNodes?.[storyRun.completedNodes.length - 1];
+      const lastCompleted =
+        storyRun.completedNodes?.[storyRun.completedNodes.length - 1];
       if (lastCompleted) {
         const room = grid.rooms.find((r) => r.nodeId === lastCompleted);
         if (room) spawnPos = { x: room.cx, y: room.cy };
@@ -179,7 +199,13 @@ export default function DungeonScreen() {
 
       // Initial reveal
       revealedRef.current = new Set();
-      const visible = computeVisibleTiles(spawnPos.x, spawnPos.y, VISIBILITY_RADIUS, grid.width, grid.height);
+      const visible = computeVisibleTiles(
+        spawnPos.x,
+        spawnPos.y,
+        VISIBILITY_RADIUS,
+        grid.width,
+        grid.height,
+      );
       for (const k of visible) revealedRef.current.add(k);
 
       setHudUpdate((n) => n + 1);
@@ -214,7 +240,7 @@ export default function DungeonScreen() {
       canvas.style.height = `${Math.round(h)}px`;
 
       // Scale so tiles fill the canvas nicely
-      scaleRef.current = (canvas.width / BASE_W);
+      scaleRef.current = canvas.width / BASE_W;
     }
 
     resize();
@@ -257,13 +283,20 @@ export default function DungeonScreen() {
             lastMoveTime.current = time;
 
             // Update fog
-            const visible = computeVisibleTiles(next.x, next.y, VISIBILITY_RADIUS, gridRef.current.width, gridRef.current.height);
+            const visible = computeVisibleTiles(
+              next.x,
+              next.y,
+              VISIBILITY_RADIUS,
+              gridRef.current.width,
+              gridRef.current.height,
+            );
             for (const k of visible) revealedRef.current.add(k);
           }
         }
       } else {
         // Idle bob (subtle)
-        walkFrameRef.current = Math.floor(frameRef.current / 24) % 2 === 0 ? 0 : 0;
+        walkFrameRef.current =
+          Math.floor(frameRef.current / 24) % 2 === 0 ? 0 : 0;
       }
 
       // Render
@@ -306,7 +339,7 @@ export default function DungeonScreen() {
 
     const pos = playerPosRef.current;
     const room = gridRef.current.rooms.find(
-      (r) => r.cx === pos.x && r.cy === pos.y
+      (r) => r.cx === pos.x && r.cy === pos.y,
     );
 
     if (!room || room.completed) return;
@@ -345,7 +378,7 @@ export default function DungeonScreen() {
         scaleRef.current,
         canvas.width,
         canvas.height,
-        gridRef.current
+        gridRef.current,
       );
 
       // Clamp to grid
@@ -356,8 +389,7 @@ export default function DungeonScreen() {
       let targetX = tx;
       let targetY = ty;
       const clickedRoom = gridRef.current.rooms.find(
-        (r) =>
-          tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h
+        (r) => tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h,
       );
       if (clickedRoom) {
         targetX = clickedRoom.cx;
@@ -365,13 +397,17 @@ export default function DungeonScreen() {
       }
 
       // Build locked doors set
-      const lockedDoors = getLockedDoors(gridRef.current, selectableNodes, completedNodes);
+      const lockedDoors = getLockedDoors(
+        gridRef.current,
+        selectableNodes,
+        completedNodes,
+      );
 
       const path = findPath(
         gridRef.current,
         playerPosRef.current,
         { x: targetX, y: targetY },
-        lockedDoors
+        lockedDoors,
       );
 
       if (path && path.length > 1) {
@@ -382,13 +418,16 @@ export default function DungeonScreen() {
         encounterTriggeredRef.current = false;
       }
     },
-    [storyLoading, selectableNodes, completedNodes, getLockedDoors, selectNode]
+    [storyLoading, selectableNodes, completedNodes, getLockedDoors, selectNode],
   );
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-950 relative overflow-hidden">
       {/* Canvas container */}
-      <div className="flex-1 w-full flex items-center justify-center relative" style={{ minHeight: 0 }}>
+      <div
+        className="flex-1 w-full flex items-center justify-center relative"
+        style={{ minHeight: 0 }}
+      >
         <canvas
           ref={canvasRef}
           onClick={handleCanvasClick}
@@ -438,7 +477,7 @@ export default function DungeonScreen() {
                   >
                     {"\u2665"}
                   </span>
-                )
+                ),
               )}
               {storyRun.nightmare && (
                 <span className="text-[10px] text-red-400/70 ml-1 font-bold uppercase tracking-wider">

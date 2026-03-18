@@ -25,8 +25,14 @@ export function findPath(grid, start, end, lockedDoors = new Set()) {
 
   // Bounds check
   if (
-    start.x < 0 || start.x >= width || start.y < 0 || start.y >= height ||
-    end.x < 0 || end.x >= width || end.y < 0 || end.y >= height
+    start.x < 0 ||
+    start.x >= width ||
+    start.y < 0 ||
+    start.y >= height ||
+    end.x < 0 ||
+    end.x >= width ||
+    end.y < 0 ||
+    end.y >= height
   ) {
     return null;
   }

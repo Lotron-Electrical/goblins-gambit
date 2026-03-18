@@ -96,6 +96,25 @@ export default function GameScreen() {
   const isMobile = useIsMobile();
   const centerZoneY = useStore((s) => s.centerZoneY);
 
+  // Preload all card images when game starts
+  useEffect(() => {
+    if (!gameState) return;
+    const images = new Set();
+    const allCards = [
+      ...(gameState.players?.[gameState.myId]?.hand || []),
+      ...(gameState.players?.[gameState.myId]?.swamp || []),
+      ...Object.values(gameState.players || {}).flatMap(p => [...(p.hand || []), ...(p.swamp || [])]),
+      ...(gameState.graveyard || []),
+      ...(gameState.deck || []),
+    ];
+    allCards.forEach(c => { if (c?.image) images.add(c.image); });
+    images.add("Card back.png");
+    images.forEach(src => {
+      const img = new Image();
+      img.src = `/cards/${src}`;
+    });
+  }, [gameState?.myId]);
+
   // Lock body scroll on mobile while game is active
   useEffect(() => {
     document.documentElement.classList.add("game-active");
@@ -567,18 +586,27 @@ export default function GameScreen() {
 
       {/* Opponent fields */}
       {isMobile ? (
-        <div
-          ref={opponentScrollRef}
-          className="flex-1 overflow-y-auto p-1 pt-12 min-h-0"
-        >
-          <div className="flex flex-col gap-1">
-            {opponents.map(({ id, player }) => {
-              const isExpanded = expandedOpponent === id;
-              const isTurn = gameState.currentPlayerId === id;
-              const is1v1 = opponents.length === 1;
-              return (
-                <div key={id} data-opponent={id}>
-                  {!is1v1 && (
+        opponents.length === 1 ? (
+          // 1v1: no scroll wrapper, direct field render
+          <div className="p-1 pt-12 shrink-0">
+            <PlayerField
+              player={opponents[0].player}
+              playerId={opponents[0].id}
+              isOpponent={true}
+              isCurrentTurn={gameState.currentPlayerId === opponents[0].id}
+            />
+          </div>
+        ) : (
+          <div
+            ref={opponentScrollRef}
+            className="flex-1 overflow-y-auto p-1 pt-12 min-h-0"
+          >
+            <div className="flex flex-col gap-1">
+              {opponents.map(({ id, player }) => {
+                const isExpanded = expandedOpponent === id;
+                const isTurn = gameState.currentPlayerId === id;
+                return (
+                  <div key={id} data-opponent={id}>
                     <OpponentBar
                       player={player}
                       playerId={id}
@@ -587,25 +615,22 @@ export default function GameScreen() {
                       onTap={() => setExpandedOpponent(isExpanded ? null : id)}
                       gameState={gameState}
                     />
-                  )}
-                  {(is1v1 || isExpanded) && (
-                    <div
-                      className={is1v1 ? "" : "mt-1"}
-                      data-opponent-field={id}
-                    >
-                      <PlayerField
-                        player={player}
-                        playerId={id}
-                        isOpponent={true}
-                        isCurrentTurn={isTurn}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                    {isExpanded && (
+                      <div className="mt-1" data-opponent-field={id}>
+                        <PlayerField
+                          player={player}
+                          playerId={id}
+                          isOpponent={true}
+                          isCurrentTurn={isTurn}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )
       ) : (
         <div className="flex-1 overflow-hidden p-2 pt-12 min-h-0">
           <div

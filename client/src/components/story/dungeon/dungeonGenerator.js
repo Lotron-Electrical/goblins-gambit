@@ -28,7 +28,12 @@ const GRID_H = 30;
  * @param {Set<string>} selectableNodeIds - set of currently selectable node IDs
  * @returns {object} DungeonGrid
  */
-export function generateDungeon(currentMap, seed, completedNodeIds, selectableNodeIds) {
+export function generateDungeon(
+  currentMap,
+  seed,
+  completedNodeIds,
+  selectableNodeIds,
+) {
   const rng = mulberry32(seed);
   const tiles = new Uint8Array(GRID_W * GRID_H); // all WALL (0) by default
   const rooms = [];
@@ -47,7 +52,9 @@ export function generateDungeon(currentMap, seed, completedNodeIds, selectableNo
 
       // Calculate base position
       // Y: distribute rows from bottom to top (row 0 = bottom, row 4 = top)
-      const baseY = Math.round(GRID_H - 5 - ((GRID_H - 10) * rowIdx) / Math.max(1, totalRows - 1));
+      const baseY = Math.round(
+        GRID_H - 5 - ((GRID_H - 10) * rowIdx) / Math.max(1, totalRows - 1),
+      );
 
       // X: spread horizontally based on column position
       let baseX;
@@ -281,7 +288,9 @@ function carveVLine(tiles, x, y1, y2, fromRoom, toRoom, doorPositions) {
 }
 
 function isInRoom(x, y, room) {
-  return x >= room.x && x < room.x + room.w && y >= room.y && y < room.y + room.h;
+  return (
+    x >= room.x && x < room.x + room.w && y >= room.y && y < room.y + room.h
+  );
 }
 
 function isRoomEdge(x, y, room) {
@@ -291,8 +300,14 @@ function isRoomEdge(x, y, room) {
 
   // Check if adjacent to room
   return (
-    (x >= room.x - 1 && x <= room.x + room.w && y >= room.y && y < room.y + room.h) ||
-    (y >= room.y - 1 && y <= room.y + room.h && x >= room.x && x < room.x + room.w)
+    (x >= room.x - 1 &&
+      x <= room.x + room.w &&
+      y >= room.y &&
+      y < room.y + room.h) ||
+    (y >= room.y - 1 &&
+      y <= room.y + room.h &&
+      x >= room.x &&
+      x < room.x + room.w)
   );
 }
 

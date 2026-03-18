@@ -3,7 +3,12 @@
  * Uses cached tile images from tilesets.js for fast blitting.
  */
 
-import { TILE_SIZE, generateTileCache, drawEncounterIcon, PALETTES } from "./tilesets.js";
+import {
+  TILE_SIZE,
+  generateTileCache,
+  drawEncounterIcon,
+  PALETTES,
+} from "./tilesets.js";
 import { TILE } from "./dungeonGenerator.js";
 import { getSpriteKey } from "./playerSprite.js";
 
@@ -54,7 +59,13 @@ export function renderDungeon(ctx, state) {
   ctx.scale(scale, scale);
 
   // Current visibility set
-  const visibleSet = getVisibleTiles(playerPos.x, playerPos.y, 4, width, height);
+  const visibleSet = getVisibleTiles(
+    playerPos.x,
+    playerPos.y,
+    4,
+    width,
+    height,
+  );
 
   // Layer 1: Dungeon tiles
   renderTiles(ctx, tiles, width, height, tileCache, revealedTiles, visibleSet);
@@ -69,7 +80,19 @@ export function renderDungeon(ctx, state) {
   }
 
   // Layer 2: Entity layer — encounter icons + player
-  renderEntities(ctx, rooms, goblinSprites, playerPos, playerFacing, walkFrame, frame, visibleSet, revealedTiles, showStairs, dungeonGrid);
+  renderEntities(
+    ctx,
+    rooms,
+    goblinSprites,
+    playerPos,
+    playerFacing,
+    walkFrame,
+    frame,
+    visibleSet,
+    revealedTiles,
+    showStairs,
+    dungeonGrid,
+  );
 
   // Layer 3: Fog of war
   renderFog(ctx, width, height, revealedTiles, visibleSet, pal);
@@ -134,7 +157,19 @@ function renderTiles(ctx, tiles, width, height, tileCache, revealed, visible) {
 }
 
 /** Render entity layer — encounter icons and player sprite */
-function renderEntities(ctx, rooms, goblinSprites, playerPos, playerFacing, walkFrame, frame, visible, revealed, showStairs, dungeonGrid) {
+function renderEntities(
+  ctx,
+  rooms,
+  goblinSprites,
+  playerPos,
+  playerFacing,
+  walkFrame,
+  frame,
+  visible,
+  revealed,
+  showStairs,
+  dungeonGrid,
+) {
   // Draw room encounter icons
   for (const room of rooms) {
     const key = `${room.cx},${room.cy}`;
@@ -195,7 +230,15 @@ function renderFog(ctx, width, height, revealed, visible, pal) {
  * @param {object} dungeonGrid - { width, height }
  * @returns {{ x: number, y: number }} tile coords
  */
-export function pixelToTile(canvasX, canvasY, playerPos, scale, canvasWidth, canvasHeight, dungeonGrid) {
+export function pixelToTile(
+  canvasX,
+  canvasY,
+  playerPos,
+  scale,
+  canvasWidth,
+  canvasHeight,
+  dungeonGrid,
+) {
   const { width, height } = dungeonGrid;
 
   // Reverse the camera transform

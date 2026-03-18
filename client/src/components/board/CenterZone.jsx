@@ -21,8 +21,8 @@ function getDeckRotations(count) {
 }
 
 function CardFace({ card, className = "", style = {}, small, isMobile }) {
-  const w = small ? (isMobile ? "w-[88px]" : "w-[107px]") : "w-[90px]";
-  const h = small ? (isMobile ? "h-[63px]" : "h-[150px]") : "h-[126px]";
+  const w = small ? (isMobile ? "w-[68px]" : "w-[107px]") : "w-[90px]";
+  const h = small ? (isMobile ? "h-[48px]" : "h-[150px]") : "h-[126px]";
   return (
     <div
       className={`${w} ${h} rounded-lg border-2 overflow-hidden ${
@@ -45,8 +45,8 @@ function CardFace({ card, className = "", style = {}, small, isMobile }) {
 }
 
 function CardBack({ className = "", style = {}, small, isMobile }) {
-  const w = small ? (isMobile ? "w-[88px]" : "w-[107px]") : "w-[90px]";
-  const h = small ? (isMobile ? "h-[63px]" : "h-[150px]") : "h-[126px]";
+  const w = small ? (isMobile ? "w-[68px]" : "w-[107px]") : "w-[90px]";
+  const h = small ? (isMobile ? "h-[48px]" : "h-[150px]") : "h-[126px]";
   return (
     <div
       className={`${w} ${h} rounded-lg border-2 border-[var(--color-gold)] overflow-hidden shadow-lg ${className}`}
@@ -94,11 +94,11 @@ export default function CenterZone({
   const deckRotations = useMemo(() => getDeckRotations(deckCount), [deckCount]);
 
   // Match creature card sizes in the swamp
-  const cardW = isMobile ? 88 : 107;
-  const cardH = isMobile ? 63 : 150;
+  const cardW = isMobile ? 68 : 107;
+  const cardH = isMobile ? 48 : 150;
   const layoutW = cardW;
   const layoutH = cardH;
-  const zoneH = isMobile ? "h-[90px]" : "h-[175px]";
+  const zoneH = isMobile ? "h-[72px]" : "h-[175px]";
 
   return (
     <div
