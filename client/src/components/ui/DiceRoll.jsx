@@ -40,10 +40,10 @@ export default function DiceRoll({ dice, result, onComplete, mobileCenterY }) {
     <div
       className={`fixed z-50 pointer-events-none ${
         mobileCenterY
-          ? "left-1/2 -translate-x-1/2 -translate-y-1/2"
+          ? ""
           : "inset-0 flex items-center justify-center"
       }`}
-      style={mobileCenterY ? { top: `${mobileCenterY}px` } : undefined}
+      style={mobileCenterY ? { left: "50%", top: `${mobileCenterY}px`, transform: "translate(-50%, -50%)" } : undefined}
     >
       <div className="text-center">
         <div className="flex gap-4 justify-center mb-4">

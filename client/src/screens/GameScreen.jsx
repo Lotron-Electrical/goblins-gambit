@@ -654,7 +654,7 @@ export default function GameScreen() {
       )}
 
       {/* Center zone: deck + graveyard */}
-      <div ref={midZoneRef}>
+      <div ref={midZoneRef} className="mb-1">
         <CenterZone
           deckCount={gameState.deckCount}
           graveyardCount={gameState.graveyardCount}
@@ -748,12 +748,12 @@ export default function GameScreen() {
         {error && (
           <motion.div
             key="game-error"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }}
+            animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+            exit={{ opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }}
             transition={{ duration: 0.2 }}
-            className="fixed left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
-            style={{ top: centerZoneY ? `${centerZoneY}px` : "50%" }}
+            className="fixed z-50 pointer-events-auto"
+            style={{ left: "50%", top: centerZoneY ? `${centerZoneY}px` : "50%" }}
           >
             {(() => {
               const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
@@ -1156,12 +1156,12 @@ export default function GameScreen() {
         {attackLine?.direct && (
           <motion.div
             key="direct-attack-text"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.5, x: "-50%", y: "-50%" }}
+            animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+            exit={{ opacity: 0, x: "-50%", y: "-50%" }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
-            style={{ top: centerZoneY ? `${centerZoneY}px` : "50%" }}
+            className="fixed z-50 pointer-events-none"
+            style={{ left: "50%", top: centerZoneY ? `${centerZoneY}px` : "50%" }}
           >
             <div className="text-center">
               <div

@@ -41,27 +41,25 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
 
   const isMajor = announcement && MAJOR_EVENTS.includes(announcement.type);
 
-  // Position at the center zone midpoint; fall back to 50% (true center) on mobile
+  // Position at the center zone midpoint; fall back to 45% on mobile
   const centerTop =
     mobileCenterY || centerZoneY
-      ? `${(mobileCenterY || centerZoneY) - (isMobile ? 55 : 70)}px`
-      : isMobile
-        ? "45%"
-        : "45%";
+      ? `${mobileCenterY || centerZoneY}px`
+      : "45%";
 
   return (
     <AnimatePresence>
       {announcement && isMajor && (
         <motion.div
           key="major"
-          className="fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2"
-          style={{ top: centerTop }}
-          initial={{ opacity: 0, scale: 0.4, filter: "blur(8px)" }}
-          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, scale: 1.15, filter: "blur(4px)" }}
+          className="fixed z-50 pointer-events-none"
+          style={{ left: "50%", top: centerTop }}
+          initial={{ opacity: 0, scale: 0.4, filter: "blur(8px)", x: "-50%", y: "-50%" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)", x: "-50%", y: "-50%" }}
+          exit={{ opacity: 0, scale: 1.15, filter: "blur(4px)", x: "-50%", y: "-50%" }}
           transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="text-center">
+          <div className="text-center w-fit max-w-[85vw]">
             <div
               className={`font-display text-white animate-announce-burst ${isMobile ? "text-2xl" : "text-4xl"}`}
               style={{
@@ -85,15 +83,15 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
       {announcement && !isMajor && (
         <motion.div
           key="toast"
-          className="fixed z-50 pointer-events-none left-1/2 -translate-x-1/2 -translate-y-1/2"
-          style={{ top: centerTop }}
-          initial={{ opacity: 0, scale: 0.85, y: 8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: -4 }}
+          className="fixed z-50 pointer-events-none"
+          style={{ left: "50%", top: centerTop }}
+          initial={{ opacity: 0, scale: 0.85, x: "-50%", y: "-42%" }}
+          animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+          exit={{ opacity: 0, scale: 0.92, x: "-50%", y: "-54%" }}
           transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
           <div
-            className={`flex items-center gap-2 border rounded-lg backdrop-blur-md text-center ${
+            className={`w-fit max-w-[85vw] flex items-center gap-2 border rounded-lg backdrop-blur-md text-center ${
               isMobile ? "px-4 py-2.5" : "px-5 py-3"
             } ${TYPE_BORDER[announcement.type] || "border-gray-600/60"} ${TYPE_BG[announcement.type] || "bg-gray-900/85"}`}
             style={{

@@ -102,7 +102,7 @@ export default function CenterZone({
 
   return (
     <div
-      className={`flex-shrink-0 ${zoneH} flex items-center justify-between px-4 md:px-12 lg:px-24 relative`}
+      className={`flex-shrink-0 ${zoneH} flex items-center justify-between px-4 md:px-12 lg:px-24 relative z-10`}
     >
       {/* Subtle divider line */}
       <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 top-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
