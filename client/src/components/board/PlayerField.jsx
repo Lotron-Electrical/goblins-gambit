@@ -233,7 +233,9 @@ export default function PlayerField({
           className={`flex items-center gap-2 justify-end ${isMobile ? "text-[10px]" : "text-[13px]"}`}
         >
           {handCount >= 10 && (
-            <span className={`text-orange-400 font-bold uppercase tracking-wider animate-pulse ${isMobile ? "text-[8px]" : "text-[10px]"}`}>
+            <span
+              className={`text-orange-400 font-bold uppercase tracking-wider animate-pulse ${isMobile ? "text-[8px]" : "text-[10px]"}`}
+            >
               ENCUMBERED
             </span>
           )}

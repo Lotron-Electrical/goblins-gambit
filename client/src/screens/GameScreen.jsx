@@ -26,6 +26,7 @@ import ChatPanel from "../components/ui/ChatPanel.jsx";
 import ChatBubbles from "../components/ui/ChatBubbles.jsx";
 import DragOverlay from "../components/ui/DragOverlay.jsx";
 import { motion, AnimatePresence } from "framer-motion";
+import cardData from "../../../shared/src/cardData.json";
 
 // Compact opponent bar for mobile — shows key info, tap to expand
 function OpponentBar({
@@ -96,20 +97,13 @@ export default function GameScreen() {
   const isMobile = useIsMobile();
   const centerZoneY = useStore((s) => s.centerZoneY);
 
-  // Preload all card images when game starts
+  // Preload ALL card images from cardData.json when game starts
   useEffect(() => {
     if (!gameState) return;
     const images = new Set();
-    const allCards = [
-      ...(gameState.players?.[gameState.myId]?.hand || []),
-      ...(gameState.players?.[gameState.myId]?.swamp || []),
-      ...Object.values(gameState.players || {}).flatMap(p => [...(p.hand || []), ...(p.swamp || [])]),
-      ...(gameState.graveyard || []),
-      ...(gameState.deck || []),
-    ];
-    allCards.forEach(c => { if (c?.image) images.add(c.image); });
+    cardData.forEach((c) => { if (c.image) images.add(c.image); });
     images.add("Card back.png");
-    images.forEach(src => {
+    images.forEach((src) => {
       const img = new Image();
       img.src = `/cards/${src}`;
     });
@@ -518,7 +512,7 @@ export default function GameScreen() {
         const spEl = document.querySelector(`[data-player-sp="${playerId}"]`);
         if (spEl) {
           const rect = spEl.getBoundingClientRect();
-          x = rect.right;
+          x = rect.left + rect.width / 2;
           y = rect.top - 20;
         }
       }
