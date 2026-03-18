@@ -101,7 +101,9 @@ export default function GameScreen() {
   useEffect(() => {
     if (!gameState) return;
     const images = new Set();
-    cardData.forEach((c) => { if (c.image) images.add(c.image); });
+    cardData.forEach((c) => {
+      if (c.image) images.add(c.image);
+    });
     images.add("Card back.png");
     images.forEach((src) => {
       const img = new Image();
