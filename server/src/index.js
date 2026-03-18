@@ -223,9 +223,13 @@ app.get("*", (req, res, next) => {
 
 const PORT = process.env.PORT || 3001;
 
-await initDatabase();
-await initSavedGames();
-await initStoryPersistence();
+try {
+  await initDatabase();
+  await initSavedGames();
+  await initStoryPersistence();
+} catch (err) {
+  console.error("[Init] Database init failed, starting without DB:", err.message);
+}
 
 httpServer.listen(PORT, () => {
   console.log(`Goblin's Gambit server running on port ${PORT}`);
