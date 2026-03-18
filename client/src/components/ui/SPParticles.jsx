@@ -66,7 +66,7 @@ function ParticleBurst({ x, y, amount }) {
         }}
         initial={{ opacity: 1, y: 0 }}
         animate={{ opacity: 0, y: -70 }}
-        transition={{ duration: 2.2 }}
+        transition={{ duration: 1.4 }}
       >
         +{amount} SP
       </motion.div>

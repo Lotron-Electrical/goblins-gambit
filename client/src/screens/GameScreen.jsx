@@ -43,11 +43,12 @@ function OpponentBar({
   return (
     <div
       onClick={onTap}
-      className={`flex items-center justify-between px-2.5 py-2 rounded-xl cursor-pointer transition-all duration-200 border ${
+      className={`grid items-center px-2.5 py-2 rounded-xl cursor-pointer transition-all duration-200 border ${
         isCurrentTurn
           ? "bg-[var(--color-swamp)]/60 border-[var(--color-gold)]/30 shadow-sm shadow-[var(--color-gold)]/10"
           : "bg-gray-900/50 border-gray-800/40"
       } ${isExpanded ? "border-blue-500/40 bg-gray-900/70" : ""}`}
+      style={{ gridTemplateColumns: "1fr auto 1fr" }}
     >
       <div className="flex items-center gap-1.5 min-w-0">
         {player.playerShield > 0 && (
@@ -64,10 +65,8 @@ function OpponentBar({
           </span>
         )}
       </div>
-      <div className="flex items-center gap-2 text-[10px]">
-        <span className="text-gray-500">{creatureCount} creat.</span>
+      <div className="flex items-center gap-1.5 justify-center text-[10px]">
         <span className="text-yellow-400 font-bold">{player.sp} SP</span>
-        <span className="text-blue-300 font-medium">{player.ap} AP</span>
         {/* SP mini progress */}
         <div className="w-8 h-1 bg-gray-800 rounded-full overflow-hidden">
           <div
@@ -75,6 +74,10 @@ function OpponentBar({
             style={{ width: `${spPct}%` }}
           />
         </div>
+      </div>
+      <div className="flex items-center gap-2 justify-end text-[10px]">
+        <span className="text-gray-500">{creatureCount} creat.</span>
+        <span className="text-blue-300 font-medium">{player.ap} AP</span>
         <span className="text-gray-600 text-[8px]">
           {isExpanded ? "\u25B2" : "\u25BC"}
         </span>
@@ -444,11 +447,18 @@ export default function GameScreen() {
       const rotation = (Math.random() - 0.5) * 10; // -5 to +5 degrees
       setStagedCards((prev) => [
         ...prev,
-        { ...currentAnimation.card, _stagedId: id, _rotation: rotation },
+        { ...currentAnimation.card, _stagedId: id, _rotation: rotation, _phase: "display" },
       ]);
+      // After 1500ms, switch to "fly" phase
+      setTimeout(() => {
+        setStagedCards((prev) =>
+          prev.map((c) => (c._stagedId === id ? { ...c, _phase: "fly" } : c))
+        );
+      }, 1500);
+      // Remove after flight completes (1500 + 600ms flight)
       setTimeout(() => {
         setStagedCards((prev) => prev.filter((c) => c._stagedId !== id));
-      }, 5000);
+      }, 2100);
     }
 
     if (currentAnimation.type === "damage" && currentAnimation.amount) {
@@ -495,7 +505,7 @@ export default function GameScreen() {
       ]);
       setTimeout(() => {
         setSPEvents((prev) => prev.filter((e) => e.id !== id));
-      }, 2500);
+      }, 1700);
     }
 
     if (currentAnimation.type === "dice_roll") {
@@ -1153,13 +1163,9 @@ export default function GameScreen() {
               inset: 0,
               zIndex: 50,
               pointerEvents: "none",
-              ...(drawnCard.phase === "fly" && drawnCard.flyTarget
-                ? {}
-                : {
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }),
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

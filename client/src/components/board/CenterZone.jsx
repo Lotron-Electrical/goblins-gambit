@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useStore } from "../../store.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "../../hooks/useIsMobile.js";
@@ -75,6 +75,9 @@ export default function CenterZone({
   const isMobile = useIsMobile();
   const [volcanoOpen, setVolcanoOpen] = useState(false);
   const [jargonOpen, setJargonOpen] = useState(false);
+
+  const graveRef = useRef(null);
+  const stagedRef = useRef(null);
 
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
   const canAttackDragon =
@@ -159,6 +162,7 @@ export default function CenterZone({
       {/* Staged card stack — center, Uno-style */}
       {stagedCards.length > 0 && (
         <div
+          ref={stagedRef}
           className="relative z-10"
           style={{
             width: isMobile ? 70 : 80,
@@ -168,7 +172,7 @@ export default function CenterZone({
         >
           <div
             style={{
-              transform: isMobile ? "scale(0.85)" : "scale(0.7)",
+              transform: isMobile ? "scale(0.65)" : "scale(0.55)",
               transformOrigin: "center center",
             }}
           >
@@ -184,10 +188,28 @@ export default function CenterZone({
                   <motion.div
                     key={card._stagedId}
                     initial={{ opacity: 0, scale: 0.5, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    style={{ rotate: `${card._rotation}deg` }}
+                    animate={
+                      card._phase === "fly" && graveRef.current && stagedRef.current
+                        ? (() => {
+                            const graveRect = graveRef.current.getBoundingClientRect();
+                            const stagedRect = stagedRef.current.getBoundingClientRect();
+                            return {
+                              x: graveRect.left - stagedRect.left,
+                              y: graveRect.top - stagedRect.top,
+                              scale: 0.5,
+                              opacity: 0.7,
+                              rotate: 180 + card._rotation,
+                            };
+                          })()
+                        : { opacity: 1, scale: 1, y: 0 }
+                    }
+                    exit={{ opacity: 0 }}
+                    transition={
+                      card._phase === "fly"
+                        ? { duration: 0.5, ease: "easeInOut" }
+                        : { duration: 0.3 }
+                    }
+                    style={card._phase !== "fly" ? { rotate: `${card._rotation}deg` } : undefined}
                     className={`absolute inset-0 rounded-lg border-2 overflow-hidden shadow-2xl flex flex-col ${
                       TYPE_BORDER[card.type] || "border-gray-600"
                     }`}
@@ -290,7 +312,7 @@ export default function CenterZone({
       )}
 
       {/* Graveyard — right side, messy stack of card faces */}
-      <div className="flex flex-col items-center gap-1">
+      <div ref={graveRef} className="flex flex-col items-center gap-1">
         <span
           className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
         >

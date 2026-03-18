@@ -182,7 +182,7 @@ export function useAnimationQueue(animations) {
         type: evt.card.type,
         flavor: getFlavorText(evt.card),
       });
-      setTimeout(() => setAnnouncement(null), 1500);
+      setTimeout(() => setAnnouncement(null), 1000);
     }
 
     let duration = ANIMATION_DURATIONS[evt.type] || 200;

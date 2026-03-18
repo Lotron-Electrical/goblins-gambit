@@ -44,10 +44,10 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
   // Position at the center zone midpoint; fall back to 50% (true center) on mobile
   const centerTop =
     mobileCenterY || centerZoneY
-      ? `${mobileCenterY || centerZoneY}px`
+      ? `${(mobileCenterY || centerZoneY) - (isMobile ? 55 : 70)}px`
       : isMobile
-        ? "50%"
-        : "50%";
+        ? "45%"
+        : "45%";
 
   return (
     <AnimatePresence>

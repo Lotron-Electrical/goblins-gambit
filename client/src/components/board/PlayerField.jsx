@@ -154,6 +154,8 @@ export default function PlayerField({
     return "text-yellow-400";
   }, [spPct]);
 
+  const handCount = player.handCount ?? player.hand?.length ?? 0;
+
   return (
     <div
       className={`relative rounded-xl ${isMobile ? "p-1.5" : isOpponent ? "p-1.5" : "p-2.5"} transition-all duration-300 border ${
@@ -167,9 +169,10 @@ export default function PlayerField({
       }`}
       onClick={canDirectAttack ? handleDirectAttack : undefined}
     >
-      {/* Player info bar */}
+      {/* Player info bar — 3-column grid: left=name/status, centre=SP, right=AP */}
       <div
-        className={`flex items-center justify-between ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5 rounded-lg`}
+        className={`grid items-center ${isOpponent ? "mb-1" : "mb-1.5"} px-1.5 rounded-lg`}
+        style={{ gridTemplateColumns: "1fr auto 1fr" }}
       >
         <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
           <span
@@ -211,7 +214,7 @@ export default function PlayerField({
           )}
         </div>
         <div
-          className={`flex items-center gap-2 md:gap-3 ${isMobile ? "text-[10px]" : "text-[13px]"}`}
+          className={`flex items-center gap-1.5 justify-center ${isMobile ? "text-[10px]" : "text-[13px]"}`}
         >
           {player.playerShield > 0 && (
             <span className="text-cyan-400 font-bold flex items-center gap-0.5">
@@ -225,19 +228,11 @@ export default function PlayerField({
           >
             {player.sp}/{gameState.winSP} SP
           </span>
+        </div>
+        <div
+          className={`flex items-center gap-2 justify-end ${isMobile ? "text-[10px]" : "text-[13px]"}`}
+        >
           <span className="text-blue-300 font-medium">{player.ap} AP</span>
-          <span
-            className={`font-medium ${(player.handCount ?? player.hand?.length ?? 0) >= 10 ? "text-orange-400" : "text-gray-500"}`}
-          >
-            {player.handCount ?? player.hand?.length ?? 0} cards
-          </span>
-          {(player.handCount ?? player.hand?.length ?? 0) >= 10 && (
-            <span
-              className={`text-orange-400 font-bold uppercase tracking-wider ${isMobile ? "text-[7px]" : "text-[9px]"}`}
-            >
-              ENCUMBERED
-            </span>
-          )}
         </div>
       </div>
 
@@ -559,6 +554,21 @@ export default function PlayerField({
           </div>
         </div>
       )}
+      {/* Card count + encumbered indicator */}
+      <div
+        className={`flex items-center gap-1.5 px-2 mt-0.5 ${isMobile ? "text-[9px]" : "text-[11px]"}`}
+      >
+        <span
+          className={`font-medium ${handCount >= 10 ? "text-orange-400" : "text-gray-500"}`}
+        >
+          {handCount} cards
+        </span>
+        {handCount >= 10 && (
+          <span className="text-orange-400 font-bold uppercase tracking-wider">
+            ENCUMBERED
+          </span>
+        )}
+      </div>
     </div>
   );
 }
