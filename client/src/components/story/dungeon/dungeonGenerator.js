@@ -4,7 +4,14 @@
  */
 
 /** Tile type constants */
-export const TILE = { WALL: 0, FLOOR: 1, CORRIDOR: 2, DOOR: 3, WATER: 4, GRASS: 5 };
+export const TILE = {
+  WALL: 0,
+  FLOOR: 1,
+  CORRIDOR: 2,
+  DOOR: 3,
+  WATER: 4,
+  GRASS: 5,
+};
 
 /** Seeded PRNG (Mulberry32) */
 function mulberry32(seed) {
@@ -337,16 +344,27 @@ function generateEnvironment(tiles, rooms, rng) {
         for (let dx = 0; dx < poolW; dx++) {
           const wx = cornerX + dx;
           const wy = cornerY + dy;
-          if (wx >= room.x && wx < room.x + room.w && wy >= room.y && wy < room.y + room.h) {
+          if (
+            wx >= room.x &&
+            wx < room.x + room.w &&
+            wy >= room.y &&
+            wy < room.y + room.h
+          ) {
             // Never on room center
             if (wx === room.cx && wy === room.cy) continue;
             // Never adjacent to doors
             const idx = wy * GRID_W + wx;
             if (tiles[idx] === TILE.FLOOR) {
               let nearDoor = false;
-              for (const dd of [[-1,0],[1,0],[0,-1],[0,1]]) {
+              for (const dd of [
+                [-1, 0],
+                [1, 0],
+                [0, -1],
+                [0, 1],
+              ]) {
                 const ni = (wy + dd[1]) * GRID_W + (wx + dd[0]);
-                if (ni >= 0 && ni < GRID_W * GRID_H && tiles[ni] === TILE.DOOR) nearDoor = true;
+                if (ni >= 0 && ni < GRID_W * GRID_H && tiles[ni] === TILE.DOOR)
+                  nearDoor = true;
               }
               if (!nearDoor) tiles[idx] = TILE.WATER;
             }
@@ -362,10 +380,19 @@ function generateEnvironment(tiles, rooms, rng) {
         // Pick a tile 1 in from wall edge
         const edge = Math.floor(rng() * 4); // 0=top,1=right,2=bottom,3=left
         let gx, gy;
-        if (edge === 0) { gx = room.x + 1 + Math.floor(rng() * (room.w - 2)); gy = room.y + 1; }
-        else if (edge === 1) { gx = room.x + room.w - 2; gy = room.y + 1 + Math.floor(rng() * (room.h - 2)); }
-        else if (edge === 2) { gx = room.x + 1 + Math.floor(rng() * (room.w - 2)); gy = room.y + room.h - 2; }
-        else { gx = room.x + 1; gy = room.y + 1 + Math.floor(rng() * (room.h - 2)); }
+        if (edge === 0) {
+          gx = room.x + 1 + Math.floor(rng() * (room.w - 2));
+          gy = room.y + 1;
+        } else if (edge === 1) {
+          gx = room.x + room.w - 2;
+          gy = room.y + 1 + Math.floor(rng() * (room.h - 2));
+        } else if (edge === 2) {
+          gx = room.x + 1 + Math.floor(rng() * (room.w - 2));
+          gy = room.y + room.h - 2;
+        } else {
+          gx = room.x + 1;
+          gy = room.y + 1 + Math.floor(rng() * (room.h - 2));
+        }
 
         if (gx === room.cx && gy === room.cy) continue;
         const idx = gy * GRID_W + gx;
@@ -389,7 +416,7 @@ function generateDecorations(tiles, rooms, rng) {
       const tx = room.x + 1 + Math.floor(rng() * (room.w - 2));
       const ty = room.y - 1; // wall tile above room
       if (ty >= 0 && tiles[ty * GRID_W + tx] === TILE.WALL) {
-        decorations.push({ x: tx, y: ty, type: 'torch' });
+        decorations.push({ x: tx, y: ty, type: "torch" });
         placed++;
       }
     }
@@ -408,7 +435,7 @@ function generateDecorations(tiles, rooms, rng) {
         const c = corners.splice(ci, 1)[0];
         const t = tiles[c.y * GRID_W + c.x];
         if (t === TILE.FLOOR || t === TILE.GRASS) {
-          decorations.push({ x: c.x, y: c.y, type: 'barrel' });
+          decorations.push({ x: c.x, y: c.y, type: "barrel" });
         }
       }
     }
@@ -422,7 +449,7 @@ function generateDecorations(tiles, rooms, rng) {
         if (bx === room.cx && by === room.cy) continue;
         const t = tiles[by * GRID_W + bx];
         if (t === TILE.FLOOR) {
-          decorations.push({ x: bx, y: by, type: 'bones' });
+          decorations.push({ x: bx, y: by, type: "bones" });
         }
       }
     }
@@ -438,7 +465,7 @@ function generateDecorations(tiles, rooms, rng) {
       if (rng() < 0.25) {
         const t = tiles[cc.y * GRID_W + cc.x];
         if (t === TILE.FLOOR) {
-          decorations.push({ x: cc.x, y: cc.y, type: 'cobweb' });
+          decorations.push({ x: cc.x, y: cc.y, type: "cobweb" });
         }
       }
     }
@@ -447,8 +474,8 @@ function generateDecorations(tiles, rooms, rng) {
   // Cracks: 10% of floor tiles
   for (let y = 0; y < GRID_H; y++) {
     for (let x = 0; x < GRID_W; x++) {
-      if (tiles[y * GRID_W + x] === TILE.FLOOR && rng() < 0.10) {
-        decorations.push({ x, y, type: 'crack' });
+      if (tiles[y * GRID_W + x] === TILE.FLOOR && rng() < 0.1) {
+        decorations.push({ x, y, type: "crack" });
       }
     }
   }
@@ -456,8 +483,8 @@ function generateDecorations(tiles, rooms, rng) {
   // Rubble: 10% of corridor tiles
   for (let y = 0; y < GRID_H; y++) {
     for (let x = 0; x < GRID_W; x++) {
-      if (tiles[y * GRID_W + x] === TILE.CORRIDOR && rng() < 0.10) {
-        decorations.push({ x, y, type: 'rubble' });
+      if (tiles[y * GRID_W + x] === TILE.CORRIDOR && rng() < 0.1) {
+        decorations.push({ x, y, type: "rubble" });
       }
     }
   }

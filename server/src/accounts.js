@@ -58,6 +58,16 @@ async function initDatabase() {
   await pool.query(`
     ALTER TABLE gg_accounts ADD COLUMN IF NOT EXISTS session_token VARCHAR(64);
   `);
+  // Add session_tokens JSONB array for multi-device support
+  await pool.query(`
+    ALTER TABLE gg_accounts ADD COLUMN IF NOT EXISTS session_tokens JSONB DEFAULT '[]';
+  `);
+  // One-time migration: copy existing single token into the new array
+  await pool.query(`
+    UPDATE gg_accounts
+    SET session_tokens = jsonb_build_array(session_token)
+    WHERE session_token IS NOT NULL AND session_tokens = '[]';
+  `);
   console.log("[Accounts] Postgres connected, gg_accounts table ready");
 }
 
@@ -132,7 +142,7 @@ async function register(username, password) {
     const token = generateToken();
     sessions.set(token, username);
     await pool.query(
-      "UPDATE gg_accounts SET session_token = $1 WHERE username = $2",
+      "UPDATE gg_accounts SET session_tokens = jsonb_build_array($1::text) WHERE username = $2",
       [token, key],
     );
     return { success: true, token, username };
@@ -160,7 +170,7 @@ async function register(username, password) {
 
   const token = generateToken();
   sessions.set(token, username);
-  accounts[key].sessionToken = token;
+  accounts[key].sessionTokens = [token];
   saveAccounts();
   return { success: true, token, username };
 }
@@ -186,8 +196,18 @@ async function login(username, password) {
 
     const token = generateToken();
     sessions.set(token, row.display_name);
+    // Append token to array, keep last 5
     await pool.query(
-      "UPDATE gg_accounts SET session_token = $1 WHERE username = $2",
+      `UPDATE gg_accounts
+       SET session_tokens = (
+         SELECT COALESCE(jsonb_agg(t ORDER BY ord), '[]') FROM (
+           SELECT t, ord FROM jsonb_array_elements(
+             session_tokens || jsonb_build_array($1::text)
+           ) WITH ORDINALITY AS x(t, ord)
+           ORDER BY ord DESC LIMIT 5
+         ) sub
+       )
+       WHERE username = $2`,
       [token, key],
     );
     return { success: true, token, username: row.display_name };
@@ -203,7 +223,11 @@ async function login(username, password) {
 
   const token = generateToken();
   sessions.set(token, account.username);
-  account.sessionToken = token;
+  if (!Array.isArray(account.sessionTokens)) account.sessionTokens = [];
+  account.sessionTokens.push(token);
+  if (account.sessionTokens.length > 5) {
+    account.sessionTokens = account.sessionTokens.slice(-5);
+  }
   saveAccounts();
   return { success: true, token, username: account.username };
 }
@@ -216,14 +240,21 @@ async function logout(token) {
   if (username) {
     const key = username.toLowerCase();
     if (usePostgres) {
+      // Remove this specific token from the array
       await pool.query(
-        "UPDATE gg_accounts SET session_token = NULL WHERE username = $1 AND session_token = $2",
+        `UPDATE gg_accounts
+         SET session_tokens = (
+           SELECT COALESCE(jsonb_agg(t), '[]')
+           FROM jsonb_array_elements(session_tokens) AS t
+           WHERE t #>> '{}' != $2
+         )
+         WHERE username = $1`,
         [key, token],
       );
     } else {
       const account = accounts[key];
-      if (account && account.sessionToken === token) {
-        account.sessionToken = null;
+      if (account && Array.isArray(account.sessionTokens)) {
+        account.sessionTokens = account.sessionTokens.filter((t) => t !== token);
         saveAccounts();
       }
     }
@@ -324,7 +355,7 @@ async function validateToken(token) {
   // Check Postgres if available
   if (usePostgres) {
     const result = await pool.query(
-      "SELECT display_name FROM gg_accounts WHERE session_token = $1",
+      "SELECT display_name FROM gg_accounts WHERE session_tokens @> to_jsonb($1::text)",
       [token],
     );
     if (result.rows.length > 0) {
@@ -338,7 +369,7 @@ async function validateToken(token) {
     // Re-read from disk in case accounts changed since last load
     loadAccounts();
     for (const account of Object.values(accounts)) {
-      if (account.sessionToken === token) {
+      if (Array.isArray(account.sessionTokens) && account.sessionTokens.includes(token)) {
         sessions.set(token, account.username); // Re-cache
         return account.username;
       }

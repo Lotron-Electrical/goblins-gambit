@@ -166,7 +166,8 @@ export function generateTileCache(levelKey, seed = 0) {
     for (let i = 0; i < 6; i++) {
       const x = Math.floor(r() * 16);
       const y = Math.floor(r() * 16);
-      ctx.fillStyle = r() > 0.5 ? adjustColor(p.wall, -0.2) : adjustColor(p.wall, 0.2);
+      ctx.fillStyle =
+        r() > 0.5 ? adjustColor(p.wall, -0.2) : adjustColor(p.wall, 0.2);
       ctx.fillRect(x, y, 1, 1);
     }
     // Bottom shadow strip
