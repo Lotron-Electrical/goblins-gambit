@@ -254,7 +254,9 @@ async function logout(token) {
     } else {
       const account = accounts[key];
       if (account && Array.isArray(account.sessionTokens)) {
-        account.sessionTokens = account.sessionTokens.filter((t) => t !== token);
+        account.sessionTokens = account.sessionTokens.filter(
+          (t) => t !== token,
+        );
         saveAccounts();
       }
     }
@@ -369,7 +371,10 @@ async function validateToken(token) {
     // Re-read from disk in case accounts changed since last load
     loadAccounts();
     for (const account of Object.values(accounts)) {
-      if (Array.isArray(account.sessionTokens) && account.sessionTokens.includes(token)) {
+      if (
+        Array.isArray(account.sessionTokens) &&
+        account.sessionTokens.includes(token)
+      ) {
         sessions.set(token, account.username); // Re-cache
         return account.username;
       }

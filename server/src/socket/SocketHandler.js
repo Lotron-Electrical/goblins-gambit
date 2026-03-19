@@ -36,14 +36,56 @@ export function setupSocketHandlers(io, lobby) {
   const lastChatTime = new Map(); // socketId -> timestamp
   const disconnectTimers = new Map(); // socketId -> timeout handle for grace period
   const autoSaveTimers = new Map(); // roomId -> { timer, socketId }
+  const accountSockets = new Map(); // username -> Set<socketId>
+
+  function addAccountSocket(username, socketId) {
+    if (!accountSockets.has(username)) {
+      accountSockets.set(username, new Set());
+    }
+    accountSockets.get(username).add(socketId);
+  }
+
+  function removeAccountSocket(username, socketId) {
+    const sockets = accountSockets.get(username);
+    if (sockets) {
+      sockets.delete(socketId);
+      if (sockets.size === 0) accountSockets.delete(username);
+    }
+  }
+
+  function getPrimarySocketId(username) {
+    const sockets = accountSockets.get(username);
+    if (!sockets) return null;
+    for (const sid of sockets) {
+      if (lobby.getPlayerRoom(sid)) return sid;
+    }
+    return null;
+  }
+
+  function resolvePlayerId(socketId) {
+    if (lobby.getPlayerRoom(socketId)) return socketId;
+    const username = socketAccounts.get(socketId);
+    if (!username) return socketId;
+    return getPrimarySocketId(username) || socketId;
+  }
+
+  function getAllSocketsForPlayer(playerId) {
+    const username = socketAccounts.get(playerId);
+    if (!username) return [playerId];
+    const sockets = accountSockets.get(username);
+    if (!sockets || sockets.size === 0) return [playerId];
+    return [...sockets];
+  }
 
   function broadcastState(roomId, engine) {
     const room = lobby.getRoom(roomId);
     if (!room) return;
     for (const p of room.players) {
-      const state = engine.getStateForPlayer(p.id);
       if (botIds.has(p.id)) continue; // Don't emit to bots
-      io.to(p.id).emit(EVENTS.GAME_STATE, state);
+      const state = engine.getStateForPlayer(p.id);
+      for (const sid of getAllSocketsForPlayer(p.id)) {
+        io.to(sid).emit(EVENTS.GAME_STATE, state);
+      }
     }
   }
 
@@ -375,6 +417,46 @@ export function setupSocketHandlers(io, lobby) {
       const username = await validateToken(token);
       if (username) {
         socketAccounts.set(socket.id, username);
+        addAccountSocket(username, socket.id);
+
+        // Check if this account already has a primary socket in a game
+        const primaryId = getPrimarySocketId(username);
+        if (primaryId && primaryId !== socket.id) {
+          const roomId = lobby.getPlayerRoom(primaryId);
+          if (roomId) {
+            socket.join(roomId);
+
+            // Cancel any disconnect/auto-save timers — player is still active
+            if (disconnectTimers.has(primaryId)) {
+              clearTimeout(disconnectTimers.get(primaryId));
+              disconnectTimers.delete(primaryId);
+            }
+            if (autoSaveTimers.has(roomId)) {
+              clearTimeout(autoSaveTimers.get(roomId).timer);
+              autoSaveTimers.delete(roomId);
+            }
+
+            const engine = lobby.getGame(roomId);
+            if (engine) {
+              const player = engine.state.players[primaryId];
+              if (player) player.connected = true;
+
+              const state = engine.getStateForPlayer(primaryId);
+              socket.emit(EVENTS.GAME_STATE, state);
+
+              // Resume bots if paused due to disconnect
+              const currentId = engine.getCurrentPlayerId();
+              if (botIds.has(currentId)) {
+                runBotTurn(roomId, engine);
+              }
+            }
+
+            const room = lobby.getRoom(roomId);
+            callback?.({ success: true, username, activeRoom: roomId, room });
+            return;
+          }
+        }
+
         callback?.({ success: true, username });
       } else {
         callback?.({ error: "Invalid token" });
@@ -399,6 +481,15 @@ export function setupSocketHandlers(io, lobby) {
 
     socket.on(EVENTS.CREATE_ROOM, ({ name, options }, callback) => {
       playerName = name || "Player";
+      // Block if logged-in account already has a player in a room
+      const username = socketAccounts.get(socket.id);
+      if (username && !username.startsWith("guest_")) {
+        const primaryId = getPrimarySocketId(username);
+        if (primaryId && primaryId !== socket.id) {
+          callback?.({ error: "Already in a game on another device" });
+          return;
+        }
+      }
       const room = lobby.createRoom(socket.id, playerName, options);
       socket.join(room.id);
       callback?.({ room });
@@ -407,6 +498,15 @@ export function setupSocketHandlers(io, lobby) {
 
     socket.on(EVENTS.JOIN_ROOM, ({ roomId, name }, callback) => {
       playerName = name || "Player";
+      // Block if logged-in account already has a player in a room
+      const username = socketAccounts.get(socket.id);
+      if (username && !username.startsWith("guest_")) {
+        const primaryId = getPrimarySocketId(username);
+        if (primaryId && primaryId !== socket.id) {
+          callback?.({ error: "Already in a game on another device" });
+          return;
+        }
+      }
       const result = lobby.joinRoom(roomId, socket.id, playerName);
       if (result.error) {
         callback?.({ error: result.error });
@@ -425,6 +525,41 @@ export function setupSocketHandlers(io, lobby) {
       if (!room) {
         callback?.({ error: "Room no longer exists" });
         return;
+      }
+
+      // If this account already has connected mirrors (primary still alive),
+      // handle as a mirror join instead of a full rejoin-with-remap
+      const myUsername = socketAccounts.get(socket.id);
+      if (myUsername) {
+        const primaryId = getPrimarySocketId(myUsername);
+        if (primaryId && primaryId !== socket.id) {
+          const game = lobby.getGame(roomId);
+          if (game && game.state.players[primaryId]) {
+            socket.join(roomId);
+            const player = game.state.players[primaryId];
+            if (player) player.connected = true;
+
+            // Cancel timers
+            if (disconnectTimers.has(primaryId)) {
+              clearTimeout(disconnectTimers.get(primaryId));
+              disconnectTimers.delete(primaryId);
+            }
+            if (autoSaveTimers.has(roomId)) {
+              clearTimeout(autoSaveTimers.get(roomId).timer);
+              autoSaveTimers.delete(roomId);
+            }
+
+            const state = game.getStateForPlayer(primaryId);
+            callback?.({ success: true, room, gameState: state });
+            socket.emit(EVENTS.GAME_STATE, state);
+
+            const currentId = game.getCurrentPlayerId();
+            if (botIds.has(currentId)) {
+              runBotTurn(roomId, game);
+            }
+            return;
+          }
+        }
       }
 
       // Find the old player entry by name
@@ -469,6 +604,8 @@ export function setupSocketHandlers(io, lobby) {
       if (username) {
         socketAccounts.delete(oldId);
         socketAccounts.set(newId, username);
+        removeAccountSocket(username, oldId);
+        addAccountSocket(username, newId);
       }
 
       const game = lobby.getGame(roomId);
@@ -554,46 +691,54 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.LEAVE_ROOM, async () => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
 
       // Cancel any pending disconnect timer for this player
-      if (disconnectTimers.has(socket.id)) {
-        clearTimeout(disconnectTimers.get(socket.id));
-        disconnectTimers.delete(socket.id);
+      if (disconnectTimers.has(playerId)) {
+        clearTimeout(disconnectTimers.get(playerId));
+        disconnectTimers.delete(playerId);
       }
 
-      // Leave the socket room BEFORE broadcasting so this player doesn't receive the state update
-      socket.leave(roomId);
+      // Remove ALL mirror sockets from the socket.io room
+      for (const sid of getAllSocketsForPlayer(playerId)) {
+        io.sockets.sockets.get(sid)?.leave(roomId);
+      }
+
+      // Clear accountSockets entry for this username entirely (leaving = all devices leave)
+      const username = socketAccounts.get(playerId);
+      if (username) {
+        accountSockets.delete(username);
+      }
 
       // If there's an active game, handle cleanup
       const game = lobby.getGame(roomId);
       if (game) {
-        const player = game.state.players[socket.id];
+        const player = game.state.players[playerId];
         if (player) {
           const allOpponentsBots = Object.keys(game.state.players)
-            .filter((id) => id !== socket.id)
+            .filter((id) => id !== playerId)
             .every((id) => botIds.has(id));
-          const username = socketAccounts.get(socket.id);
 
           if (allOpponentsBots && username && !username.startsWith("guest_")) {
             // PvE + logged in: save immediately and clean up room
             player.connected = false;
-            await autoSaveAndCleanup(roomId, socket.id);
+            await autoSaveAndCleanup(roomId, playerId);
             io.emit(EVENTS.ROOM_LIST, lobby.getRoomList());
             return;
           }
 
           // PvP or guest: mark disconnected and force end turn
           player.connected = false;
-          if (game.getCurrentPlayerId() === socket.id) {
-            game.handleAction(socket.id, { type: ACTION.END_TURN });
+          if (game.getCurrentPlayerId() === playerId) {
+            game.handleAction(playerId, { type: ACTION.END_TURN });
             broadcastState(roomId, game);
             runBotTurn(roomId, game);
           }
         }
       }
-      const result = lobby.leaveRoom(socket.id);
+      const result = lobby.leaveRoom(playerId);
       if (result && !result.deleted) {
         io.to(roomId).emit(EVENTS.ROOM_UPDATE, result.room);
       }
@@ -601,9 +746,10 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.READY_UP, () => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
-      const room = lobby.toggleReady(socket.id);
+      const room = lobby.toggleReady(playerId);
       if (room) {
         io.to(roomId).emit(EVENTS.ROOM_UPDATE, room);
       }
@@ -611,10 +757,11 @@ export function setupSocketHandlers(io, lobby) {
 
     // --- Bot management ---
     socket.on(EVENTS.ADD_BOT, (data, callback) => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
-      if (!room || room.host !== socket.id) {
+      if (!room || room.host !== playerId) {
         callback?.({ error: "Only host can add bots" });
         return;
       }
@@ -651,10 +798,11 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.REMOVE_BOT, ({ botId }, callback) => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
-      if (!room || room.host !== socket.id) {
+      if (!room || room.host !== playerId) {
         callback?.({ error: "Only host can remove bots" });
         return;
       }
@@ -679,10 +827,11 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.SET_ROOM_SETTINGS, ({ settings }, callback) => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
-      if (!room || room.host !== socket.id) {
+      if (!room || room.host !== playerId) {
         callback?.({ error: "Only host can change settings" });
         return;
       }
@@ -720,10 +869,11 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.SET_THEME, ({ theme }, callback) => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
-      if (!room || room.host !== socket.id) {
+      if (!room || room.host !== playerId) {
         callback?.({ error: "Only host can set theme" });
         return;
       }
@@ -737,10 +887,11 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.START_GAME, (_, callback) => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
       const room = lobby.getRoom(roomId);
-      if (!room || room.host !== socket.id) {
+      if (!room || room.host !== playerId) {
         callback?.({ error: "Only host can start" });
         return;
       }
@@ -774,13 +925,13 @@ export function setupSocketHandlers(io, lobby) {
         runBotTurn(roomId, result.engine);
       };
 
-      // Send initial state to each human player
+      // Send initial state to each human player (including mirrors)
       for (const p of result.room.players) {
         if (botIds.has(p.id)) continue;
-        io.to(p.id).emit(
-          EVENTS.GAME_STATE,
-          result.engine.getStateForPlayer(p.id),
-        );
+        const state = result.engine.getStateForPlayer(p.id);
+        for (const sid of getAllSocketsForPlayer(p.id)) {
+          io.to(sid).emit(EVENTS.GAME_STATE, state);
+        }
       }
       callback?.({ success: true });
       io.emit(EVENTS.ROOM_LIST, lobby.getRoomList());
@@ -790,7 +941,8 @@ export function setupSocketHandlers(io, lobby) {
     });
 
     socket.on(EVENTS.GAME_ACTION, async (action, callback) => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
       const engine = lobby.getGame(roomId);
       if (!engine) {
@@ -798,7 +950,7 @@ export function setupSocketHandlers(io, lobby) {
         return;
       }
 
-      const result = engine.handleAction(socket.id, action);
+      const result = engine.handleAction(playerId, action);
 
       if (!result.success && !result.needsTarget) {
         callback?.({ error: result.error });
@@ -827,13 +979,14 @@ export function setupSocketHandlers(io, lobby) {
     // --- Saved Games ---
     socket.on(EVENTS.SAVE_GAME, async (_, callback) => {
       try {
-        const username = socketAccounts.get(socket.id);
+        const playerId = resolvePlayerId(socket.id);
+        const username = socketAccounts.get(playerId);
         if (!username) {
           callback?.({ error: "Must be logged in to save" });
           return;
         }
 
-        const roomId = lobby.getPlayerRoom(socket.id);
+        const roomId = lobby.getPlayerRoom(playerId);
         if (!roomId) {
           callback?.({ error: "Not in a game" });
           return;
@@ -881,9 +1034,12 @@ export function setupSocketHandlers(io, lobby) {
         await saveGame(username, gameState, roomSettings);
 
         // Clean up the room/game and return player to lobby
-        socket.leave(roomId);
+        // Remove all mirror sockets from the room
+        for (const sid of getAllSocketsForPlayer(playerId)) {
+          io.sockets.sockets.get(sid)?.leave(roomId);
+        }
         cleanupFinishedGame(roomId);
-        lobby.playerRooms.delete(socket.id);
+        lobby.playerRooms.delete(playerId);
 
         callback?.({ success: true });
       } catch (err) {
@@ -1052,23 +1208,24 @@ export function setupSocketHandlers(io, lobby) {
 
     // --- Chat ---
     socket.on(EVENTS.CHAT_MESSAGE, (data) => {
-      const roomId = lobby.getPlayerRoom(socket.id);
+      const playerId = resolvePlayerId(socket.id);
+      const roomId = lobby.getPlayerRoom(playerId);
       if (!roomId) return;
       const game = lobby.getGame(roomId);
       if (!game) return; // only during active games
 
-      // Rate limit: 1 msg/sec
+      // Rate limit: 1 msg/sec (by primary socketId, not mirror)
       const now = Date.now();
-      const last = lastChatTime.get(socket.id) || 0;
+      const last = lastChatTime.get(playerId) || 0;
       if (now - last < 1000) return; // silent drop
-      lastChatTime.set(socket.id, now);
+      lastChatTime.set(playerId, now);
 
-      const player = game.state.players[socket.id];
+      const player = game.state.players[playerId];
       if (!player) return;
 
       const msg = {
-        id: `${socket.id}-${now}`,
-        playerId: socket.id,
+        id: `${playerId}-${now}`,
+        playerId: playerId,
         playerName: player.name,
         timestamp: now,
       };
@@ -1118,27 +1275,79 @@ export function setupSocketHandlers(io, lobby) {
     socket.on("disconnect", () => {
       lastChatTime.delete(socket.id);
       // Clean up story engine if player had one
-      const storyUsername = socketAccounts.get(socket.id);
-      if (storyUsername) cleanupStoryEngine(storyUsername);
+      const username = socketAccounts.get(socket.id);
+      if (username) cleanupStoryEngine(username);
+
+      // Remove this socket from account tracking
+      if (username) removeAccountSocket(username, socket.id);
+      socketAccounts.delete(socket.id);
+
+      // Check if this account still has other sockets connected
+      const otherSocketsExist =
+        username && accountSockets.get(username)?.size > 0;
+
+      // Was this socket the primary (game engine knows about it)?
       const roomId = lobby.getPlayerRoom(socket.id);
+
+      // If not in a room, check if we were a mirror
       if (!roomId) {
-        socketAccounts.delete(socket.id);
+        if (otherSocketsExist) {
+          // Mirror disconnected, primary still alive — nothing to do
+          return;
+        }
+        // No room, no other sockets — fully gone
         return;
       }
 
       const game = lobby.getGame(roomId);
       if (game) {
-        // Mark player disconnected but keep in game — don't delete playerRooms or socketAccounts
-        // so the rejoin handler can find them
-        const player = game.state.players[socket.id];
+        if (otherSocketsExist) {
+          // Other sockets remain for this account
+          const wasPrimary = game.state.players[socket.id] != null;
+
+          if (wasPrimary) {
+            // Promote a mirror to primary
+            const remainingSockets = accountSockets.get(username);
+            const newPrimaryId = remainingSockets.values().next().value;
+
+            // Re-register the new primary in socketAccounts
+            socketAccounts.set(newPrimaryId, username);
+
+            // Remap player ID in game state using existing remapPlayerIds
+            remapPlayerIds(game.state, { [socket.id]: newPrimaryId });
+
+            // Update room player entry
+            const room = lobby.getRoom(roomId);
+            if (room) {
+              const playerEntry = room.players.find((p) => p.id === socket.id);
+              if (playerEntry) playerEntry.id = newPrimaryId;
+              if (room.host === socket.id) room.host = newPrimaryId;
+            }
+
+            // Update lobby tracking
+            lobby.playerRooms.delete(socket.id);
+            lobby.playerRooms.set(newPrimaryId, roomId);
+
+            // Broadcast updated state
+            broadcastState(roomId, game);
+          }
+          // else: mirror disconnected, primary still alive — just clean up lastChatTime (done above)
+
+          // Do NOT mark player.connected = false, do NOT start timers, do NOT emit PLAYER_DISCONNECTED
+          return;
+        }
+
+        // Last socket disconnected — run existing disconnect logic
+        const primaryId = socket.id;
+        const player = game.state.players[primaryId];
         if (player) {
           player.connected = false;
           const room = lobby.getRoom(roomId);
           if (room) {
             for (const p of room.players) {
-              if (p.id !== socket.id && !botIds.has(p.id)) {
+              if (p.id !== primaryId && !botIds.has(p.id)) {
                 io.to(p.id).emit(EVENTS.PLAYER_DISCONNECTED, {
-                  playerId: socket.id,
+                  playerId: primaryId,
                   playerName: player.name,
                 });
               }
@@ -1146,49 +1355,47 @@ export function setupSocketHandlers(io, lobby) {
           }
 
           const allOpponentsBots = Object.keys(game.state.players)
-            .filter((id) => id !== socket.id)
+            .filter((id) => id !== primaryId)
             .every((id) => botIds.has(id));
 
           // If it was this player's turn, give 15s grace period before force-ending (PvP only)
-          if (game.getCurrentPlayerId() === socket.id && !allOpponentsBots) {
+          if (game.getCurrentPlayerId() === primaryId && !allOpponentsBots) {
             const timer = setTimeout(() => {
-              disconnectTimers.delete(socket.id);
+              disconnectTimers.delete(primaryId);
               const currentGame = lobby.getGame(roomId);
               if (!currentGame) return;
-              const p = currentGame.state.players[socket.id];
+              const p = currentGame.state.players[primaryId];
               if (
                 p &&
                 !p.connected &&
-                currentGame.getCurrentPlayerId() === socket.id
+                currentGame.getCurrentPlayerId() === primaryId
               ) {
-                currentGame.handleAction(socket.id, {
+                currentGame.handleAction(primaryId, {
                   type: ACTION.END_TURN,
                 });
                 broadcastState(roomId, currentGame);
                 runBotTurn(roomId, currentGame);
               }
             }, 15000);
-            disconnectTimers.set(socket.id, timer);
+            disconnectTimers.set(primaryId, timer);
           }
 
           // PvE auto-save: start 30s timer (regardless of whose turn it is)
           if (allOpponentsBots) {
-            const username = socketAccounts.get(socket.id);
             if (username && !username.startsWith("guest_")) {
               const saveTimer = setTimeout(async () => {
                 autoSaveTimers.delete(roomId);
-                await autoSaveAndCleanup(roomId, socket.id);
+                await autoSaveAndCleanup(roomId, primaryId);
               }, 30000);
               autoSaveTimers.set(roomId, {
                 timer: saveTimer,
-                socketId: socket.id,
+                socketId: primaryId,
               });
             }
           }
         }
       } else {
         // Not in game, just leave lobby
-        socketAccounts.delete(socket.id);
         const result = lobby.leaveRoom(socket.id);
         if (result && !result.deleted) {
           io.to(roomId).emit(EVENTS.ROOM_UPDATE, result.room);

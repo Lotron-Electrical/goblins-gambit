@@ -633,8 +633,16 @@ socket.on("connect", () => {
     socket.emit("authenticate", { token: authToken }, (res) => {
       // After auth, check for saved games
       useStore.getState().fetchSavedGameInfo();
-      // Now it's safe to rejoin — server knows who we are
-      attemptRejoin();
+
+      if (res?.activeRoom) {
+        // Already in a game on another device — mirror in
+        sessionStorage.setItem("gg_roomId", res.activeRoom);
+        useStore.setState({ currentRoom: res.room });
+        // GAME_STATE event fires separately and switches screen to 'game'
+      } else {
+        // Now it's safe to rejoin — server knows who we are
+        attemptRejoin();
+      }
     });
   } else if (authToken === "guest") {
     // Authenticate guests with their player name so story mode works
