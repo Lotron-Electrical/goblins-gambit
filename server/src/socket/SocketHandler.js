@@ -442,6 +442,11 @@ export function setupSocketHandlers(io, lobby) {
               if (player) player.connected = true;
 
               const state = engine.getStateForPlayer(primaryId);
+
+              // Callback first so client sets currentRoom before GAME_STATE arrives
+              const room = lobby.getRoom(roomId);
+              callback?.({ success: true, username, activeRoom: roomId, room });
+
               socket.emit(EVENTS.GAME_STATE, state);
 
               // Resume bots if paused due to disconnect
@@ -450,9 +455,6 @@ export function setupSocketHandlers(io, lobby) {
                 runBotTurn(roomId, engine);
               }
             }
-
-            const room = lobby.getRoom(roomId);
-            callback?.({ success: true, username, activeRoom: roomId, room });
             return;
           }
         }

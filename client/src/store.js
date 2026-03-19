@@ -638,7 +638,10 @@ socket.on("connect", () => {
         // Already in a game on another device — mirror in
         sessionStorage.setItem("gg_roomId", res.activeRoom);
         useStore.setState({ currentRoom: res.room });
-        // GAME_STATE event fires separately and switches screen to 'game'
+        // GAME_STATE may have already arrived — transition now if so
+        if (useStore.getState().gameState) {
+          useStore.setState({ screen: "game" });
+        }
       } else {
         // Now it's safe to rejoin — server knows who we are
         attemptRejoin();
