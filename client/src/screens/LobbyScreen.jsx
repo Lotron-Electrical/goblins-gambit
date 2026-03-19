@@ -41,6 +41,8 @@ export default function LobbyScreen() {
     loadSavedGame,
     deleteSavedGame,
     setMenuOpen,
+    mirrorAvailable,
+    linkDevice,
   } = useStore();
   const [name, setName] = useState(playerName || "");
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -235,6 +237,33 @@ export default function LobbyScreen() {
                 {confirmDeleteSave ? "Confirm?" : "Delete"}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Link Device card — mirror into active game on another device */}
+        {mirrorAvailable && (
+          <div className="bg-gray-950/80 border-2 border-purple-500 rounded-2xl p-6 shadow-[0_0_30px_rgba(168,85,247,0.15)] backdrop-blur-sm">
+            <p className="font-display text-purple-400 text-xl mb-1 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+              Game In Progress
+            </p>
+            <div className="text-gray-400 text-[13px] mb-5 space-y-0.5">
+              <p>
+                Turn {mirrorAvailable.turnNumber} &middot;{" "}
+                {mirrorAvailable.playerCount} player
+                {mirrorAvailable.playerCount !== 1 ? "s" : ""} &middot;{" "}
+                {{
+                  swamp: "The Swamp",
+                  blood: "Blood Moon",
+                  frost: "Frozen Wastes",
+                }[mirrorAvailable.theme] || "The Swamp"}
+              </p>
+            </div>
+            <button
+              onClick={linkDevice}
+              className="w-full bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white font-display font-bold py-3 rounded-lg transition-all duration-300 text-lg shadow-[0_4px_16px_rgba(168,85,247,0.3)] hover:shadow-[0_4px_24px_rgba(168,85,247,0.5)] hover:scale-[1.02] active:scale-[0.98] border border-purple-500/30"
+            >
+              Link Device
+            </button>
           </div>
         )}
 

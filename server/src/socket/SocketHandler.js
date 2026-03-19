@@ -424,37 +424,19 @@ export function setupSocketHandlers(io, lobby) {
         if (primaryId && primaryId !== socket.id) {
           const roomId = lobby.getPlayerRoom(primaryId);
           if (roomId) {
-            socket.join(roomId);
-
-            // Cancel any disconnect/auto-save timers — player is still active
-            if (disconnectTimers.has(primaryId)) {
-              clearTimeout(disconnectTimers.get(primaryId));
-              disconnectTimers.delete(primaryId);
-            }
-            if (autoSaveTimers.has(roomId)) {
-              clearTimeout(autoSaveTimers.get(roomId).timer);
-              autoSaveTimers.delete(roomId);
-            }
-
+            // Return metadata only — let client choose when to mirror in
             const engine = lobby.getGame(roomId);
-            if (engine) {
-              const player = engine.state.players[primaryId];
-              if (player) player.connected = true;
-
-              const state = engine.getStateForPlayer(primaryId);
-
-              // Callback first so client sets currentRoom before GAME_STATE arrives
-              const room = lobby.getRoom(roomId);
-              callback?.({ success: true, username, activeRoom: roomId, room });
-
-              socket.emit(EVENTS.GAME_STATE, state);
-
-              // Resume bots if paused due to disconnect
-              const currentId = engine.getCurrentPlayerId();
-              if (botIds.has(currentId)) {
-                runBotTurn(roomId, engine);
-              }
-            }
+            const room = lobby.getRoom(roomId);
+            callback?.({
+              success: true,
+              username,
+              mirrorAvailable: {
+                roomId,
+                theme: room?.theme || "swamp",
+                playerCount: room?.players?.length || 0,
+                turnNumber: engine?.state?.turnNumber || 1,
+              },
+            });
             return;
           }
         }
@@ -476,6 +458,56 @@ export function setupSocketHandlers(io, lobby) {
       }
       socketAccounts.set(socket.id, `guest_${trimmedName}`);
       callback?.({ success: true, username: `guest_${trimmedName}` });
+    });
+
+    // Link device — user explicitly chooses to mirror into active game
+    socket.on(EVENTS.LINK_DEVICE, (_, callback) => {
+      const username = socketAccounts.get(socket.id);
+      if (!username) {
+        callback?.({ error: "Not authenticated" });
+        return;
+      }
+      const primaryId = getPrimarySocketId(username);
+      if (!primaryId || primaryId === socket.id) {
+        callback?.({ error: "No active game found" });
+        return;
+      }
+      const roomId = lobby.getPlayerRoom(primaryId);
+      if (!roomId) {
+        callback?.({ error: "No active game found" });
+        return;
+      }
+
+      socket.join(roomId);
+
+      // Cancel any disconnect/auto-save timers — player is still active
+      if (disconnectTimers.has(primaryId)) {
+        clearTimeout(disconnectTimers.get(primaryId));
+        disconnectTimers.delete(primaryId);
+      }
+      if (autoSaveTimers.has(roomId)) {
+        clearTimeout(autoSaveTimers.get(roomId).timer);
+        autoSaveTimers.delete(roomId);
+      }
+
+      const engine = lobby.getGame(roomId);
+      if (engine) {
+        const player = engine.state.players[primaryId];
+        if (player) player.connected = true;
+
+        const state = engine.getStateForPlayer(primaryId);
+        const room = lobby.getRoom(roomId);
+        callback?.({ success: true, roomId, room });
+        socket.emit(EVENTS.GAME_STATE, state);
+
+        // Resume bots if paused due to disconnect
+        const currentId = engine.getCurrentPlayerId();
+        if (botIds.has(currentId)) {
+          runBotTurn(roomId, engine);
+        }
+      } else {
+        callback?.({ error: "Game no longer exists" });
+      }
     });
 
     // Story mode handlers

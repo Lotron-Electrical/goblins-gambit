@@ -243,6 +243,9 @@ export const EVENTS = {
   DELETE_SAVE: "delete_save",
   SAVED_GAME_INFO: "saved_game_info",
 
+  // Multi-device
+  LINK_DEVICE: "link_device",
+
   // System
   PLAYER_DISCONNECTED: "player_disconnected",
   PLAYER_RECONNECTED: "player_reconnected",

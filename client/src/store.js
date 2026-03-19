@@ -62,6 +62,9 @@ export const useStore = create((set, get) => ({
   // Saved game
   savedGameInfo: null,
 
+  // Multi-device mirror
+  mirrorAvailable: null,
+
   // Story battle
   storyBattle: false,
 
@@ -153,6 +156,7 @@ export const useStore = create((set, get) => ({
       playerName: "",
       screen: "lobby",
       guestAuthenticated: false,
+      mirrorAvailable: null,
     });
   },
 
@@ -408,6 +412,24 @@ export const useStore = create((set, get) => ({
     });
   },
 
+  // Multi-device link
+  linkDevice: () => {
+    socket.emit(EVENTS.LINK_DEVICE, null, (res) => {
+      if (res?.error) {
+        set({ mirrorAvailable: null, error: res.error });
+        return;
+      }
+      if (res?.success) {
+        sessionStorage.setItem("gg_roomId", res.roomId);
+        set({ currentRoom: res.room, mirrorAvailable: null });
+        // GAME_STATE may have already arrived — transition now if so
+        if (useStore.getState().gameState) {
+          set({ screen: "game" });
+        }
+      }
+    });
+  },
+
   // Tutorial actions
   startTutorial: () => {
     const engine = new TutorialEngine();
@@ -634,14 +656,9 @@ socket.on("connect", () => {
       // After auth, check for saved games
       useStore.getState().fetchSavedGameInfo();
 
-      if (res?.activeRoom) {
-        // Already in a game on another device — mirror in
-        sessionStorage.setItem("gg_roomId", res.activeRoom);
-        useStore.setState({ currentRoom: res.room });
-        // GAME_STATE may have already arrived — transition now if so
-        if (useStore.getState().gameState) {
-          useStore.setState({ screen: "game" });
-        }
+      if (res?.mirrorAvailable) {
+        // Active game on another device — show link card in lobby
+        useStore.setState({ mirrorAvailable: res.mirrorAvailable });
       } else {
         // Now it's safe to rejoin — server knows who we are
         attemptRejoin();
