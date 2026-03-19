@@ -658,8 +658,11 @@ socket.on("connect", () => {
 
       if (res?.mirrorAvailable) {
         // Active game on another device — show link card in lobby
+        console.log("[auth] mirrorAvailable:", res.mirrorAvailable);
         useStore.setState({ mirrorAvailable: res.mirrorAvailable });
+        useStore.getState().refreshRooms();
       } else {
+        console.log("[auth] no mirror available, res:", res);
         // Now it's safe to rejoin — server knows who we are
         attemptRejoin();
       }

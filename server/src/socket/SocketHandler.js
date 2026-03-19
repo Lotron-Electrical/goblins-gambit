@@ -421,9 +421,12 @@ export function setupSocketHandlers(io, lobby) {
 
         // Check if this account already has a primary socket in a game
         const primaryId = getPrimarySocketId(username);
+        console.log(`[auth] ${username}: primaryId=${primaryId}, thisSocket=${socket.id}`);
         if (primaryId && primaryId !== socket.id) {
           const roomId = lobby.getPlayerRoom(primaryId);
+          console.log(`[auth] ${username}: primary roomId=${roomId}`);
           if (roomId) {
+            console.log(`[auth] ${username}: sending mirrorAvailable`);
             // Return metadata only — let client choose when to mirror in
             const engine = lobby.getGame(roomId);
             const room = lobby.getRoom(roomId);
