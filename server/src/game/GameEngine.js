@@ -28,9 +28,10 @@ import {
 
 // Encumbrance: hoarding cards (8-9) penalises AP to 1, but maxing hand (10)
 // flips to 7 AP as a "hoarding becomes advantage" comeback mechanic.
+// baseAP should already have theme penalties applied (e.g. frost -1).
 function getEncumbranceAP(handSize, baseAP = BASE_AP) {
-  if (handSize === 0) return Math.max(baseAP, 4);
-  if (handSize === 1) return Math.max(baseAP, 3);
+  if (handSize === 0) return baseAP + 2;
+  if (handSize === 1) return baseAP + 1;
   if (handSize >= 10) return 7;
   if (handSize >= 8) return 1;
   return baseAP;
@@ -65,7 +66,18 @@ export class GameEngine {
   }
 
   getStateForPlayer(playerId) {
-    return getClientState(this.state, playerId);
+    const clientState = getClientState(this.state, playerId);
+
+    // Attach server-computed effective stats to each creature so the client
+    // doesn't have to replicate synergy / theme-multiplier logic.
+    for (const [pid, p] of Object.entries(clientState.players)) {
+      p.swamp = p.swamp.map((c) => {
+        const eff = getEffectiveStats(this.state, pid, c);
+        return { ...c, _effectiveAtk: eff.attack, _effectiveDef: eff.defence, _effectiveSP: eff.sp };
+      });
+    }
+
+    return clientState;
   }
 
   getCurrentPlayerId() {
@@ -588,17 +600,18 @@ export class GameEngine {
     const nextPlayer = getCurrentPlayer(this.state);
     const nextPlayerId = this.getCurrentPlayerId();
     const apPenalty = nextPlayer.apPenalty || 0;
+
+    // Theme AP penalty (e.g. Frost: -1 AP per turn)
+    const themeAP = THEME_EFFECTS[this.state.theme];
+    const themeApPenalty = themeAP?.apPenalty || 0;
+    // Apply frost to base AP so encumbrance bonuses scale down with the theme
+    const frostBaseAP = Math.max(1, this.state.baseAP - themeApPenalty);
+
     nextPlayer.ap = Math.max(
       0,
-      getEncumbranceAP(nextPlayer.hand.length, this.state.baseAP) - apPenalty,
+      getEncumbranceAP(nextPlayer.hand.length, frostBaseAP) - apPenalty,
     );
     nextPlayer.apPenalty = 0;
-
-    // Theme AP penalty (e.g. Frost: -1 AP per turn, minimum 1)
-    const themeAP = THEME_EFFECTS[this.state.theme];
-    if (themeAP?.apPenalty) {
-      nextPlayer.ap = Math.max(1, nextPlayer.ap - themeAP.apPenalty);
-    }
 
     // Hessian set bonus: extra AP
     const hessianCount = ["head", "body", "feet"].filter(
@@ -659,13 +672,9 @@ export class GameEngine {
       const apPen = np.apPenalty || 0;
       np.ap = Math.max(
         0,
-        getEncumbranceAP(np.hand.length, this.state.baseAP) - apPen,
+        getEncumbranceAP(np.hand.length, frostBaseAP) - apPen,
       );
       np.apPenalty = 0;
-      // Theme AP penalty
-      if (themeAP?.apPenalty) {
-        np.ap = Math.max(1, np.ap - themeAP.apPenalty);
-      }
       // Hessian set bonus: extra AP
       const hessianSkipCount = ["head", "body", "feet"].filter(
         (s) => np.gear[s]?.set === "hessian",
@@ -872,18 +881,23 @@ export class GameEngine {
       const idx = this.state.graveyard.findIndex((c) => c.uid === chosenUid);
       if (idx !== -1) {
         const [card] = this.state.graveyard.splice(idx, 1);
-        const player = this.state.players[playerId];
-        if (player.hand.length < MAX_HAND_SIZE) {
-          player.hand.push(card);
-          events.push({
-            type: "card_recovered",
-            cardUid: card.uid,
-            card,
-            playerId,
-            reason: "Dead Meme revive",
-          });
-        } else {
+        // In story mode, bots cannot recover the player's custom card
+        if (card.isCustomCard && playerId !== "story_player") {
           this.state.graveyard.push(card);
+        } else {
+          const player = this.state.players[playerId];
+          if (player.hand.length < MAX_HAND_SIZE) {
+            player.hand.push(card);
+            events.push({
+              type: "card_recovered",
+              cardUid: card.uid,
+              card,
+              playerId,
+              reason: "Dead Meme revive",
+            });
+          } else {
+            this.state.graveyard.push(card);
+          }
         }
       }
     }

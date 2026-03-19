@@ -9,10 +9,16 @@ const STAT_BOOSTS = [
   { type: "stat_boost", stat: "attack", amount: 100, description: "+100 ATK" },
   { type: "stat_boost", stat: "defence", amount: 50, description: "+50 DEF" },
   { type: "stat_boost", stat: "defence", amount: 100, description: "+100 DEF" },
-  { type: "stat_boost", stat: "sp", amount: 50, description: "+50 SP" },
-  { type: "stat_boost", stat: "sp", amount: 100, description: "+100 SP" },
   { type: "stat_boost", stat: "attack", amount: 200, description: "+200 ATK" },
   { type: "stat_boost", stat: "defence", amount: 200, description: "+200 DEF" },
+];
+
+// Stat trade options (gain one stat, lose another)
+const STAT_TRADES = [
+  { type: "stat_trade", boostStat: "attack", boostAmount: 300, costStat: "defence", costAmount: 100, description: "+300 ATK but -100 DEF" },
+  { type: "stat_trade", boostStat: "defence", boostAmount: 300, costStat: "attack", costAmount: 100, description: "+300 DEF but -100 ATK" },
+  { type: "stat_trade", boostStat: "attack", boostAmount: 200, costStat: "defence", costAmount: 50, description: "+200 ATK but -50 DEF" },
+  { type: "stat_trade", boostStat: "defence", boostAmount: 200, costStat: "attack", costAmount: 50, description: "+200 DEF but -50 ATK" },
 ];
 
 // Ability options
@@ -90,8 +96,9 @@ export function generateEnhancements(levelKey, run) {
   const pool = [];
   const maxLives = run.nightmare ? 2 : 3;
 
-  // All levels get stat boosts
+  // All levels get stat boosts and stat trades
   pool.push(...STAT_BOOSTS);
+  pool.push(...STAT_TRADES);
 
   // Hills+ get abilities
   if (["hills", "swamp", "tundra", "cliffs", "volcano"].includes(levelKey)) {
@@ -134,7 +141,7 @@ export function generateEnhancements(levelKey, run) {
     if (!run.items.some((i) => i.id === "sock_satchel" && !i.used)) {
       volcanoPool.push(ITEM_SATCHEL);
     }
-    // Add some big stat boosts too
+    // Add big stat boosts and trades
     volcanoPool.push(
       {
         type: "stat_boost",
@@ -148,6 +155,7 @@ export function generateEnhancements(levelKey, run) {
         amount: 300,
         description: "+300 DEF",
       },
+      ...STAT_TRADES,
     );
     return pickRandom(volcanoPool, 3);
   }

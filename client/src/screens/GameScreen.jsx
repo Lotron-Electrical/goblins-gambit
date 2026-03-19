@@ -87,7 +87,7 @@ function OpponentBar({
   );
 }
 
-export default function GameScreen() {
+export default function GameScreen({ isStoryMode } = {}) {
   const { gameState, musicMuted, theme, tutorialMode, setCenterZoneY } =
     useStore();
   const error = useStore((s) => s.error);
@@ -699,7 +699,7 @@ export default function GameScreen() {
       )}
 
       {/* Game over (not during tutorial — TutorialOverlay handles victory) */}
-      {gameState.winner && !tutorialMode && <GameOverModal />}
+      {gameState.winner && !tutorialMode && !isStoryMode && <GameOverModal />}
 
       {/* Card zoom panel */}
       <CardZoom />

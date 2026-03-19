@@ -136,14 +136,18 @@ export default function CardZoom() {
 
             {card.type === "Creature" &&
               (() => {
-                const currentAtk = (card.attack || 0) + (card._attackBuff || 0);
-                const currentHP = Math.max(
-                  0,
-                  (card.defence || 0) -
-                    (card._defenceDamage || 0) +
-                    (card._defenceBuff || 0) +
-                    (card._tempShield || 0),
-                );
+                const currentAtk = card._effectiveAtk != null
+                  ? card._effectiveAtk
+                  : (card.attack || 0) + (card._attackBuff || 0);
+                const currentHP = card._effectiveDef != null
+                  ? card._effectiveDef
+                  : Math.max(
+                      0,
+                      (card.defence || 0) -
+                        (card._defenceDamage || 0) +
+                        (card._defenceBuff || 0) +
+                        (card._tempShield || 0),
+                    );
                 const baseHP = card.defence || 0;
                 return (
                   <div className="space-y-1">
@@ -164,7 +168,7 @@ export default function CardZoom() {
                     />
                     <StatBar
                       label="SP"
-                      value={card.sp ?? 0}
+                      value={card._effectiveSP != null ? card._effectiveSP : (card.sp ?? 0)}
                       max={maxSp}
                       color="bg-yellow-500"
                     />
@@ -272,7 +276,7 @@ export default function CardZoom() {
                   <p className="text-[13px] text-red-200 text-center">
                     {confirmAction === "discard"
                       ? `Discard ${card.name} from your hand? This cannot be undone.`
-                      : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Costs ${recycleSPCost} SP. This cannot be undone.`}
+                      : `Sacrifice ${card.name} for +${card._effectiveDef != null ? card._effectiveDef : Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Costs ${recycleSPCost} SP. This cannot be undone.`}
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -340,7 +344,7 @@ export default function CardZoom() {
                       }`}
                     >
                       Recycle ({recycleSPCost} SP, +
-                      {Math.max(
+                      {card._effectiveDef != null ? card._effectiveDef : Math.max(
                         0,
                         (card.defence || 0) -
                           (card._defenceDamage || 0) +
@@ -426,14 +430,18 @@ export default function CardZoom() {
         {/* Stats with bars */}
         {card.type === "Creature" &&
           (() => {
-            const currentAtk = (card.attack || 0) + (card._attackBuff || 0);
-            const currentHP = Math.max(
-              0,
-              (card.defence || 0) -
-                (card._defenceDamage || 0) +
-                (card._defenceBuff || 0) +
-                (card._tempShield || 0),
-            );
+            const currentAtk = card._effectiveAtk != null
+              ? card._effectiveAtk
+              : (card.attack || 0) + (card._attackBuff || 0);
+            const currentHP = card._effectiveDef != null
+              ? card._effectiveDef
+              : Math.max(
+                  0,
+                  (card.defence || 0) -
+                    (card._defenceDamage || 0) +
+                    (card._defenceBuff || 0) +
+                    (card._tempShield || 0),
+                );
             const baseHP = card.defence || 0;
             return (
               <div className="space-y-2">
@@ -454,7 +462,7 @@ export default function CardZoom() {
                 />
                 <StatBar
                   label="SP"
-                  value={card.sp ?? 0}
+                  value={card._effectiveSP != null ? card._effectiveSP : (card.sp ?? 0)}
                   max={maxSp}
                   color="bg-yellow-500"
                 />
@@ -559,7 +567,7 @@ export default function CardZoom() {
                 <p className="text-[12px] text-red-200 text-center">
                   {confirmAction === "discard"
                     ? `Discard ${card.name}? This cannot be undone.`
-                    : `Sacrifice ${card.name} for +${Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Costs ${recycleSPCost} SP. Cannot be undone.`}
+                    : `Sacrifice ${card.name} for +${card._effectiveDef != null ? card._effectiveDef : Math.max(0, (card.defence || 0) - (card._defenceDamage || 0) + (card._defenceBuff || 0) + (card._tempShield || 0))} shield? Costs ${recycleSPCost} SP. Cannot be undone.`}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -627,7 +635,7 @@ export default function CardZoom() {
                     }`}
                   >
                     Recycle ({recycleSPCost} SP, +
-                    {Math.max(
+                    {card._effectiveDef != null ? card._effectiveDef : Math.max(
                       0,
                       (card.defence || 0) -
                         (card._defenceDamage || 0) +

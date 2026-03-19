@@ -2,25 +2,25 @@
   "runs": {
     "poat": {
       "runState": {
-        "runId": "5441ce2e-c3e2-4415-8f8c-de40e49011fd",
+        "runId": "5f7e9b3c-5a84-42e6-835f-ee624c5515fb",
         "username": "POAT",
         "customCard": {
           "id": "custom_creature",
-          "name": "Shet",
+          "name": "hoolaf",
           "type": "Creature",
           "cost": 1,
           "attack": 100,
           "defence": 100,
           "sp": 100,
           "copies": 1,
-          "image": "player_card_3.jpg",
+          "image": "player_card_2.jpg",
           "abilityId": null,
           "effect": "Your custom creature",
           "isCustomCard": true,
           "_drawChanceBoost": 0
         },
         "currentLevelIndex": 0,
-        "lives": 2,
+        "lives": 3,
         "nightmare": false,
         "currentMap": {
           "levelIndex": 0,
@@ -32,10 +32,14 @@
                 "row": 0,
                 "col": 0,
                 "type": "battle",
-                "connections": ["node_1_0", "node_1_1", "node_1_2"],
+                "connections": [
+                  "node_1_0",
+                  "node_1_1",
+                  "node_1_2"
+                ],
                 "revealed": true,
                 "completed": true,
-                "characterId": "tavern_1"
+                "characterId": "tavern_5"
               }
             ],
             [
@@ -43,8 +47,10 @@
                 "id": "node_1_0",
                 "row": 1,
                 "col": 0,
-                "type": "enhancement",
-                "connections": ["node_2_0"],
+                "type": "battle",
+                "connections": [
+                  "node_2_0"
+                ],
                 "revealed": true,
                 "completed": false,
                 "characterId": null
@@ -54,7 +60,10 @@
                 "row": 1,
                 "col": 1,
                 "type": "battle",
-                "connections": ["node_2_1", "node_2_0"],
+                "connections": [
+                  "node_2_1",
+                  "node_2_0"
+                ],
                 "revealed": true,
                 "completed": false,
                 "characterId": null
@@ -64,7 +73,9 @@
                 "row": 1,
                 "col": 2,
                 "type": "enhancement",
-                "connections": ["node_2_0"],
+                "connections": [
+                  "node_2_2"
+                ],
                 "revealed": true,
                 "completed": false,
                 "characterId": null
@@ -75,8 +86,11 @@
                 "id": "node_2_0",
                 "row": 2,
                 "col": 0,
-                "type": "enhancement",
-                "connections": ["node_3_0", "node_3_1"],
+                "type": "battle",
+                "connections": [
+                  "node_3_0",
+                  "node_3_1"
+                ],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -85,8 +99,24 @@
                 "id": "node_2_1",
                 "row": 2,
                 "col": 1,
+                "type": "enhancement",
+                "connections": [
+                  "node_3_1",
+                  "node_3_2"
+                ],
+                "revealed": false,
+                "completed": false,
+                "characterId": null
+              },
+              {
+                "id": "node_2_2",
+                "row": 2,
+                "col": 2,
                 "type": "battle",
-                "connections": ["node_3_2"],
+                "connections": [
+                  "node_3_1",
+                  "node_3_2"
+                ],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -98,7 +128,9 @@
                 "row": 3,
                 "col": 0,
                 "type": "battle",
-                "connections": ["node_4_0"],
+                "connections": [
+                  "node_4_0"
+                ],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -107,8 +139,10 @@
                 "id": "node_3_1",
                 "row": 3,
                 "col": 1,
-                "type": "battle",
-                "connections": ["node_4_0"],
+                "type": "enhancement",
+                "connections": [
+                  "node_4_0"
+                ],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -118,7 +152,9 @@
                 "row": 3,
                 "col": 2,
                 "type": "battle",
-                "connections": ["node_4_0"],
+                "connections": [
+                  "node_4_0"
+                ],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -143,17 +179,23 @@
               "row": 0,
               "col": 0,
               "type": "battle",
-              "connections": ["node_1_0", "node_1_1", "node_1_2"],
+              "connections": [
+                "node_1_0",
+                "node_1_1",
+                "node_1_2"
+              ],
               "revealed": true,
               "completed": true,
-              "characterId": "tavern_1"
+              "characterId": "tavern_5"
             },
             "node_1_0": {
               "id": "node_1_0",
               "row": 1,
               "col": 0,
-              "type": "enhancement",
-              "connections": ["node_2_0"],
+              "type": "battle",
+              "connections": [
+                "node_2_0"
+              ],
               "revealed": true,
               "completed": false,
               "characterId": null
@@ -163,7 +205,10 @@
               "row": 1,
               "col": 1,
               "type": "battle",
-              "connections": ["node_2_1", "node_2_0"],
+              "connections": [
+                "node_2_1",
+                "node_2_0"
+              ],
               "revealed": true,
               "completed": false,
               "characterId": null
@@ -173,7 +218,9 @@
               "row": 1,
               "col": 2,
               "type": "enhancement",
-              "connections": ["node_2_0"],
+              "connections": [
+                "node_2_2"
+              ],
               "revealed": true,
               "completed": false,
               "characterId": null
@@ -182,8 +229,11 @@
               "id": "node_2_0",
               "row": 2,
               "col": 0,
-              "type": "enhancement",
-              "connections": ["node_3_0", "node_3_1"],
+              "type": "battle",
+              "connections": [
+                "node_3_0",
+                "node_3_1"
+              ],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -192,8 +242,24 @@
               "id": "node_2_1",
               "row": 2,
               "col": 1,
+              "type": "enhancement",
+              "connections": [
+                "node_3_1",
+                "node_3_2"
+              ],
+              "revealed": false,
+              "completed": false,
+              "characterId": null
+            },
+            "node_2_2": {
+              "id": "node_2_2",
+              "row": 2,
+              "col": 2,
               "type": "battle",
-              "connections": ["node_3_2"],
+              "connections": [
+                "node_3_1",
+                "node_3_2"
+              ],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -203,7 +269,9 @@
               "row": 3,
               "col": 0,
               "type": "battle",
-              "connections": ["node_4_0"],
+              "connections": [
+                "node_4_0"
+              ],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -212,8 +280,10 @@
               "id": "node_3_1",
               "row": 3,
               "col": 1,
-              "type": "battle",
-              "connections": ["node_4_0"],
+              "type": "enhancement",
+              "connections": [
+                "node_4_0"
+              ],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -223,7 +293,9 @@
               "row": 3,
               "col": 2,
               "type": "battle",
-              "connections": ["node_4_0"],
+              "connections": [
+                "node_4_0"
+              ],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -242,18 +314,21 @@
         },
         "currentNodeId": "node_0_0",
         "items": [],
-        "completedNodes": ["node_0_0"],
+        "completedNodes": [
+          "node_0_0"
+        ],
         "stats": {
-          "battlesWon": 0,
-          "battlesLost": 1,
+          "battlesWon": 1,
+          "battlesLost": 0,
           "enhancementsPicked": 0,
-          "totalSPEarned": 0,
+          "totalSPEarned": 2100,
           "creaturesKilled": 0,
           "levelsCompleted": 0
         },
-        "startedAt": 1773685300599
+        "dungeonSeed": 3016766156,
+        "startedAt": 1773888131375
       },
-      "savedAt": 1773685395167
+      "savedAt": 1773888316784
     }
   },
   "trophies": {
@@ -277,6 +352,66 @@
         "levelReached": "tundra",
         "nightmare": false,
         "completedAt": 1773680013909
+      },
+      {
+        "trophyCard": {
+          "id": "custom_creature",
+          "name": "boob",
+          "type": "Creature",
+          "cost": 1,
+          "attack": 400,
+          "defence": 500,
+          "sp": 100,
+          "copies": 1,
+          "image": "player_card_3.jpg",
+          "abilityId": "streamer_draw",
+          "effect": "Streamer — draw 1 card when played",
+          "isCustomCard": true,
+          "_drawChanceBoost": 0
+        },
+        "levelReached": "tundra",
+        "nightmare": false,
+        "completedAt": 1773893296386
+      },
+      {
+        "trophyCard": {
+          "id": "custom_creature",
+          "name": "Heehoo",
+          "type": "Creature",
+          "cost": 1,
+          "attack": 300,
+          "defence": 300,
+          "sp": 100,
+          "copies": 1,
+          "image": "player_card_1.jpg",
+          "abilityId": null,
+          "effect": "Your custom creature",
+          "isCustomCard": true,
+          "_drawChanceBoost": 0
+        },
+        "levelReached": "tavern",
+        "nightmare": false,
+        "completedAt": 1773898140890
+      },
+      {
+        "trophyCard": {
+          "id": "custom_creature",
+          "name": "Stanp",
+          "type": "Creature",
+          "cost": 1,
+          "attack": 100,
+          "defence": 300,
+          "sp": 100,
+          "copies": 1,
+          "image": "player_card_3.jpg",
+          "abilityId": null,
+          "effect": "Your custom creature",
+          "isCustomCard": true,
+          "_drawChanceBoost": 0
+        },
+        "levelReached": "hills",
+        "nightmare": false,
+        "completedAt": 1773899050568
       }
     ]
   },

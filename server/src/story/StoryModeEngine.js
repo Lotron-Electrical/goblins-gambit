@@ -232,6 +232,12 @@ export class StoryModeEngine {
         if (enhancement.stat === "defence") card.defence += enhancement.amount;
         if (enhancement.stat === "sp") card.sp += enhancement.amount;
         break;
+      case "stat_trade":
+        if (enhancement.boostStat === "attack") card.attack += enhancement.boostAmount;
+        if (enhancement.boostStat === "defence") card.defence += enhancement.boostAmount;
+        if (enhancement.costStat === "attack") card.attack = Math.max(0, card.attack - enhancement.costAmount);
+        if (enhancement.costStat === "defence") card.defence = Math.max(0, card.defence - enhancement.costAmount);
+        break;
       case "ability":
         card.abilityId = enhancement.abilityId;
         card.effect = enhancement.description;

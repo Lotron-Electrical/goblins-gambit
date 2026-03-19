@@ -108,9 +108,12 @@ export function createGameState(playerIds, playerNames, settings = {}) {
   }
 
   // First-player compensation: +1 card, +1 AP
+  // Apply theme AP penalty so first turn respects frost/etc.
+  const themeApPenalty = THEME_EFFECTS[state.theme]?.apPenalty || 0;
+  const firstTurnBaseAP = Math.max(1, baseAP - themeApPenalty);
   const firstPlayer = state.turnOrder[0];
   drawCardRaw(state, firstPlayer);
-  state.players[firstPlayer].ap = baseAP + 1;
+  state.players[firstPlayer].ap = firstTurnBaseAP + 1;
   state.animations.push({
     type: "first_player_bonus",
     playerId: firstPlayer,
@@ -125,8 +128,23 @@ export function drawCardRaw(state, playerId) {
   recycleDeckIfNeeded(state);
   if (state.deck.length === 0) return null;
 
-  const card = state.deck.pop();
-  state.players[playerId].hand.push(card);
+  let card = state.deck.pop();
+
+  // Custom cards (story mode) can only be drawn by their owner
+  if (card && card.isCustomCard && playerId !== "story_player") {
+    // Put it back at a random position and draw the next card
+    const insertIdx = Math.floor(Math.random() * (state.deck.length + 1));
+    state.deck.splice(insertIdx, 0, card);
+    if (state.deck.length <= 1) return null; // only custom card left
+    card = state.deck.pop();
+    // If we somehow drew it again (it was the only card), give up
+    if (card && card.isCustomCard && playerId !== "story_player") {
+      state.deck.push(card);
+      return null;
+    }
+  }
+
+  if (card) state.players[playerId].hand.push(card);
   return card;
 }
 

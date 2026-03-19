@@ -241,7 +241,11 @@ function resolveAttackDamage(
       defenderCard.abilityId === "dead_meme_revive" &&
       !defenderCard._silenced
     ) {
-      const topGrave = state.graveyard.slice(-6);
+      let topGrave = state.graveyard.slice(-6);
+      // In story mode, bots cannot recover the player's custom card
+      if (defenderOwnerId !== "story_player") {
+        topGrave = topGrave.filter((c) => !c.isCustomCard);
+      }
       if (topGrave.length > 0) {
         deadMemeTriggered = true;
         deadMemeChoice = {
@@ -317,13 +321,16 @@ function resolveAttackDamage(
           !adj._silenced &&
           !deadMemeTriggered
         ) {
-          const topGrave = state.graveyard.slice(-6);
-          if (topGrave.length > 0) {
+          let topGrave2 = state.graveyard.slice(-6);
+          if (defenderOwnerId !== "story_player") {
+            topGrave2 = topGrave2.filter((c) => !c.isCustomCard);
+          }
+          if (topGrave2.length > 0) {
             deadMemeTriggered = true;
             deadMemeChoice = {
               playerId: defenderOwnerId,
               type: "dead_meme",
-              cards: topGrave,
+              cards: topGrave2,
               prompt:
                 "Dead Meme died! Choose a card from the graveyard to return to your hand",
             };

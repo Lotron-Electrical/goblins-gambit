@@ -83,6 +83,7 @@ export default function PlayerField({
 
   // Account for Swapeewee stat swap in attack calculations
   const getAttackerAtk = (card) => {
+    if (card._effectiveAtk != null) return card._effectiveAtk;
     const isSwapped = card.abilityId === "swapeewee_swap" && card._swapped;
     const baseAtk = isSwapped ? card.defence || 0 : card.attack || 0;
     return baseAtk + (card._attackBuff || 0);
@@ -96,30 +97,40 @@ export default function PlayerField({
       selectedCard._zone !== "swamp"
     )
       return null;
-    const atkBase = getAttackerAtk(selectedCard);
-    let atk = Math.floor(atkBase * (themeEffects.atkMultiplier || 1));
+    // _effectiveAtk already includes theme multiplier; only add berserk
+    let atk = getAttackerAtk(selectedCard);
+    if (selectedCard._effectiveAtk == null) {
+      atk = Math.floor(atk * (themeEffects.atkMultiplier || 1));
+    }
     if (isBerserk && themeEffects.berserkMultiplier)
       atk = Math.floor(atk * themeEffects.berserkMultiplier);
-    const isTargetSwapped =
-      targetCreature.abilityId === "swapeewee_swap" && targetCreature._swapped;
-    const tBaseDef = isTargetSwapped
-      ? targetCreature.attack || 0
-      : targetCreature.defence || 0;
-    const targetDef = Math.max(
-      0,
-      tBaseDef -
-        (targetCreature._defenceDamage || 0) +
-        (targetCreature._defenceBuff || 0) +
-        (targetCreature._tempShield || 0),
-    );
+    // Use server-computed effective DEF if available (already includes theme multiplier)
+    const targetDef = targetCreature._effectiveDef != null
+      ? targetCreature._effectiveDef
+      : (() => {
+          const isTargetSwapped =
+            targetCreature.abilityId === "swapeewee_swap" && targetCreature._swapped;
+          const tBaseDef = isTargetSwapped
+            ? targetCreature.attack || 0
+            : targetCreature.defence || 0;
+          return Math.max(
+            0,
+            tBaseDef -
+              (targetCreature._defenceDamage || 0) +
+              (targetCreature._defenceBuff || 0) +
+              (targetCreature._tempShield || 0),
+          );
+        })();
     const kills = atk >= targetDef;
     return { atk, def: targetDef, kills };
   };
 
   const getDirectPrediction = () => {
     if (!selectedCard || selectedCard._zone !== "swamp") return null;
-    const atkBase = getAttackerAtk(selectedCard);
-    let atk = Math.floor(atkBase * (themeEffects.atkMultiplier || 1));
+    let atk = getAttackerAtk(selectedCard);
+    if (selectedCard._effectiveAtk == null) {
+      atk = Math.floor(atk * (themeEffects.atkMultiplier || 1));
+    }
     if (isBerserk && themeEffects.berserkMultiplier)
       atk = Math.floor(atk * themeEffects.berserkMultiplier);
     const shield = player.playerShield || 0;

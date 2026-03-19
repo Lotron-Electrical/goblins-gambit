@@ -293,7 +293,19 @@ export function yeet_discard(state, playerId, card, cardIdx, targetInfo) {
   const { targetOwnerId } = targetInfo;
   const targetPlayer = state.players[targetOwnerId];
   if (targetPlayer && targetPlayer.hand.length > 0) {
-    const randIdx = Math.floor(Math.random() * targetPlayer.hand.length);
+    // In story mode, bots cannot yeet the player's custom card
+    let yeetableIndices = targetPlayer.hand.map((_, i) => i);
+    if (playerId !== "story_player") {
+      yeetableIndices = yeetableIndices.filter(
+        (i) => !targetPlayer.hand[i].isCustomCard,
+      );
+    }
+    if (yeetableIndices.length === 0) {
+      state.graveyard.push(card);
+      return { success: true, events };
+    }
+    const randIdx =
+      yeetableIndices[Math.floor(Math.random() * yeetableIndices.length)];
     const [discarded] = targetPlayer.hand.splice(randIdx, 1);
     state.graveyard.push(discarded);
     events.push({
@@ -409,7 +421,20 @@ export function finesse_steal(state, playerId, card, cardIdx, targetInfo) {
   player.hand.splice(cardIdx, 1);
   events.push({ type: "card_played", cardUid: card.uid, card, playerId });
 
-  const randIdx = Math.floor(Math.random() * targetPlayer.hand.length);
+  // In story mode, bots cannot steal the player's custom card
+  let stealableIndices = targetPlayer.hand.map((_, i) => i);
+  if (playerId !== "story_player") {
+    stealableIndices = stealableIndices.filter(
+      (i) => !targetPlayer.hand[i].isCustomCard,
+    );
+  }
+  if (stealableIndices.length === 0) {
+    state.graveyard.push(card);
+    events.push({ type: "card_played", cardUid: card.uid, card, playerId });
+    return { success: true, events };
+  }
+  const randIdx =
+    stealableIndices[Math.floor(Math.random() * stealableIndices.length)];
   const [stolen] = targetPlayer.hand.splice(randIdx, 1);
   if (player.hand.length < MAX_HAND_SIZE) {
     player.hand.push(stolen);

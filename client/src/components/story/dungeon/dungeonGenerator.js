@@ -254,7 +254,8 @@ function carveHLine(tiles, y, x1, x2, fromRoom, toRoom, doorPositions) {
 
       if (atFromEdge || atToEdge) {
         tiles[idx] = TILE.DOOR;
-        doorPositions.push({ x, y });
+        if (atFromEdge) doorPositions.push({ x, y, roomNodeId: fromRoom.nodeId });
+        if (atToEdge) doorPositions.push({ x, y, roomNodeId: toRoom.nodeId });
       } else if (!inFromRoom && !inToRoom) {
         tiles[idx] = TILE.CORRIDOR;
       }
@@ -279,7 +280,8 @@ function carveVLine(tiles, x, y1, y2, fromRoom, toRoom, doorPositions) {
 
       if (atFromEdge || atToEdge) {
         tiles[idx] = TILE.DOOR;
-        doorPositions.push({ x, y });
+        if (atFromEdge) doorPositions.push({ x, y, roomNodeId: fromRoom.nodeId });
+        if (atToEdge) doorPositions.push({ x, y, roomNodeId: toRoom.nodeId });
       } else if (!inFromRoom && !inToRoom) {
         tiles[idx] = TILE.CORRIDOR;
       }

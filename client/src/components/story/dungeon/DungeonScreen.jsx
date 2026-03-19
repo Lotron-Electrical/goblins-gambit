@@ -57,6 +57,10 @@ export default function DungeonScreen() {
   // Track if encounter was triggered to prevent double-fire
   const encounterTriggeredRef = useRef(false);
 
+  // Refs to avoid stale closures in game loop
+  const selectableNodesRef = useRef(new Set());
+  const selectNodeRef = useRef(selectNode);
+
   // Level transition state
   const [transitioning, setTransitioning] = useState(false);
   const [fadeOpacity, setFadeOpacity] = useState(0);
@@ -119,29 +123,29 @@ export default function DungeonScreen() {
     }
   }
 
+  // Keep refs in sync so the game loop always sees current values
+  selectableNodesRef.current = selectableNodes;
+  selectNodeRef.current = selectNode;
+
   // Check if boss is completed (show stairs)
   const bossRow = currentMap.rows[currentMap.rows.length - 1];
   const bossCompleted = bossRow && bossRow[0] && bossRow[0].completed;
 
-  // Build locked doors set — doors adjacent to non-selectable, non-completed rooms
+  // Build locked doors set — doors belonging to non-selectable, non-completed rooms
   const getLockedDoors = useCallback((grid, sNodes, cNodes) => {
     const locked = new Set();
     if (!grid) return locked;
 
+    const lockedNodeIds = new Set();
     for (const room of grid.rooms) {
       if (!sNodes.has(room.nodeId) && !cNodes.has(room.nodeId)) {
-        // This room is locked — find any door tiles adjacent to it
-        for (const dp of grid.doorPositions) {
-          // Check if door is adjacent to this room
-          if (
-            dp.x >= room.x - 1 &&
-            dp.x <= room.x + room.w &&
-            dp.y >= room.y - 1 &&
-            dp.y <= room.y + room.h
-          ) {
-            locked.add(`${dp.x},${dp.y}`);
-          }
-        }
+        lockedNodeIds.add(room.nodeId);
+      }
+    }
+
+    for (const dp of grid.doorPositions) {
+      if (dp.roomNodeId && lockedNodeIds.has(dp.roomNodeId)) {
+        locked.add(`${dp.x},${dp.y}`);
       }
     }
     return locked;
@@ -344,9 +348,9 @@ export default function DungeonScreen() {
 
     if (!room || room.completed) return;
 
-    if (selectableNodes.has(room.nodeId)) {
+    if (selectableNodesRef.current.has(room.nodeId)) {
       encounterTriggeredRef.current = true;
-      selectNode(room.nodeId);
+      selectNodeRef.current(room.nodeId);
     }
 
     // Check stairs

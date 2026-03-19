@@ -166,7 +166,14 @@ export function setupStoryHandlers(socket, io, getUsername) {
             amount: 50,
             description: "+50 DEF",
           },
-          { type: "stat_boost", stat: "sp", amount: 50, description: "+50 SP" },
+          {
+            type: "stat_trade",
+            boostStat: "attack",
+            boostAmount: 300,
+            costStat: "defence",
+            costAmount: 100,
+            description: "+300 ATK but -100 DEF",
+          },
         ];
       }
       callback?.({
