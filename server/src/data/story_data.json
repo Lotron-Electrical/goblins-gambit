@@ -32,11 +32,7 @@
                 "row": 0,
                 "col": 0,
                 "type": "battle",
-                "connections": [
-                  "node_1_0",
-                  "node_1_1",
-                  "node_1_2"
-                ],
+                "connections": ["node_1_0", "node_1_1", "node_1_2"],
                 "revealed": true,
                 "completed": true,
                 "characterId": "tavern_5"
@@ -48,9 +44,7 @@
                 "row": 1,
                 "col": 0,
                 "type": "battle",
-                "connections": [
-                  "node_2_0"
-                ],
+                "connections": ["node_2_0"],
                 "revealed": true,
                 "completed": false,
                 "characterId": null
@@ -60,10 +54,7 @@
                 "row": 1,
                 "col": 1,
                 "type": "battle",
-                "connections": [
-                  "node_2_1",
-                  "node_2_0"
-                ],
+                "connections": ["node_2_1", "node_2_0"],
                 "revealed": true,
                 "completed": false,
                 "characterId": null
@@ -73,9 +64,7 @@
                 "row": 1,
                 "col": 2,
                 "type": "enhancement",
-                "connections": [
-                  "node_2_2"
-                ],
+                "connections": ["node_2_2"],
                 "revealed": true,
                 "completed": false,
                 "characterId": null
@@ -87,10 +76,7 @@
                 "row": 2,
                 "col": 0,
                 "type": "battle",
-                "connections": [
-                  "node_3_0",
-                  "node_3_1"
-                ],
+                "connections": ["node_3_0", "node_3_1"],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -100,10 +86,7 @@
                 "row": 2,
                 "col": 1,
                 "type": "enhancement",
-                "connections": [
-                  "node_3_1",
-                  "node_3_2"
-                ],
+                "connections": ["node_3_1", "node_3_2"],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -113,10 +96,7 @@
                 "row": 2,
                 "col": 2,
                 "type": "battle",
-                "connections": [
-                  "node_3_1",
-                  "node_3_2"
-                ],
+                "connections": ["node_3_1", "node_3_2"],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -128,9 +108,7 @@
                 "row": 3,
                 "col": 0,
                 "type": "battle",
-                "connections": [
-                  "node_4_0"
-                ],
+                "connections": ["node_4_0"],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -140,9 +118,7 @@
                 "row": 3,
                 "col": 1,
                 "type": "enhancement",
-                "connections": [
-                  "node_4_0"
-                ],
+                "connections": ["node_4_0"],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -152,9 +128,7 @@
                 "row": 3,
                 "col": 2,
                 "type": "battle",
-                "connections": [
-                  "node_4_0"
-                ],
+                "connections": ["node_4_0"],
                 "revealed": false,
                 "completed": false,
                 "characterId": null
@@ -179,11 +153,7 @@
               "row": 0,
               "col": 0,
               "type": "battle",
-              "connections": [
-                "node_1_0",
-                "node_1_1",
-                "node_1_2"
-              ],
+              "connections": ["node_1_0", "node_1_1", "node_1_2"],
               "revealed": true,
               "completed": true,
               "characterId": "tavern_5"
@@ -193,9 +163,7 @@
               "row": 1,
               "col": 0,
               "type": "battle",
-              "connections": [
-                "node_2_0"
-              ],
+              "connections": ["node_2_0"],
               "revealed": true,
               "completed": false,
               "characterId": null
@@ -205,10 +173,7 @@
               "row": 1,
               "col": 1,
               "type": "battle",
-              "connections": [
-                "node_2_1",
-                "node_2_0"
-              ],
+              "connections": ["node_2_1", "node_2_0"],
               "revealed": true,
               "completed": false,
               "characterId": null
@@ -218,9 +183,7 @@
               "row": 1,
               "col": 2,
               "type": "enhancement",
-              "connections": [
-                "node_2_2"
-              ],
+              "connections": ["node_2_2"],
               "revealed": true,
               "completed": false,
               "characterId": null
@@ -230,10 +193,7 @@
               "row": 2,
               "col": 0,
               "type": "battle",
-              "connections": [
-                "node_3_0",
-                "node_3_1"
-              ],
+              "connections": ["node_3_0", "node_3_1"],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -243,10 +203,7 @@
               "row": 2,
               "col": 1,
               "type": "enhancement",
-              "connections": [
-                "node_3_1",
-                "node_3_2"
-              ],
+              "connections": ["node_3_1", "node_3_2"],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -256,10 +213,7 @@
               "row": 2,
               "col": 2,
               "type": "battle",
-              "connections": [
-                "node_3_1",
-                "node_3_2"
-              ],
+              "connections": ["node_3_1", "node_3_2"],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -269,9 +223,7 @@
               "row": 3,
               "col": 0,
               "type": "battle",
-              "connections": [
-                "node_4_0"
-              ],
+              "connections": ["node_4_0"],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -281,9 +233,7 @@
               "row": 3,
               "col": 1,
               "type": "enhancement",
-              "connections": [
-                "node_4_0"
-              ],
+              "connections": ["node_4_0"],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -293,9 +243,7 @@
               "row": 3,
               "col": 2,
               "type": "battle",
-              "connections": [
-                "node_4_0"
-              ],
+              "connections": ["node_4_0"],
               "revealed": false,
               "completed": false,
               "characterId": null
@@ -314,9 +262,7 @@
         },
         "currentNodeId": "node_0_0",
         "items": [],
-        "completedNodes": [
-          "node_0_0"
-        ],
+        "completedNodes": ["node_0_0"],
         "stats": {
           "battlesWon": 1,
           "battlesLost": 0,

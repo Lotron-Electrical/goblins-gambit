@@ -105,22 +105,24 @@ export default function PlayerField({
     if (isBerserk && themeEffects.berserkMultiplier)
       atk = Math.floor(atk * themeEffects.berserkMultiplier);
     // Use server-computed effective DEF if available (already includes theme multiplier)
-    const targetDef = targetCreature._effectiveDef != null
-      ? targetCreature._effectiveDef
-      : (() => {
-          const isTargetSwapped =
-            targetCreature.abilityId === "swapeewee_swap" && targetCreature._swapped;
-          const tBaseDef = isTargetSwapped
-            ? targetCreature.attack || 0
-            : targetCreature.defence || 0;
-          return Math.max(
-            0,
-            tBaseDef -
-              (targetCreature._defenceDamage || 0) +
-              (targetCreature._defenceBuff || 0) +
-              (targetCreature._tempShield || 0),
-          );
-        })();
+    const targetDef =
+      targetCreature._effectiveDef != null
+        ? targetCreature._effectiveDef
+        : (() => {
+            const isTargetSwapped =
+              targetCreature.abilityId === "swapeewee_swap" &&
+              targetCreature._swapped;
+            const tBaseDef = isTargetSwapped
+              ? targetCreature.attack || 0
+              : targetCreature.defence || 0;
+            return Math.max(
+              0,
+              tBaseDef -
+                (targetCreature._defenceDamage || 0) +
+                (targetCreature._defenceBuff || 0) +
+                (targetCreature._tempShield || 0),
+            );
+          })();
     const kills = atk >= targetDef;
     return { atk, def: targetDef, kills };
   };

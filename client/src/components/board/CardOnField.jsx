@@ -173,18 +173,20 @@ export default function CardOnField({
 
   // Use server-computed effective stats (includes synergy, theme multipliers, etc.)
   // Falls back to local calculation if server values aren't available yet
-  const effectiveAtk = card._effectiveAtk != null
-    ? card._effectiveAtk
-    : baseAtk + (card._attackBuff || 0);
-  const currentDef = card._effectiveDef != null
-    ? card._effectiveDef
-    : Math.max(
-        0,
-        baseDef -
-          (card._defenceDamage || 0) +
-          (card._defenceBuff || 0) +
-          (card._tempShield || 0),
-      );
+  const effectiveAtk =
+    card._effectiveAtk != null
+      ? card._effectiveAtk
+      : baseAtk + (card._attackBuff || 0);
+  const currentDef =
+    card._effectiveDef != null
+      ? card._effectiveDef
+      : Math.max(
+          0,
+          baseDef -
+            (card._defenceDamage || 0) +
+            (card._defenceBuff || 0) +
+            (card._tempShield || 0),
+        );
 
   // Glow when stats change from buffs
   const [atkGlow, setAtkGlow] = useState(false);

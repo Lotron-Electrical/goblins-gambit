@@ -73,7 +73,12 @@ export class GameEngine {
     for (const [pid, p] of Object.entries(clientState.players)) {
       p.swamp = p.swamp.map((c) => {
         const eff = getEffectiveStats(this.state, pid, c);
-        return { ...c, _effectiveAtk: eff.attack, _effectiveDef: eff.defence, _effectiveSP: eff.sp };
+        return {
+          ...c,
+          _effectiveAtk: eff.attack,
+          _effectiveDef: eff.defence,
+          _effectiveSP: eff.sp,
+        };
       });
     }
 

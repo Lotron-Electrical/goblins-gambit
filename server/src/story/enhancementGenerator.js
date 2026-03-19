@@ -15,10 +15,38 @@ const STAT_BOOSTS = [
 
 // Stat trade options (gain one stat, lose another)
 const STAT_TRADES = [
-  { type: "stat_trade", boostStat: "attack", boostAmount: 300, costStat: "defence", costAmount: 100, description: "+300 ATK but -100 DEF" },
-  { type: "stat_trade", boostStat: "defence", boostAmount: 300, costStat: "attack", costAmount: 100, description: "+300 DEF but -100 ATK" },
-  { type: "stat_trade", boostStat: "attack", boostAmount: 200, costStat: "defence", costAmount: 50, description: "+200 ATK but -50 DEF" },
-  { type: "stat_trade", boostStat: "defence", boostAmount: 200, costStat: "attack", costAmount: 50, description: "+200 DEF but -50 ATK" },
+  {
+    type: "stat_trade",
+    boostStat: "attack",
+    boostAmount: 300,
+    costStat: "defence",
+    costAmount: 100,
+    description: "+300 ATK but -100 DEF",
+  },
+  {
+    type: "stat_trade",
+    boostStat: "defence",
+    boostAmount: 300,
+    costStat: "attack",
+    costAmount: 100,
+    description: "+300 DEF but -100 ATK",
+  },
+  {
+    type: "stat_trade",
+    boostStat: "attack",
+    boostAmount: 200,
+    costStat: "defence",
+    costAmount: 50,
+    description: "+200 ATK but -50 DEF",
+  },
+  {
+    type: "stat_trade",
+    boostStat: "defence",
+    boostAmount: 200,
+    costStat: "attack",
+    costAmount: 50,
+    description: "+200 DEF but -50 ATK",
+  },
 ];
 
 // Ability options

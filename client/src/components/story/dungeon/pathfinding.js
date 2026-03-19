@@ -8,7 +8,8 @@ import { TILE } from "./dungeonGenerator.js";
 /** Check if a tile type is walkable */
 function isWalkable(tileType, doorStates) {
   if (tileType === TILE.FLOOR || tileType === TILE.CORRIDOR) return true;
-  if (tileType === TILE.DOOR) return true; // doors are walkable if path exists to them
+  if (tileType === TILE.DOOR) return true;
+  if (tileType === TILE.WATER || tileType === TILE.GRASS) return true;
   return false;
 }
 

@@ -32,11 +32,12 @@ export function renderDungeon(ctx, state) {
     canvasWidth,
     canvasHeight,
     scale,
+    visibilityRadius,
   } = state;
 
   if (!dungeonGrid || !tileCache) return;
 
-  const { width, height, tiles, rooms } = dungeonGrid;
+  const { width, height, tiles, rooms, decorations } = dungeonGrid;
   const pal = PALETTES[levelKey] || PALETTES.tavern;
 
   ctx.save();
@@ -59,10 +60,11 @@ export function renderDungeon(ctx, state) {
   ctx.scale(scale, scale);
 
   // Current visibility set
+  const radius = visibilityRadius || 6;
   const visibleSet = getVisibleTiles(
     playerPos.x,
     playerPos.y,
-    4,
+    radius,
     width,
     height,
   );
@@ -77,6 +79,11 @@ export function renderDungeon(ctx, state) {
     if (visibleSet.has(stairKey) || revealedTiles.has(stairKey)) {
       ctx.drawImage(tileCache.stairs, sp.x * TILE_SIZE, sp.y * TILE_SIZE);
     }
+  }
+
+  // Layer 1.75: Decorations
+  if (decorations) {
+    renderDecorations(ctx, decorations, tileCache, visibleSet, revealedTiles);
   }
 
   // Layer 2: Entity layer — encounter icons + player
@@ -95,7 +102,7 @@ export function renderDungeon(ctx, state) {
   );
 
   // Layer 3: Fog of war
-  renderFog(ctx, width, height, revealedTiles, visibleSet, pal);
+  renderFog(ctx, width, height, revealedTiles, visibleSet, pal, tileCache);
 
   ctx.restore();
 }
@@ -133,9 +140,18 @@ function renderTiles(ctx, tiles, width, height, tileCache, revealed, visible) {
 
       let tileImg;
       switch (tileType) {
-        case TILE.WALL:
-          tileImg = tileCache.wall;
+        case TILE.WALL: {
+          // Check if the tile below is non-wall (floor/corridor/door/water/grass)
+          // If so, use wallTop for depth effect
+          const belowIdx = (y + 1) * width + x;
+          const belowTile = y + 1 < height ? tiles[belowIdx] : TILE.WALL;
+          if (belowTile !== TILE.WALL) {
+            tileImg = tileCache.wallTop;
+          } else {
+            tileImg = tileCache.wall;
+          }
           break;
+        }
         case TILE.FLOOR:
           tileImg = tileCache[`floor${(x + y) % 3}`];
           break;
@@ -145,6 +161,12 @@ function renderTiles(ctx, tiles, width, height, tileCache, revealed, visible) {
         case TILE.DOOR:
           tileImg = tileCache.doorOpen;
           break;
+        case TILE.WATER:
+          tileImg = tileCache.water;
+          break;
+        case TILE.GRASS:
+          tileImg = tileCache.grass;
+          break;
         default:
           tileImg = tileCache.wall;
       }
@@ -152,6 +174,19 @@ function renderTiles(ctx, tiles, width, height, tileCache, revealed, visible) {
       if (tileImg) {
         ctx.drawImage(tileImg, px, py);
       }
+    }
+  }
+}
+
+/** Render decoration overlay layer */
+function renderDecorations(ctx, decorations, tileCache, visible, revealed) {
+  for (const deco of decorations) {
+    const key = `${deco.x},${deco.y}`;
+    if (!visible.has(key) && !revealed.has(key)) continue;
+
+    const sprite = tileCache[`deco_${deco.type}`];
+    if (sprite) {
+      ctx.drawImage(sprite, deco.x * TILE_SIZE, deco.y * TILE_SIZE);
     }
   }
 }
@@ -195,8 +230,8 @@ function renderEntities(
   }
 }
 
-/** Render fog of war layer */
-function renderFog(ctx, width, height, revealed, visible, pal) {
+/** Render fog of war layer with soft edges */
+function renderFog(ctx, width, height, revealed, visible, pal, tileCache) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const key = `${x},${y}`;
@@ -204,8 +239,20 @@ function renderFog(ctx, width, height, revealed, visible, pal) {
       const py = y * TILE_SIZE;
 
       if (visible.has(key)) {
-        // Fully visible — no fog
-        continue;
+        // Fully visible — no fog, but check for soft edge overlays
+        // For each adjacent non-visible tile, draw a gradient edge
+        if (!visible.has(`${x},${y - 1}`)) {
+          ctx.drawImage(tileCache.fogEdgeTop, px, py);
+        }
+        if (!visible.has(`${x},${y + 1}`)) {
+          ctx.drawImage(tileCache.fogEdgeBottom, px, py);
+        }
+        if (!visible.has(`${x - 1},${y}`)) {
+          ctx.drawImage(tileCache.fogEdgeLeft, px, py);
+        }
+        if (!visible.has(`${x + 1},${y}`)) {
+          ctx.drawImage(tileCache.fogEdgeRight, px, py);
+        }
       } else if (revealed.has(key)) {
         // Previously seen — dim fog
         ctx.fillStyle = "rgba(0,0,0,0.55)";
@@ -221,14 +268,6 @@ function renderFog(ctx, width, height, revealed, visible, pal) {
 
 /**
  * Convert canvas pixel coordinates to tile coordinates.
- * @param {number} canvasX - pixel x on canvas
- * @param {number} canvasY - pixel y on canvas
- * @param {object} playerPos - { x, y } tile coords
- * @param {number} scale - current render scale
- * @param {number} canvasWidth
- * @param {number} canvasHeight
- * @param {object} dungeonGrid - { width, height }
- * @returns {{ x: number, y: number }} tile coords
  */
 export function pixelToTile(
   canvasX,

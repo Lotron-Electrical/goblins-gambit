@@ -20,9 +20,9 @@ import { generateGoblinSprites } from "./playerSprite.js";
 import { findPath } from "./pathfinding.js";
 
 const MOVE_SPEED = 120; // ms per tile step
-const VISIBILITY_RADIUS = 4;
-const BASE_W = 640;
-const BASE_H = 480;
+const VISIBILITY_RADIUS = 6;
+const BASE_W = 192;
+const BASE_H = 160;
 
 export default function DungeonScreen() {
   const {
@@ -323,6 +323,7 @@ export default function DungeonScreen() {
           canvasWidth: canvas.width,
           canvasHeight: canvas.height,
           scale: scaleRef.current,
+          visibilityRadius: VISIBILITY_RADIUS,
         });
       }
 

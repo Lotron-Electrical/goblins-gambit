@@ -43,9 +43,7 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
 
   // Position at the center zone midpoint; fall back to 45% on mobile
   const centerTop =
-    mobileCenterY || centerZoneY
-      ? `${mobileCenterY || centerZoneY}px`
-      : "45%";
+    mobileCenterY || centerZoneY ? `${mobileCenterY || centerZoneY}px` : "45%";
 
   return (
     <AnimatePresence>
@@ -54,9 +52,27 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
           key="major"
           className="fixed z-50 pointer-events-none"
           style={{ left: "50%", top: centerTop }}
-          initial={{ opacity: 0, scale: 0.4, filter: "blur(8px)", x: "-50%", y: "-50%" }}
-          animate={{ opacity: 1, scale: 1, filter: "blur(0px)", x: "-50%", y: "-50%" }}
-          exit={{ opacity: 0, scale: 1.15, filter: "blur(4px)", x: "-50%", y: "-50%" }}
+          initial={{
+            opacity: 0,
+            scale: 0.4,
+            filter: "blur(8px)",
+            x: "-50%",
+            y: "-50%",
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            x: "-50%",
+            y: "-50%",
+          }}
+          exit={{
+            opacity: 0,
+            scale: 1.15,
+            filter: "blur(4px)",
+            x: "-50%",
+            y: "-50%",
+          }}
           transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="text-center w-fit max-w-[85vw]">

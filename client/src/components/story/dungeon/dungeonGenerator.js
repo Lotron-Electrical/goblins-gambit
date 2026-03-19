@@ -4,7 +4,7 @@
  */
 
 /** Tile type constants */
-export const TILE = { WALL: 0, FLOOR: 1, CORRIDOR: 2, DOOR: 3 };
+export const TILE = { WALL: 0, FLOOR: 1, CORRIDOR: 2, DOOR: 3, WATER: 4, GRASS: 5 };
 
 /** Seeded PRNG (Mulberry32) */
 function mulberry32(seed) {
@@ -139,6 +139,12 @@ export function generateDungeon(
     }
   }
 
+  // Step 3.5: Environmental tiles (water pools + grass patches)
+  generateEnvironment(tiles, rooms, rng);
+
+  // Step 3.6: Decorations layer
+  const decorations = generateDecorations(tiles, rooms, rng);
+
   // Step 4: Player spawn — entrance room (row 0) doorway area
   const entranceNode = currentMap.rows[0][0];
   const entranceRoom = nodeRooms.get(entranceNode.id);
@@ -162,6 +168,7 @@ export function generateDungeon(
     stairsPos,
     seed,
     doorPositions,
+    decorations,
   };
 }
 
@@ -254,7 +261,8 @@ function carveHLine(tiles, y, x1, x2, fromRoom, toRoom, doorPositions) {
 
       if (atFromEdge || atToEdge) {
         tiles[idx] = TILE.DOOR;
-        if (atFromEdge) doorPositions.push({ x, y, roomNodeId: fromRoom.nodeId });
+        if (atFromEdge)
+          doorPositions.push({ x, y, roomNodeId: fromRoom.nodeId });
         if (atToEdge) doorPositions.push({ x, y, roomNodeId: toRoom.nodeId });
       } else if (!inFromRoom && !inToRoom) {
         tiles[idx] = TILE.CORRIDOR;
@@ -280,7 +288,8 @@ function carveVLine(tiles, x, y1, y2, fromRoom, toRoom, doorPositions) {
 
       if (atFromEdge || atToEdge) {
         tiles[idx] = TILE.DOOR;
-        if (atFromEdge) doorPositions.push({ x, y, roomNodeId: fromRoom.nodeId });
+        if (atFromEdge)
+          doorPositions.push({ x, y, roomNodeId: fromRoom.nodeId });
         if (atToEdge) doorPositions.push({ x, y, roomNodeId: toRoom.nodeId });
       } else if (!inFromRoom && !inToRoom) {
         tiles[idx] = TILE.CORRIDOR;
@@ -311,6 +320,149 @@ function isRoomEdge(x, y, room) {
       x >= room.x &&
       x < room.x + room.w)
   );
+}
+
+/** Place water pools and grass patches in rooms */
+function generateEnvironment(tiles, rooms, rng) {
+  for (const room of rooms) {
+    // Water pools: 20% of rooms get a 2x3 or 3x2 pool in a corner
+    if (rng() < 0.2) {
+      const poolW = rng() > 0.5 ? 3 : 2;
+      const poolH = poolW === 3 ? 2 : 3;
+      // Pick a corner
+      const cornerX = rng() > 0.5 ? room.x + 1 : room.x + room.w - poolW - 1;
+      const cornerY = rng() > 0.5 ? room.y + 1 : room.y + room.h - poolH - 1;
+
+      for (let dy = 0; dy < poolH; dy++) {
+        for (let dx = 0; dx < poolW; dx++) {
+          const wx = cornerX + dx;
+          const wy = cornerY + dy;
+          if (wx >= room.x && wx < room.x + room.w && wy >= room.y && wy < room.y + room.h) {
+            // Never on room center
+            if (wx === room.cx && wy === room.cy) continue;
+            // Never adjacent to doors
+            const idx = wy * GRID_W + wx;
+            if (tiles[idx] === TILE.FLOOR) {
+              let nearDoor = false;
+              for (const dd of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                const ni = (wy + dd[1]) * GRID_W + (wx + dd[0]);
+                if (ni >= 0 && ni < GRID_W * GRID_H && tiles[ni] === TILE.DOOR) nearDoor = true;
+              }
+              if (!nearDoor) tiles[idx] = TILE.WATER;
+            }
+          }
+        }
+      }
+    }
+
+    // Grass patches: 30% of rooms get 3-6 grass tiles along inner edges
+    if (rng() < 0.3) {
+      const count = 3 + Math.floor(rng() * 4);
+      for (let i = 0; i < count; i++) {
+        // Pick a tile 1 in from wall edge
+        const edge = Math.floor(rng() * 4); // 0=top,1=right,2=bottom,3=left
+        let gx, gy;
+        if (edge === 0) { gx = room.x + 1 + Math.floor(rng() * (room.w - 2)); gy = room.y + 1; }
+        else if (edge === 1) { gx = room.x + room.w - 2; gy = room.y + 1 + Math.floor(rng() * (room.h - 2)); }
+        else if (edge === 2) { gx = room.x + 1 + Math.floor(rng() * (room.w - 2)); gy = room.y + room.h - 2; }
+        else { gx = room.x + 1; gy = room.y + 1 + Math.floor(rng() * (room.h - 2)); }
+
+        if (gx === room.cx && gy === room.cy) continue;
+        const idx = gy * GRID_W + gx;
+        if (tiles[idx] === TILE.FLOOR) {
+          tiles[idx] = TILE.GRASS;
+        }
+      }
+    }
+  }
+}
+
+/** Generate decoration objects (torches, barrels, bones, cobwebs, cracks, rubble) */
+function generateDecorations(tiles, rooms, rng) {
+  const decorations = [];
+
+  for (const room of rooms) {
+    // Torches: 1-2 on wall tiles adjacent to floor (1 tile above room interior)
+    const torchCount = 1 + Math.floor(rng() * 2);
+    let placed = 0;
+    for (let attempt = 0; attempt < 10 && placed < torchCount; attempt++) {
+      const tx = room.x + 1 + Math.floor(rng() * (room.w - 2));
+      const ty = room.y - 1; // wall tile above room
+      if (ty >= 0 && tiles[ty * GRID_W + tx] === TILE.WALL) {
+        decorations.push({ x: tx, y: ty, type: 'torch' });
+        placed++;
+      }
+    }
+
+    // Barrels: 20% of rooms, 1-2 in corners
+    if (rng() < 0.2) {
+      const barrelCount = 1 + Math.floor(rng() * 2);
+      const corners = [
+        { x: room.x + 1, y: room.y + 1 },
+        { x: room.x + room.w - 2, y: room.y + 1 },
+        { x: room.x + 1, y: room.y + room.h - 2 },
+        { x: room.x + room.w - 2, y: room.y + room.h - 2 },
+      ];
+      for (let i = 0; i < barrelCount && corners.length > 0; i++) {
+        const ci = Math.floor(rng() * corners.length);
+        const c = corners.splice(ci, 1)[0];
+        const t = tiles[c.y * GRID_W + c.x];
+        if (t === TILE.FLOOR || t === TILE.GRASS) {
+          decorations.push({ x: c.x, y: c.y, type: 'barrel' });
+        }
+      }
+    }
+
+    // Bones: 15% of rooms, 1-2 tiles
+    if (rng() < 0.15) {
+      const count = 1 + Math.floor(rng() * 2);
+      for (let i = 0; i < count; i++) {
+        const bx = room.x + 1 + Math.floor(rng() * (room.w - 2));
+        const by = room.y + 1 + Math.floor(rng() * (room.h - 2));
+        if (bx === room.cx && by === room.cy) continue;
+        const t = tiles[by * GRID_W + bx];
+        if (t === TILE.FLOOR) {
+          decorations.push({ x: bx, y: by, type: 'bones' });
+        }
+      }
+    }
+
+    // Cobwebs: 25% per corner
+    const cobCorners = [
+      { x: room.x, y: room.y },
+      { x: room.x + room.w - 1, y: room.y },
+      { x: room.x, y: room.y + room.h - 1 },
+      { x: room.x + room.w - 1, y: room.y + room.h - 1 },
+    ];
+    for (const cc of cobCorners) {
+      if (rng() < 0.25) {
+        const t = tiles[cc.y * GRID_W + cc.x];
+        if (t === TILE.FLOOR) {
+          decorations.push({ x: cc.x, y: cc.y, type: 'cobweb' });
+        }
+      }
+    }
+  }
+
+  // Cracks: 10% of floor tiles
+  for (let y = 0; y < GRID_H; y++) {
+    for (let x = 0; x < GRID_W; x++) {
+      if (tiles[y * GRID_W + x] === TILE.FLOOR && rng() < 0.10) {
+        decorations.push({ x, y, type: 'crack' });
+      }
+    }
+  }
+
+  // Rubble: 10% of corridor tiles
+  for (let y = 0; y < GRID_H; y++) {
+    for (let x = 0; x < GRID_W; x++) {
+      if (tiles[y * GRID_W + x] === TILE.CORRIDOR && rng() < 0.10) {
+        decorations.push({ x, y, type: 'rubble' });
+      }
+    }
+  }
+
+  return decorations;
 }
 
 /** Get the grid width/height constants */

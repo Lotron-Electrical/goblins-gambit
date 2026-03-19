@@ -136,18 +136,20 @@ export default function CardZoom() {
 
             {card.type === "Creature" &&
               (() => {
-                const currentAtk = card._effectiveAtk != null
-                  ? card._effectiveAtk
-                  : (card.attack || 0) + (card._attackBuff || 0);
-                const currentHP = card._effectiveDef != null
-                  ? card._effectiveDef
-                  : Math.max(
-                      0,
-                      (card.defence || 0) -
-                        (card._defenceDamage || 0) +
-                        (card._defenceBuff || 0) +
-                        (card._tempShield || 0),
-                    );
+                const currentAtk =
+                  card._effectiveAtk != null
+                    ? card._effectiveAtk
+                    : (card.attack || 0) + (card._attackBuff || 0);
+                const currentHP =
+                  card._effectiveDef != null
+                    ? card._effectiveDef
+                    : Math.max(
+                        0,
+                        (card.defence || 0) -
+                          (card._defenceDamage || 0) +
+                          (card._defenceBuff || 0) +
+                          (card._tempShield || 0),
+                      );
                 const baseHP = card.defence || 0;
                 return (
                   <div className="space-y-1">
@@ -168,7 +170,11 @@ export default function CardZoom() {
                     />
                     <StatBar
                       label="SP"
-                      value={card._effectiveSP != null ? card._effectiveSP : (card.sp ?? 0)}
+                      value={
+                        card._effectiveSP != null
+                          ? card._effectiveSP
+                          : (card.sp ?? 0)
+                      }
                       max={maxSp}
                       color="bg-yellow-500"
                     />
@@ -344,13 +350,15 @@ export default function CardZoom() {
                       }`}
                     >
                       Recycle ({recycleSPCost} SP, +
-                      {card._effectiveDef != null ? card._effectiveDef : Math.max(
-                        0,
-                        (card.defence || 0) -
-                          (card._defenceDamage || 0) +
-                          (card._defenceBuff || 0) +
-                          (card._tempShield || 0),
-                      )}{" "}
+                      {card._effectiveDef != null
+                        ? card._effectiveDef
+                        : Math.max(
+                            0,
+                            (card.defence || 0) -
+                              (card._defenceDamage || 0) +
+                              (card._defenceBuff || 0) +
+                              (card._tempShield || 0),
+                          )}{" "}
                       shield)
                     </button>
                   )}
@@ -430,18 +438,20 @@ export default function CardZoom() {
         {/* Stats with bars */}
         {card.type === "Creature" &&
           (() => {
-            const currentAtk = card._effectiveAtk != null
-              ? card._effectiveAtk
-              : (card.attack || 0) + (card._attackBuff || 0);
-            const currentHP = card._effectiveDef != null
-              ? card._effectiveDef
-              : Math.max(
-                  0,
-                  (card.defence || 0) -
-                    (card._defenceDamage || 0) +
-                    (card._defenceBuff || 0) +
-                    (card._tempShield || 0),
-                );
+            const currentAtk =
+              card._effectiveAtk != null
+                ? card._effectiveAtk
+                : (card.attack || 0) + (card._attackBuff || 0);
+            const currentHP =
+              card._effectiveDef != null
+                ? card._effectiveDef
+                : Math.max(
+                    0,
+                    (card.defence || 0) -
+                      (card._defenceDamage || 0) +
+                      (card._defenceBuff || 0) +
+                      (card._tempShield || 0),
+                  );
             const baseHP = card.defence || 0;
             return (
               <div className="space-y-2">
@@ -462,7 +472,11 @@ export default function CardZoom() {
                 />
                 <StatBar
                   label="SP"
-                  value={card._effectiveSP != null ? card._effectiveSP : (card.sp ?? 0)}
+                  value={
+                    card._effectiveSP != null
+                      ? card._effectiveSP
+                      : (card.sp ?? 0)
+                  }
                   max={maxSp}
                   color="bg-yellow-500"
                 />
@@ -635,13 +649,15 @@ export default function CardZoom() {
                     }`}
                   >
                     Recycle ({recycleSPCost} SP, +
-                    {card._effectiveDef != null ? card._effectiveDef : Math.max(
-                      0,
-                      (card.defence || 0) -
-                        (card._defenceDamage || 0) +
-                        (card._defenceBuff || 0) +
-                        (card._tempShield || 0),
-                    )}{" "}
+                    {card._effectiveDef != null
+                      ? card._effectiveDef
+                      : Math.max(
+                          0,
+                          (card.defence || 0) -
+                            (card._defenceDamage || 0) +
+                            (card._defenceBuff || 0) +
+                            (card._tempShield || 0),
+                        )}{" "}
                     shield)
                   </button>
                 )}

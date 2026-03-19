@@ -753,7 +753,10 @@ export default function GameScreen({ isStoryMode } = {}) {
             exit={{ opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }}
             transition={{ duration: 0.2 }}
             className="fixed z-50 pointer-events-auto"
-            style={{ left: "50%", top: centerZoneY ? `${centerZoneY}px` : "50%" }}
+            style={{
+              left: "50%",
+              top: centerZoneY ? `${centerZoneY}px` : "50%",
+            }}
           >
             {(() => {
               const isInfo = /\b(reconnected|disconnected)\b/i.test(error);
@@ -1161,7 +1164,10 @@ export default function GameScreen({ isStoryMode } = {}) {
             exit={{ opacity: 0, x: "-50%", y: "-50%" }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="fixed z-50 pointer-events-none"
-            style={{ left: "50%", top: centerZoneY ? `${centerZoneY}px` : "50%" }}
+            style={{
+              left: "50%",
+              top: centerZoneY ? `${centerZoneY}px` : "50%",
+            }}
           >
             <div className="text-center">
               <div
