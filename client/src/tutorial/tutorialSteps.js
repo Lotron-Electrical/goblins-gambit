@@ -142,6 +142,14 @@ export const TUTORIAL_STEPS = [
       ].hand.filter((c) => c.uid !== "tut-kickflip");
       state.players["tutorial-player"].handCount = 3;
       state.players["tutorial-player"].sp = 500;
+      // Grab the kickflip card object before the filter removed it
+      const kickflip = prevState.players["tutorial-player"].hand.find(
+        (c) => c.uid === "tut-kickflip",
+      );
+      state.animations = [
+        { type: "card_played", cardUid: "tut-kickflip", card: kickflip, playerId: "tutorial-player" },
+        { type: "sp_change", playerId: "tutorial-player", amount: 500, reason: "Kickflip" },
+      ];
       return state;
     },
   },
