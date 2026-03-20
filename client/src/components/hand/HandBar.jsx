@@ -108,11 +108,14 @@ function MobileCardInfoPanel({
               }
               draggable={false}
             />
-            {card.type === "Creature" && canPlay && canAfford && !tutorialEngine && (
-              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black/70 text-[7px] text-gray-300 px-1 rounded whitespace-nowrap pointer-events-none">
-                drag up to place
-              </div>
-            )}
+            {card.type === "Creature" &&
+              canPlay &&
+              canAfford &&
+              !tutorialEngine && (
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black/70 text-[7px] text-gray-300 px-1 rounded whitespace-nowrap pointer-events-none">
+                  drag up to place
+                </div>
+              )}
           </div>
         )}
 

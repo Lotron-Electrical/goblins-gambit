@@ -160,7 +160,7 @@ export const TUTORIAL_STEPS = [
     expectedAction: "play_card",
     expectedPayload: { cardUid: "tut-happy-hippy" },
     setupState: null,
-    onComplete: (prevState) => {
+    onComplete: (prevState, payload) => {
       const state = JSON.parse(JSON.stringify(prevState));
       const card = state.players["tutorial-player"].hand.find(
         (c) => c.uid === "tut-happy-hippy",
@@ -169,8 +169,9 @@ export const TUTORIAL_STEPS = [
         "tutorial-player"
       ].hand.filter((c) => c.uid !== "tut-happy-hippy");
       state.players["tutorial-player"].handCount = 2;
+      const slot = payload?.slotIndex ?? 0;
       state.players["tutorial-player"].swamp = [
-        { ...card, turnsOnField: 0, _slot: 0 },
+        { ...card, turnsOnField: 0, _slot: slot },
       ];
       state.players["tutorial-player"].ap = 0;
       return state;

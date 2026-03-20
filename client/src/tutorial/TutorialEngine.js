@@ -71,7 +71,7 @@ export class TutorialEngine {
 
     // Action matches — advance
     if (step.onComplete) {
-      this.gameState = step.onComplete(this.gameState);
+      this.gameState = step.onComplete(this.gameState, payload);
     }
 
     this.currentStepIndex++;
