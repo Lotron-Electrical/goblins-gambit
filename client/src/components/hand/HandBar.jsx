@@ -297,6 +297,7 @@ function CircularCardRow({
   handleReorderEnd,
   scrollToIndex,
   scrollLocked,
+  tutorialScrolling,
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef(null);
@@ -306,7 +307,6 @@ function CircularCardRow({
   const rafId = useRef(null);
   const pendingIndex = useRef(null);
   const lastSelectedIdx = useRef(-1);
-  const tutorialScrolling = useRef(false);
   const velocityRef = useRef(0);
   const lastTouchX = useRef(null);
   const lastTouchTime = useRef(null);
@@ -718,6 +718,7 @@ export default function HandBar() {
   const [handExpanded, setHandExpanded] = useState(false);
   const [mobileSelectedCard, setMobileSelectedCard] = useState(null);
   const cardRowRef = useRef(null);
+  const tutorialScrolling = useRef(false);
 
   // Tutorial store values (useEffect that depends on sortedHand is below, after sortedHand declaration)
   const tutorialEngine = useStore((s) => s.tutorialEngine);
@@ -1187,6 +1188,7 @@ export default function HandBar() {
                   handleReorderEnd={handleReorderEnd}
                   scrollToIndex={carouselScrollTo}
                   scrollLocked={!!tutorialHighlightUid}
+                  tutorialScrolling={tutorialScrolling}
                 />
               </div>
             </motion.div>
