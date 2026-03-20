@@ -272,7 +272,7 @@ export const useStore = create((set, get) => ({
 
   playCard: (cardUid, targetInfo) => {
     if (get().tutorialMode)
-      return get().tutorialAction(ACTION.PLAY_CARD, { cardUid });
+      return get().tutorialAction(ACTION.PLAY_CARD, { cardUid, ...targetInfo });
     get()._emitAction({ type: ACTION.PLAY_CARD, cardUid, targetInfo });
     set({ selectedCard: null });
   },
