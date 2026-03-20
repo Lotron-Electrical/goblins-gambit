@@ -98,8 +98,8 @@ export default function ChatPanel({ expanded, onClose }) {
           isTutorial ? "border-[var(--color-gold)]/50" : "border-gray-700"
         } ${
           isMobile
-            ? "w-[280px] max-h-[300px] top-[41px]"
-            : "w-[300px] max-h-[350px] top-[49px]"
+            ? "w-[280px] max-h-[150px] top-[41px]"
+            : "w-[300px] max-h-[175px] top-[49px]"
         }`}
       >
         {/* Header */}
