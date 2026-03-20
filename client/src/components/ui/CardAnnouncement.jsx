@@ -45,6 +45,12 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
   const centerTop =
     mobileCenterY || centerZoneY ? `${mobileCenterY || centerZoneY}px` : "45%";
 
+  // Offset toast above the staged card's visual top edge
+  const cardHalfH = isMobile ? 32 : 31; // (98*0.65)/2 or (112*0.55)/2
+  const gap = 8;
+  const rawY = mobileCenterY || centerZoneY;
+  const toastTop = rawY ? `${rawY - cardHalfH - gap}px` : "40%";
+
   return (
     <AnimatePresence>
       {announcement && isMajor && (
@@ -100,14 +106,10 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
         <motion.div
           key="toast"
           className="fixed z-50 pointer-events-none"
-          style={{
-            left: "50%",
-            top: centerTop,
-            transform: "translateX(-50%) translateY(calc(-100% - 16px))",
-          }}
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.92 }}
+          style={{ left: "50%", top: toastTop }}
+          initial={{ opacity: 0, scale: 0.85, x: "-50%", y: "-85%" }}
+          animate={{ opacity: 1, scale: 1, x: "-50%", y: "-100%" }}
+          exit={{ opacity: 0, scale: 0.92, x: "-50%", y: "-90%" }}
           transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
           <div
