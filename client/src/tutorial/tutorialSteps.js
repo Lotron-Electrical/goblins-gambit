@@ -147,8 +147,18 @@ export const TUTORIAL_STEPS = [
         (c) => c.uid === "tut-kickflip",
       );
       state.animations = [
-        { type: "card_played", cardUid: "tut-kickflip", card: kickflip, playerId: "tutorial-player" },
-        { type: "sp_change", playerId: "tutorial-player", amount: 500, reason: "Kickflip" },
+        {
+          type: "card_played",
+          cardUid: "tut-kickflip",
+          card: kickflip,
+          playerId: "tutorial-player",
+        },
+        {
+          type: "sp_change",
+          playerId: "tutorial-player",
+          amount: 500,
+          reason: "Kickflip",
+        },
       ];
       return state;
     },
