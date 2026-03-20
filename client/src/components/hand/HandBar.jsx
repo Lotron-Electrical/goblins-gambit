@@ -59,7 +59,7 @@ function MobileCardInfoPanel({
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.95, opacity: 0 }}
-      transition={{ duration: 0.1, ease: "easeOut" }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
     >
       <div className="flex gap-2 p-2">
         {/* Card image thumbnail — draggable for creatures */}
@@ -306,6 +306,7 @@ function CircularCardRow({
   const rafId = useRef(null);
   const pendingIndex = useRef(null);
   const lastSelectedIdx = useRef(-1);
+  const tutorialScrolling = useRef(false);
   const velocityRef = useRef(0);
   const lastTouchX = useRef(null);
   const lastTouchTime = useRef(null);
@@ -377,6 +378,7 @@ function CircularCardRow({
   // Auto-select the centred card — only when the rounded index changes AND not mid-swipe
   useEffect(() => {
     if (reorderMode || sortedHand.length === 0) return;
+    if (tutorialScrolling.current) return;
     const idx = Math.round(
       Math.max(0, Math.min(currentIndex, sortedHand.length - 1)),
     );
@@ -841,8 +843,12 @@ export default function HandBar() {
             (c) => c.uid === config.highlightCardUid,
           );
           if (idx >= 0) {
+            tutorialScrolling.current = true;
             setCarouselScrollTo(idx);
             setMobileSelectedCard(sortedHand[idx]);
+            setTimeout(() => {
+              tutorialScrolling.current = false;
+            }, 400);
           }
         }, 300);
       }
@@ -1075,7 +1081,7 @@ export default function HandBar() {
               </div>
 
               {/* Selected card info panel */}
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="popLayout">
                 {mobileSelectedCard &&
                   hand.some((c) => c.uid === mobileSelectedCard.uid) && (
                     <MobileCardInfoPanel
