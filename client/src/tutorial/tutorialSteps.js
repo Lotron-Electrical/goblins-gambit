@@ -151,7 +151,7 @@ export const TUTORIAL_STEPS = [
     id: "play-creature",
     title: "Summon a Creature",
     gnarlMessage:
-      "Now summon a creature to your Swamp! Tap Happy Hippy, then plonk it in an empty swamp slot. Every goblin needs minions!",
+      "A trick? Pfft, that won't save you! Now summon a creature — tap Happy Hippy and plonk it in an empty swamp slot!",
     instruction:
       "Now summon a creature to your Swamp. Tap Happy Hippy, then tap an empty swamp slot.",
     highlight: null,
@@ -182,7 +182,7 @@ export const TUTORIAL_STEPS = [
     id: "end-turn",
     title: "End Your Turn",
     gnarlMessage:
-      "Ha! You're out of AP — everything costs action points, see? Tap End Turn and let a REAL player have a go!",
+      "Oh look, a creature! How cute. Mine's bigger. You're out of AP now — tap End Turn and let a REAL player have a go!",
     instruction:
       "Out of AP! Actions cost AP. Tap End Turn to pass to your opponent.",
     highlight: '[data-tutorial="end-turn-btn"]',
@@ -255,7 +255,7 @@ export const TUTORIAL_STEPS = [
     id: "equip-armour-1",
     title: "Gear Up!",
     gnarlMessage:
-      "Alright, not bad! Now try some armour — there's 3 slots: head, body, feet. Get a full set for a bonus! Tap that Lucky Headband.",
+      "OI! That was me best one! You'll pay for that! ...Now try some armour — 3 slots: head, body, feet. Full set = bonus! Tap that Lucky Headband.",
     instruction:
       "Nice kill! Armour has 3 slots — head, body, feet. Collect a full set for a bonus! Tap Lucky Headband.",
     highlight: null,
@@ -383,7 +383,7 @@ export const TUTORIAL_STEPS = [
     id: "play-magic",
     title: "Use Magic",
     gnarlMessage:
-      "You've got 1,000 SP shield protecting your score now! Time for some magic — tap Ooft to buff your creature!",
+      "All that armour?! That's not fair! ...You've got 1,000 SP shield now. Time for some magic — tap Ooft to buff your creature!",
     instruction:
       "You have 1,000 SP shield protecting your score! Now tap Ooft to buff your creature.",
     highlight: null,
@@ -445,7 +445,7 @@ export const TUTORIAL_STEPS = [
     id: "end-turn-2",
     title: "End Your Turn",
     gnarlMessage:
-      "600 ATK?! That's... that's fine. I'm not worried. End your turn — I dare you!",
+      "Magic?! Goblins don't need magic... usually. 600 ATK?! That's... that's fine. End your turn — I dare you!",
     instruction:
       "Happy Hippy is powered up to 600 ATK! End your turn for the final strike.",
     highlight: '[data-tutorial="end-turn-btn"]',

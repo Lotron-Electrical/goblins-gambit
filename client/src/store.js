@@ -491,32 +491,6 @@ export const useStore = create((set, get) => ({
       if (newState.animations?.length) {
         engine.gameState = { ...engine.gameState, animations: [] };
       }
-      // Tutorial bot chat — Gnarl reacts to player actions
-      const GNARL_CHAT = {
-        "play-trick": "A trick? Pfft, that won't save you!",
-        "play-creature": "Oh look, a creature! How cute. Mine's bigger.",
-        "end-turn": "Finally! Watch THIS!",
-        attack: "OI! That was me best one! You'll pay for that!",
-        "equip-armour-3": "All that armour?! That's not fair!",
-        "play-magic": "Magic?! Goblins don't need magic... usually.",
-        "final-attack": "NO! IMPOSSIBLE! How did you—",
-      };
-      const stepId = prevStep?.id;
-      if (stepId && GNARL_CHAT[stepId]) {
-        setTimeout(() => {
-          const chatMsg = {
-            id: `tut-chat-${stepId}`,
-            playerId: "tutorial-opponent",
-            playerName: "Gnarl",
-            isGnarl: true,
-            timestamp: Date.now(),
-            text: GNARL_CHAT[stepId],
-          };
-          const { chatMessages: msgs } = get();
-          set({ chatMessages: [...msgs, chatMsg] });
-        }, 1500);
-      }
-
       // Inject Gnarl's tutorial instruction for the next step
       const nextConfig = engine.getStepConfig();
       if (nextConfig.gnarlMessage) {
