@@ -433,6 +433,20 @@ export const useStore = create((set, get) => ({
   // Tutorial actions
   startTutorial: () => {
     const engine = new TutorialEngine();
+    const firstStep = engine.getStepConfig();
+    // Build initial Gnarl tutorial message
+    const gnarlMsg = firstStep.gnarlMessage
+      ? [
+          {
+            id: "tut-gnarl-draw",
+            playerId: "tutorial-opponent",
+            playerName: "Gnarl",
+            isGnarl: true,
+            timestamp: Date.now(),
+            text: firstStep.gnarlMessage,
+          },
+        ]
+      : [];
     set({
       tutorialMode: true,
       tutorialEngine: engine,
@@ -440,24 +454,10 @@ export const useStore = create((set, get) => ({
       screen: "tutorial",
       selectedCard: null,
       targetMode: false,
-      chatMessages: [],
+      chatMessages: gnarlMsg,
       chatUnread: 0,
+      chatOpen: true, // Force chat open for tutorial
     });
-    // Gnarl's opening taunt after a short delay
-    setTimeout(() => {
-      const msg = {
-        id: "tut-chat-0",
-        playerId: "tutorial-opponent",
-        playerName: "Gnarl the Goblin",
-        timestamp: Date.now(),
-        text: "Welcome to the swamp, smoothskin! Try not to embarrass yourself.",
-      };
-      const { chatMessages, chatOpen } = get();
-      set({
-        chatMessages: [...chatMessages, msg],
-        ...(!chatOpen ? { chatUnread: (get().chatUnread || 0) + 1 } : {}),
-      });
-    }, 2000);
   },
 
   tutorialAction: (actionType, payload = {}) => {
@@ -507,19 +507,55 @@ export const useStore = create((set, get) => ({
           const chatMsg = {
             id: `tut-chat-${stepId}`,
             playerId: "tutorial-opponent",
-            playerName: "Gnarl the Goblin",
+            playerName: "Gnarl",
+            isGnarl: true,
             timestamp: Date.now(),
             text: GNARL_CHAT[stepId],
           };
-          const { chatMessages: msgs, chatOpen: isOpen } = get();
-          set({
-            chatMessages: [...msgs, chatMsg],
-            ...(!isOpen ? { chatUnread: (get().chatUnread || 0) + 1 } : {}),
-          });
+          const { chatMessages: msgs } = get();
+          set({ chatMessages: [...msgs, chatMsg] });
         }, 1500);
       }
-      // Auto-select the highlighted card for the next step (after optional delay)
+
+      // Inject Gnarl's tutorial instruction for the next step
       const nextConfig = engine.getStepConfig();
+      if (nextConfig.gnarlMessage) {
+        // For opponent delay steps, show "thinking" first, then instruction
+        const msgDelay = prevStep?.opponentDelay ? 2500 : delayAfter + 800;
+        if (prevStep?.opponentDelay) {
+          // Show "Gnarl is thinking..." as a chat message
+          setTimeout(() => {
+            const thinkMsg = {
+              id: `tut-gnarl-think-${nextConfig.id}`,
+              playerId: "tutorial-opponent",
+              playerName: "Gnarl",
+              isGnarl: true,
+              isThinking: true,
+              timestamp: Date.now(),
+              text: "Hmm... let me think...",
+            };
+            const { chatMessages: msgs2 } = get();
+            set({ chatMessages: [...msgs2, thinkMsg] });
+          }, 800);
+        }
+        setTimeout(() => {
+          const instrMsg = {
+            id: `tut-gnarl-${nextConfig.id}`,
+            playerId: "tutorial-opponent",
+            playerName: "Gnarl",
+            isGnarl: true,
+            timestamp: Date.now(),
+            text: nextConfig.gnarlMessage,
+          };
+          const { chatMessages: msgs3 } = get();
+          // Remove thinking message if present
+          const filtered = msgs3.filter(
+            (m) => m.id !== `tut-gnarl-think-${nextConfig.id}`,
+          );
+          set({ chatMessages: [...filtered, instrMsg] });
+        }, msgDelay);
+      }
+      // Auto-select the highlighted card for the next step (after optional delay)
       if (nextConfig.highlightCardUid) {
         const hand = newState.players?.["tutorial-player"]?.hand;
         const targetCard = hand?.find(

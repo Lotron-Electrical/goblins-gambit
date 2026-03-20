@@ -206,9 +206,9 @@ export default function GameScreen({ isStoryMode } = {}) {
     [storeChatOpen],
   );
 
-  // Close chat when game ends
+  // Close chat when game ends (but not during tutorial — chat stays open)
   useEffect(() => {
-    if (gameState?.winner && chatOpen) {
+    if (gameState?.winner && chatOpen && !tutorialMode) {
       storeChatOpen(false);
     }
   }, [gameState?.winner]);
@@ -698,7 +698,7 @@ export default function GameScreen({ isStoryMode } = {}) {
         <CardChoiceModal mobileCenterY={isMobile ? centerZoneY : null} />
       )}
 
-      {/* Game over (not during tutorial — TutorialOverlay handles victory) */}
+      {/* Game over (not during tutorial — TutorialScreen handles victory) */}
       {gameState.winner && !tutorialMode && !isStoryMode && <GameOverModal />}
 
       {/* Card zoom panel */}

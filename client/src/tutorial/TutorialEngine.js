@@ -32,6 +32,7 @@ export class TutorialEngine {
       highlightCardUid: step.highlightCardUid || null,
       tabHint: step.tabHint,
       opponentDelay: step.opponentDelay || false,
+      gnarlMessage: step.gnarlMessage || null,
     };
   }
 

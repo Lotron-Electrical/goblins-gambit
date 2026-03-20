@@ -91,6 +91,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "draw",
     title: "Draw a Card",
+    gnarlMessage:
+      "Welcome to the swamp, smoothskin! Goal's simple — get to 2,000 SP before I do. Now draw a card, go on! Tap that Draw button.",
     instruction:
       "Welcome to Goblin's Gambit! Reach 2,000 SP to win. Start by drawing a card — tap Draw.",
     highlight: '[data-tutorial="draw-btn"]',
@@ -122,6 +124,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "play-trick",
     title: "Play a Trick",
+    gnarlMessage:
+      "Ooh, a Trick card! Those are free to play and give you SP straight away. Go on then, tap it and hit Play!",
     instruction:
       "You drew a Trick card! Tricks are free and give instant SP. Tap play to use it.",
     highlight: null, // Will highlight the card in hand
@@ -146,6 +150,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "play-creature",
     title: "Summon a Creature",
+    gnarlMessage:
+      "Now summon a creature to your Swamp! Tap Happy Hippy, then plonk it in an empty swamp slot. Every goblin needs minions!",
     instruction:
       "Now summon a creature to your Swamp. Tap Happy Hippy, then tap an empty swamp slot.",
     highlight: null,
@@ -175,6 +181,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "end-turn",
     title: "End Your Turn",
+    gnarlMessage:
+      "Ha! You're out of AP — everything costs action points, see? Tap End Turn and let a REAL player have a go!",
     instruction:
       "Out of AP! Actions cost AP. Tap End Turn to pass to your opponent.",
     highlight: '[data-tutorial="end-turn-btn"]',
@@ -208,6 +216,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "attack",
     title: "Attack!",
+    gnarlMessage:
+      "I played a creature! Think you can take it? Tap your Happy Hippy, then tap my Stoner to attack. Your 400 ATK vs 200 DEF — that's a kill worth 420 SP!",
     instruction:
       "Gnarl played a creature! Tap your Happy Hippy on the field, then tap Gnarl's Stoner to attack. Your 400 ATK vs 200 DEF = a kill! You earn 420 SP.",
     highlight: '[data-card-uid="tut-happy-hippy"]',
@@ -244,6 +254,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "equip-armour-1",
     title: "Gear Up!",
+    gnarlMessage:
+      "Alright, not bad! Now try some armour — there's 3 slots: head, body, feet. Get a full set for a bonus! Tap that Lucky Headband.",
     instruction:
       "Nice kill! Armour has 3 slots — head, body, feet. Collect a full set for a bonus! Tap Lucky Headband.",
     highlight: null,
@@ -297,6 +309,7 @@ export const TUTORIAL_STEPS = [
   {
     id: "equip-armour-2",
     title: "Body Armour",
+    gnarlMessage: "Keep going — slap that Lucky Chestplate on your body slot!",
     instruction: "Now equip Lucky Chestplate to your body slot.",
     highlight: null,
     highlightCardUid: "tut-lucky-chestplate",
@@ -327,6 +340,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "equip-armour-3",
     title: "Set Bonus!",
+    gnarlMessage:
+      "Last piece! Chuck on those Lucky Socks and you'll get a massive set bonus — +500 SP shield! Do it!",
     instruction:
       "Last piece! Equip Lucky Socks to complete the set and earn +500 SP shield!",
     highlight: null,
@@ -367,6 +382,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "play-magic",
     title: "Use Magic",
+    gnarlMessage:
+      "You've got 1,000 SP shield protecting your score now! Time for some magic — tap Ooft to buff your creature!",
     instruction:
       "You have 1,000 SP shield protecting your score! Now tap Ooft to buff your creature.",
     highlight: null,
@@ -403,6 +420,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "select-target",
     title: "Choose Target",
+    gnarlMessage:
+      "Now pick who gets the buff! Tap Happy Hippy to give it +200 ATK!",
     instruction: "Select Happy Hippy to buff its ATK by +200!",
     highlight: null,
     tabHint: null,
@@ -425,6 +444,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "end-turn-2",
     title: "End Your Turn",
+    gnarlMessage:
+      "600 ATK?! That's... that's fine. I'm not worried. End your turn — I dare you!",
     instruction:
       "Happy Hippy is powered up to 600 ATK! End your turn for the final strike.",
     highlight: '[data-tutorial="end-turn-btn"]',
@@ -457,6 +478,8 @@ export const TUTORIAL_STEPS = [
   {
     id: "final-attack",
     title: "Finish Him!",
+    gnarlMessage:
+      "No no no no — your 600 ATK vs my 200 DEF... that's 1,080 SP! You'll hit 2,000! Just... get it over with!",
     instruction:
       "Your 600 ATK vs 200 DEF — this kill earns 1,080 SP, hitting 2,000 for the win!",
     highlight: '[data-card-uid="tut-happy-hippy"]',
@@ -494,6 +517,7 @@ export const TUTORIAL_STEPS = [
   {
     id: "complete",
     title: "Victory!",
+    gnarlMessage: null, // Victory overlay handles this
     instruction: null, // Completion overlay handles this
     highlight: null,
     tabHint: null,

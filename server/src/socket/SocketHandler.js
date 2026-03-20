@@ -421,7 +421,9 @@ export function setupSocketHandlers(io, lobby) {
 
         // Check if this account already has a primary socket in a game
         const primaryId = getPrimarySocketId(username);
-        console.log(`[auth] ${username}: primaryId=${primaryId}, thisSocket=${socket.id}`);
+        console.log(
+          `[auth] ${username}: primaryId=${primaryId}, thisSocket=${socket.id}`,
+        );
         if (primaryId && primaryId !== socket.id) {
           const roomId = lobby.getPlayerRoom(primaryId);
           console.log(`[auth] ${username}: primary roomId=${roomId}`);
