@@ -840,7 +840,10 @@ export default function HandBar() {
           const idx = sortedHand.findIndex(
             (c) => c.uid === config.highlightCardUid,
           );
-          if (idx >= 0) setCarouselScrollTo(idx);
+          if (idx >= 0) {
+            setCarouselScrollTo(idx);
+            setMobileSelectedCard(sortedHand[idx]);
+          }
         }, 300);
       }
     }
