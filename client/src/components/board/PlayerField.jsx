@@ -171,7 +171,7 @@ export default function PlayerField({
 
   return (
     <div
-      className={`relative rounded-xl ${isMobile ? "p-1.5" : isOpponent ? "p-1.5" : "p-2.5"} transition-all duration-300 border ${
+      className={`relative rounded-xl ${isMobile ? "p-1.5" : isOpponent ? "p-1.5 pb-0.5" : "p-2.5"} transition-all duration-300 border ${
         isCurrentTurn
           ? "bg-[var(--color-swamp)]/70 border-[var(--color-gold)]/30 animate-turn-glow"
           : "bg-gray-900/50 border-gray-800/40"
@@ -575,7 +575,7 @@ export default function PlayerField({
         </div>
       )}
       {/* Card count — hide on mobile for own field */}
-      {(isOpponent || !isMobile) && (
+      {!isOpponent && !isMobile && (
         <div
           className={`flex items-center gap-1.5 px-2 mt-0.5 ${isMobile ? "text-[9px]" : "text-[11px]"}`}
         >
