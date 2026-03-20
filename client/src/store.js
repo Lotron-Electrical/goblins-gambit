@@ -555,6 +555,9 @@ export const useStore = create((set, get) => ({
       screen: "lobby",
       selectedCard: null,
       targetMode: false,
+      chatMessages: [],
+      chatUnread: 0,
+      chatOpen: false,
     });
   },
 
