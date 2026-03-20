@@ -265,18 +265,63 @@ export const TUTORIAL_STEPS = [
         { type: "destroy", cardUid: "tut-stoner" },
         { type: "sp_change", playerId: "tutorial-player", amount: 420 },
       ];
+      state.players["tutorial-player"].ap = 0;
       return state;
     },
   },
 
-  // Step 6: Equip Lucky Headband (head)
+  // Step 6: Opponent Attacks Back
+  {
+    id: "opponent-attacks",
+    title: "Brace Yourself!",
+    gnarlMessage:
+      "Done already? My turn now! Let me show you what my creatures can do...",
+    instruction:
+      "Out of AP! End your turn. Watch out — Gnarl's creature will attack yours!",
+    highlight: '[data-tutorial="end-turn-btn"]',
+    tabHint: null,
+    expectedAction: "end_turn",
+    opponentDelay: true,
+    delayAfter: 1500,
+    setupState: null,
+    onComplete: (prevState) => {
+      const state = JSON.parse(JSON.stringify(prevState));
+      // Opponent places a weak creature and attacks Happy Hippy
+      const weakCreature = stoner();
+      weakCreature.uid = "tut-opp-weakling";
+      weakCreature.currentAttack = 150;
+      weakCreature.currentDefence = 100;
+      weakCreature._slot = 0;
+      state.players["tutorial-opponent"].swamp = [weakCreature];
+      state.players["tutorial-opponent"].handCount = 3;
+      // Non-lethal attack: 150 ATK < 200 DEF — Happy Hippy survives
+      state.animations = [
+        {
+          type: "attack",
+          attacker: "tut-opp-weakling",
+          defender: "tut-happy-hippy",
+          killshot: false,
+        },
+        { type: "damage", targetUid: "tut-happy-hippy", amount: 150 },
+      ];
+      // Return to player turn
+      state.currentPlayerId = "tutorial-player";
+      state.turnNumber = 2;
+      state.players["tutorial-player"].ap = 2;
+      state.players["tutorial-player"].swamp[0].turnsOnField = 1;
+      state.players["tutorial-player"].swamp[0].hasAttacked = false;
+      return state;
+    },
+  },
+
+  // Step 7: Equip Lucky Headband (head)
   {
     id: "equip-armour-1",
     title: "Gear Up!",
     gnarlMessage:
-      "OI! That was me best one! You'll pay for that! ...Now try some armour — 3 slots: head, body, feet. Full set = bonus! Tap that Lucky Headband.",
+      "Wait... your creature SURVIVED?! 150 ATK vs 200 DEF — gah! Fine, try some armour — 3 slots: head, body, feet. Full set = bonus! Tap that Lucky Headband.",
     instruction:
-      "Nice kill! Armour has 3 slots — head, body, feet. Collect a full set for a bonus! Tap Lucky Headband.",
+      "Your creature survived! Its 200 DEF blocked the 150 ATK attack. Now try armour — 3 slots: head, body, feet. Full set = bonus! Tap Lucky Headband.",
     highlight: null,
     highlightCardUid: "tut-lucky-headband",
     tabHint: "Armour",
