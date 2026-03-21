@@ -9,9 +9,9 @@ import { soundManager } from "../audio/SoundManager.js";
 const ANIMATION_DURATIONS = {
   card_played: 400,
   draw_card: 2000,
-  attack: 100,
-  damage: 100,
-  destroy: 100,
+  attack: 0,
+  damage: 0,
+  destroy: 0,
   sp_change: 900,
   buff: 200,
   equip_armour: 300,
