@@ -77,6 +77,7 @@ export default function CenterZone({
   const [jargonOpen, setJargonOpen] = useState(false);
 
   const graveRef = useRef(null);
+  const graveStackRef = useRef(null);
   const stagedRef = useRef(null);
 
   const isMyTurn = gameState?.currentPlayerId === gameState?.myId;
@@ -190,19 +191,32 @@ export default function CenterZone({
                     initial={{ opacity: 0, scale: 0.5, y: 20 }}
                     animate={
                       card._phase === "fly" &&
-                      graveRef.current &&
+                      graveStackRef.current &&
                       stagedRef.current
                         ? (() => {
                             const graveRect =
-                              graveRef.current.getBoundingClientRect();
+                              graveStackRef.current.getBoundingClientRect();
                             const stagedRect =
                               stagedRef.current.getBoundingClientRect();
+                            const targetScale =
+                              graveRect.width / stagedRect.width;
+                            const dx =
+                              graveRect.left +
+                              graveRect.width / 2 -
+                              (stagedRect.left + stagedRect.width / 2);
+                            const dy =
+                              graveRect.top +
+                              graveRect.height / 2 -
+                              (stagedRect.top + stagedRect.height / 2);
+                            const targetRot =
+                              Math.sin((graveyard?.length || 0) * 5.7 + 1.3) *
+                              8;
                             return {
-                              x: graveRect.left - stagedRect.left,
-                              y: graveRect.top - stagedRect.top,
-                              scale: 0.5,
-                              opacity: 0.7,
-                              rotate: 180 + card._rotation,
+                              x: dx,
+                              y: dy,
+                              scale: targetScale,
+                              opacity: 1,
+                              rotate: targetRot,
                             };
                           })()
                         : { opacity: 1, scale: 1, y: 0 }
@@ -327,6 +341,7 @@ export default function CenterZone({
           Grave
         </span>
         <div
+          ref={graveStackRef}
           className="relative cursor-pointer"
           style={{ width: layoutW, height: layoutH }}
           onClick={() => graveyardCount > 0 && setGraveyardOpen(true)}
