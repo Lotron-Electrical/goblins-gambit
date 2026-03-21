@@ -359,7 +359,11 @@ export default function CenterZone({
         >
           {graveyard && graveyard.length > 0 ? (
             <>
-              {graveyard.slice(isMobile ? -3 : -5).map((card, i, arr) => {
+              {(() => {
+                const hideTop = stagedCards.length > 0;
+                const graveCards = graveyard.slice(isMobile ? -3 : -5);
+                return hideTop ? graveCards.slice(0, -1) : graveCards;
+              })().map((card, i, arr) => {
                 const isTop = i === arr.length - 1;
                 const rot =
                   graveyardRotations[graveyard.length - arr.length + i] || 0;
