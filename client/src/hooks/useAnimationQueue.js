@@ -9,9 +9,9 @@ import { soundManager } from "../audio/SoundManager.js";
 const ANIMATION_DURATIONS = {
   card_played: 400,
   draw_card: 2000,
-  attack: 500,
-  damage: 850,
-  destroy: 300,
+  attack: 100,
+  damage: 100,
+  destroy: 100,
   sp_change: 900,
   buff: 200,
   equip_armour: 300,
@@ -186,9 +186,6 @@ export function useAnimationQueue(animations) {
     }
 
     let duration = ANIMATION_DURATIONS[evt.type] || 200;
-    // Give killshots and direct attacks more time for their animations
-    if (evt.type === "attack" && evt.killshot) duration = 650;
-    if (evt.type === "attack" && evt.directAttack) duration = 1250;
     setTimeout(processNext, duration);
   }, []);
 
