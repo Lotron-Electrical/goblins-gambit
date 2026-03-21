@@ -209,14 +209,19 @@ export default function CenterZone({
                               ? stagedRect.height
                               : stagedRect.width;
                             const targetScale = graveRect.width / stagedVisualW;
+                            // motion.div is inside a scale wrapper, so divide
+                            // screen-space offsets by the parent scale factor
+                            const parentScale = isMobile ? 0.65 : 0.55;
                             const dx =
-                              graveRect.left +
-                              graveRect.width / 2 -
-                              (stagedRect.left + stagedRect.width / 2);
+                              (graveRect.left +
+                                graveRect.width / 2 -
+                                (stagedRect.left + stagedRect.width / 2)) /
+                              parentScale;
                             const dy =
-                              graveRect.top +
-                              graveRect.height / 2 -
-                              (stagedRect.top + stagedRect.height / 2);
+                              (graveRect.top +
+                                graveRect.height / 2 -
+                                (stagedRect.top + stagedRect.height / 2)) /
+                              parentScale;
                             return {
                               x: dx,
                               y: dy,
