@@ -198,8 +198,17 @@ export default function CenterZone({
                               graveStackRef.current.getBoundingClientRect();
                             const stagedRect =
                               stagedRef.current.getBoundingClientRect();
-                            const targetScale =
-                              graveRect.width / stagedRect.width;
+                            const isGraveLandscape = cardW > cardH;
+                            const tiltRot =
+                              Math.sin((graveyard?.length || 0) * 5.7 + 1.3) *
+                              8;
+                            const targetRot = isGraveLandscape
+                              ? 90 + tiltRot
+                              : tiltRot;
+                            const stagedVisualW = isGraveLandscape
+                              ? stagedRect.height
+                              : stagedRect.width;
+                            const targetScale = graveRect.width / stagedVisualW;
                             const dx =
                               graveRect.left +
                               graveRect.width / 2 -
@@ -208,9 +217,6 @@ export default function CenterZone({
                               graveRect.top +
                               graveRect.height / 2 -
                               (stagedRect.top + stagedRect.height / 2);
-                            const targetRot =
-                              Math.sin((graveyard?.length || 0) * 5.7 + 1.3) *
-                              8;
                             return {
                               x: dx,
                               y: dy,
