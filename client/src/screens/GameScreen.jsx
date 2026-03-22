@@ -28,6 +28,9 @@ import DragOverlay from "../components/ui/DragOverlay.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 import cardData from "../../../shared/src/cardData.json";
 
+// Module-level cache — keeps preloaded Image objects alive so browser doesn't GC them
+const imageCache = new Map();
+
 // Compact opponent bar for mobile — shows key info, tap to expand
 function OpponentBar({
   player,
@@ -97,7 +100,7 @@ export default function GameScreen({ isStoryMode } = {}) {
   const isMobile = useIsMobile();
   const centerZoneY = useStore((s) => s.centerZoneY);
 
-  // Preload ALL card images from cardData.json when game starts
+  // Preload ALL card images into persistent cache when game starts
   useEffect(() => {
     if (!gameState) return;
     const images = new Set();
@@ -106,8 +109,11 @@ export default function GameScreen({ isStoryMode } = {}) {
     });
     images.add("Card back.png");
     images.forEach((src) => {
-      const img = new Image();
-      img.src = `/cards/${src}`;
+      if (!imageCache.has(src)) {
+        const img = new Image();
+        img.src = `/cards/${src}`;
+        imageCache.set(src, img);
+      }
     });
   }, [gameState?.myId]);
 
@@ -1209,7 +1215,7 @@ export default function GameScreen({ isStoryMode } = {}) {
             transition={{ duration: 0.15 }}
           >
             <motion.div
-              className={`rounded-xl border-2 overflow-hidden shadow-2xl ${
+              className={`rounded-xl border-2 overflow-hidden shadow-2xl bg-gray-900 ${
                 {
                   Creature: "border-red-500",
                   Magic: "border-blue-500",
