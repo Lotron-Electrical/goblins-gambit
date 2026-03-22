@@ -106,7 +106,7 @@ export default function CardAnnouncement({
           </div>
         </motion.div>
       )}
-      {announcement && !isMajor && (
+      {announcement && !isMajor && !(hasStaged && isMobile) && (
         <motion.div
           key="toast"
           className="fixed z-50 pointer-events-none"

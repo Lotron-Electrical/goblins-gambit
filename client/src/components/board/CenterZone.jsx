@@ -12,6 +12,34 @@ const TYPE_BORDER = {
   Tricks: "border-green-600",
 };
 
+const TOAST_COLOR = {
+  Creature: "text-red-400",
+  Magic: "text-blue-400",
+  Armour: "text-gray-300",
+  Tricks: "text-green-400",
+};
+
+const TOAST_BORDER = {
+  Creature: "border-red-600/60",
+  Magic: "border-blue-600/60",
+  Armour: "border-gray-500/60",
+  Tricks: "border-green-600/60",
+};
+
+const TOAST_BG = {
+  Creature: "bg-red-950/85",
+  Magic: "bg-blue-950/85",
+  Armour: "bg-gray-900/85",
+  Tricks: "bg-green-950/85",
+};
+
+const TOAST_GLOW = {
+  Creature: "0 0 30px rgba(220, 38, 38, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5)",
+  Magic: "0 0 30px rgba(37, 99, 235, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5)",
+  Armour: "0 0 30px rgba(156, 163, 175, 0.2), 0 4px 20px rgba(0, 0, 0, 0.5)",
+  Tricks: "0 0 30px rgba(22, 163, 74, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5)",
+};
+
 function getDeckRotations(count) {
   const rotations = [];
   for (let i = 0; i < Math.min(count, 6); i++) {
@@ -70,6 +98,7 @@ export default function CenterZone({
   volcano,
   dragon,
   jargon,
+  announcement,
 }) {
   const { setGraveyardOpen, selectedCard, attackEvent, gameState } = useStore();
   const isMobile = useIsMobile();
@@ -101,15 +130,24 @@ export default function CenterZone({
   const layoutH = cardH;
   const zoneH = isMobile ? "h-[90px]" : "h-[175px]";
 
+  // Non-major announcement to show in toast column
+  const isMajor = announcement && announcement.type === "Event";
+  const showToast = announcement && !isMajor && isMobile;
+
   return (
     <div
-      className={`flex-shrink-0 ${zoneH} flex items-center justify-between px-4 md:px-12 lg:px-24 relative z-10`}
+      className={`flex-shrink-0 ${zoneH} ${
+        isMobile
+          ? "grid grid-cols-5 items-center px-2"
+          : "flex items-center justify-between px-4 md:px-12 lg:px-24"
+      } relative z-10`}
     >
       {/* Subtle divider line */}
       <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 top-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
       <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
-      {/* Deck stack — left side */}
-      <div className="flex flex-col items-center gap-1">
+
+      {/* Col 1: Deck stack */}
+      <div className="flex flex-col items-center gap-1 justify-self-center">
         <span
           className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
         >
@@ -160,195 +198,408 @@ export default function CenterZone({
         </div>
       </div>
 
-      {/* Staged card stack — center, Uno-style */}
-      {stagedCards.length > 0 && (
-        <div
-          ref={stagedRef}
-          className="relative z-10"
-          style={{
-            width: isMobile ? 50 : 80,
-            height: isMobile ? 70 : 112,
-            overflow: "visible",
-          }}
-        >
-          <div
-            style={{
-              transform: isMobile ? "scale(0.45)" : "scale(0.55)",
-              transformOrigin: "center center",
-            }}
-          >
-            <div
-              className="relative"
-              style={{
-                width: isMobile ? 82 : 110,
-                height: isMobile ? 115 : 154,
-              }}
-            >
-              <AnimatePresence>
-                {stagedCards.map((card) => (
-                  <motion.div
-                    key={card._stagedId}
-                    initial={{ opacity: 0, scale: 0.5, y: 20 }}
-                    animate={
-                      card._phase === "fly" &&
-                      graveStackRef.current &&
-                      stagedRef.current
-                        ? (() => {
-                            const graveRect =
-                              graveStackRef.current.getBoundingClientRect();
-                            const stagedRect =
-                              stagedRef.current.getBoundingClientRect();
-                            const isGraveLandscape = cardW > cardH;
-                            const tiltRot =
-                              Math.sin((graveyard?.length || 0) * 5.7 + 1.3) *
-                              8;
-                            const targetRot = isGraveLandscape
-                              ? 90 + tiltRot
-                              : tiltRot;
-                            // motion.div is inside a scale wrapper, so divide
-                            // screen-space offsets by the parent scale factor
-                            const parentScale = isMobile ? 0.45 : 0.55;
-                            const innerW = isMobile ? 82 : 110;
-                            const innerH = isMobile ? 115 : 154;
-                            const stagedVisualW = isGraveLandscape
-                              ? innerH * parentScale
-                              : innerW * parentScale;
-                            const targetScale = graveRect.width / stagedVisualW;
-                            const dx =
-                              (graveRect.left +
-                                graveRect.width / 2 -
-                                (stagedRect.left + stagedRect.width / 2)) /
-                              parentScale;
-                            const dy =
-                              (graveRect.top +
-                                graveRect.height / 2 -
-                                (stagedRect.top + stagedRect.height / 2)) /
-                              parentScale;
-                            const dyNudge = isMobile ? -8 : 0;
-                            return {
-                              x: dx,
-                              y: dy + dyNudge,
-                              scale: targetScale,
-                              opacity: 1,
-                              rotate: targetRot,
-                            };
-                          })()
-                        : { opacity: 1, scale: 1, y: 0 }
-                    }
-                    exit={{ opacity: 0, transition: { duration: 0 } }}
-                    transition={
-                      card._phase === "fly"
-                        ? { duration: 0.5, ease: "easeInOut" }
-                        : { duration: 0.3 }
-                    }
-                    style={
-                      card._phase !== "fly"
-                        ? { rotate: `${card._rotation}deg` }
-                        : undefined
-                    }
-                    className={`absolute inset-0 rounded-lg border-2 overflow-hidden shadow-2xl flex flex-col ${
-                      TYPE_BORDER[card.type] || "border-gray-600"
-                    }`}
-                  >
-                    {card.image ? (
-                      <img
-                        src={`/cards/${card.image}`}
-                        alt={card.name}
-                        className="w-full h-[155%] object-cover object-top"
-                        draggable={false}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-800" />
-                    )}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Event zone — Volcano, Dragon, Jargon */}
-      {(volcano?.active || dragon?.active || jargon?.active) && (
-        <div className="flex items-center gap-2 z-10">
-          {/* Volcano */}
-          {volcano?.active && !dragon?.active && (
-            <button
-              onClick={() => setVolcanoOpen(true)}
-              className={`relative flex flex-col items-center rounded-lg bg-orange-900/40 border border-orange-600/50 hover:bg-orange-900/60 transition cursor-pointer ${
-                isMobile ? "px-3 py-2" : "px-2 py-1"
-              }`}
-              title="Volcano Bank"
-            >
-              <span className={`text-xl ${isMobile ? "text-base" : ""}`}>
-                &#x1F30B;
-              </span>
-              <span className="text-[9px] text-orange-300 font-bold">
-                {volcano.totalBanked} SP
-              </span>
-            </button>
-          )}
-
-          {/* Dragon — click to attack with selected creature */}
-          {dragon?.active && (
-            <div
-              className={`relative flex flex-col items-center px-2 py-1 rounded-lg bg-red-900/50 border border-red-500/60 animate-pulse ${
-                canAttackDragon
-                  ? "cursor-pointer ring-2 ring-[var(--color-gold)] hover:bg-red-900/80"
-                  : ""
-              }`}
-              onClick={() => {
-                if (canAttackDragon) attackEvent(selectedCard.uid);
-              }}
-              title={canAttackDragon ? "Click to attack the Dragon!" : "Dragon"}
-            >
-              <span className={`text-xl ${isMobile ? "text-base" : ""}`}>
-                &#x1F409;
-              </span>
-              <div className="w-16 h-1.5 bg-gray-800 rounded-full mt-0.5 overflow-hidden">
+      {/* Col 2: Toast (mobile only, inline when staged card present) */}
+      {isMobile && (
+        <div className="flex items-center justify-center">
+          <AnimatePresence>
+            {showToast && (
+              <motion.div
+                key="inline-toast"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <div
-                  className="h-full bg-red-500 rounded-full transition-all"
+                  className={`w-fit max-w-full border rounded-lg backdrop-blur-md text-center px-2 py-1 ${
+                    TOAST_BORDER[announcement.type] || "border-gray-600/60"
+                  } ${TOAST_BG[announcement.type] || "bg-gray-900/85"}`}
                   style={{
-                    width: `${(dragon.currentHP / dragon.maxHP) * 100}%`,
+                    boxShadow:
+                      TOAST_GLOW[announcement.type] ||
+                      "0 4px 20px rgba(0, 0, 0, 0.5)",
                   }}
-                />
-              </div>
-              <span className="text-[8px] text-red-300">
-                {dragon.currentHP}/{dragon.maxHP}
-              </span>
-              {canAttackDragon && (
-                <span className="text-[8px] text-[var(--color-gold)] font-bold mt-0.5">
-                  TAP TO ATTACK
-                </span>
-              )}
-              {volcano?.totalBanked > 0 && (
-                <span className="text-[8px] text-orange-300">
-                  &#x1F30B; {volcano.totalBanked} SP
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Jargon */}
-          {jargon?.active && (
-            <button
-              onClick={() => setJargonOpen(true)}
-              className={`relative flex flex-col items-center rounded-lg bg-purple-900/40 border border-purple-500/50 hover:bg-purple-900/60 transition cursor-pointer ${
-                isMobile ? "px-3 py-2" : "px-2 py-1"
-              }`}
-              title="Jargon the Vendor"
-            >
-              <span className={`text-xl ${isMobile ? "text-base" : ""}`}>
-                &#x1F9D9;
-              </span>
-              <span className="text-[9px] text-purple-300 font-bold">Shop</span>
-            </button>
-          )}
+                >
+                  <div
+                    className={`font-display text-sm ${
+                      TOAST_COLOR[announcement.type] || "text-white"
+                    }`}
+                    style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)" }}
+                  >
+                    {announcement.name}
+                  </div>
+                  {announcement.flavor && (
+                    <div
+                      className="text-[var(--color-gold)] font-display text-[10px]"
+                      style={{
+                        textShadow: "0 0 8px rgba(212, 175, 55, 0.3)",
+                      }}
+                    >
+                      {announcement.flavor}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
-      {/* Graveyard — right side, messy stack of card faces */}
-      <div ref={graveRef} className="flex flex-col items-center gap-1">
+      {/* Col 3: Event zone — Volcano, Dragon, Jargon */}
+      {isMobile ? (
+        <div className="flex items-center justify-center">
+          {(volcano?.active || dragon?.active || jargon?.active) && (
+            <div className="flex items-center gap-1">
+              {volcano?.active && !dragon?.active && (
+                <button
+                  onClick={() => setVolcanoOpen(true)}
+                  className="relative flex flex-col items-center rounded-lg bg-orange-900/40 border border-orange-600/50 hover:bg-orange-900/60 transition cursor-pointer px-2 py-1"
+                  title="Volcano Bank"
+                >
+                  <span className="text-base">&#x1F30B;</span>
+                  <span className="text-[9px] text-orange-300 font-bold">
+                    {volcano.totalBanked} SP
+                  </span>
+                </button>
+              )}
+              {dragon?.active && (
+                <div
+                  className={`relative flex flex-col items-center px-2 py-1 rounded-lg bg-red-900/50 border border-red-500/60 animate-pulse ${
+                    canAttackDragon
+                      ? "cursor-pointer ring-2 ring-[var(--color-gold)] hover:bg-red-900/80"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    if (canAttackDragon) attackEvent(selectedCard.uid);
+                  }}
+                  title={
+                    canAttackDragon ? "Click to attack the Dragon!" : "Dragon"
+                  }
+                >
+                  <span className="text-base">&#x1F409;</span>
+                  <div className="w-12 h-1.5 bg-gray-800 rounded-full mt-0.5 overflow-hidden">
+                    <div
+                      className="h-full bg-red-500 rounded-full transition-all"
+                      style={{
+                        width: `${(dragon.currentHP / dragon.maxHP) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-[8px] text-red-300">
+                    {dragon.currentHP}/{dragon.maxHP}
+                  </span>
+                  {canAttackDragon && (
+                    <span className="text-[8px] text-[var(--color-gold)] font-bold mt-0.5">
+                      TAP
+                    </span>
+                  )}
+                  {volcano?.totalBanked > 0 && (
+                    <span className="text-[8px] text-orange-300">
+                      &#x1F30B; {volcano.totalBanked} SP
+                    </span>
+                  )}
+                </div>
+              )}
+              {jargon?.active && (
+                <button
+                  onClick={() => setJargonOpen(true)}
+                  className="relative flex flex-col items-center rounded-lg bg-purple-900/40 border border-purple-500/50 hover:bg-purple-900/60 transition cursor-pointer px-2 py-1"
+                  title="Jargon the Vendor"
+                >
+                  <span className="text-base">&#x1F9D9;</span>
+                  <span className="text-[9px] text-purple-300 font-bold">
+                    Shop
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        // Desktop: events between staged and grave (original layout)
+        <>
+          {(volcano?.active || dragon?.active || jargon?.active) && (
+            <div className="flex items-center gap-2 z-10">
+              {volcano?.active && !dragon?.active && (
+                <button
+                  onClick={() => setVolcanoOpen(true)}
+                  className="relative flex flex-col items-center rounded-lg bg-orange-900/40 border border-orange-600/50 hover:bg-orange-900/60 transition cursor-pointer px-2 py-1"
+                  title="Volcano Bank"
+                >
+                  <span className="text-xl">&#x1F30B;</span>
+                  <span className="text-[9px] text-orange-300 font-bold">
+                    {volcano.totalBanked} SP
+                  </span>
+                </button>
+              )}
+              {dragon?.active && (
+                <div
+                  className={`relative flex flex-col items-center px-2 py-1 rounded-lg bg-red-900/50 border border-red-500/60 animate-pulse ${
+                    canAttackDragon
+                      ? "cursor-pointer ring-2 ring-[var(--color-gold)] hover:bg-red-900/80"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    if (canAttackDragon) attackEvent(selectedCard.uid);
+                  }}
+                  title={
+                    canAttackDragon ? "Click to attack the Dragon!" : "Dragon"
+                  }
+                >
+                  <span className="text-xl">&#x1F409;</span>
+                  <div className="w-16 h-1.5 bg-gray-800 rounded-full mt-0.5 overflow-hidden">
+                    <div
+                      className="h-full bg-red-500 rounded-full transition-all"
+                      style={{
+                        width: `${(dragon.currentHP / dragon.maxHP) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-[8px] text-red-300">
+                    {dragon.currentHP}/{dragon.maxHP}
+                  </span>
+                  {canAttackDragon && (
+                    <span className="text-[8px] text-[var(--color-gold)] font-bold mt-0.5">
+                      TAP TO ATTACK
+                    </span>
+                  )}
+                  {volcano?.totalBanked > 0 && (
+                    <span className="text-[8px] text-orange-300">
+                      &#x1F30B; {volcano.totalBanked} SP
+                    </span>
+                  )}
+                </div>
+              )}
+              {jargon?.active && (
+                <button
+                  onClick={() => setJargonOpen(true)}
+                  className="relative flex flex-col items-center rounded-lg bg-purple-900/40 border border-purple-500/50 hover:bg-purple-900/60 transition cursor-pointer px-2 py-1"
+                  title="Jargon the Vendor"
+                >
+                  <span className="text-xl">&#x1F9D9;</span>
+                  <span className="text-[9px] text-purple-300 font-bold">
+                    Shop
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Col 4: Staged card */}
+      {isMobile ? (
+        <div className="flex items-center justify-center">
+          {stagedCards.length > 0 && (
+            <div
+              ref={stagedRef}
+              className="relative z-10"
+              style={{
+                width: 60,
+                height: 84,
+                overflow: "visible",
+              }}
+            >
+              <div
+                style={{
+                  transform: "scale(0.55)",
+                  transformOrigin: "center center",
+                }}
+              >
+                <div className="relative" style={{ width: 82, height: 115 }}>
+                  <AnimatePresence>
+                    {stagedCards.map((card) => (
+                      <motion.div
+                        key={card._stagedId}
+                        initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                        animate={
+                          card._phase === "fly" &&
+                          graveStackRef.current &&
+                          stagedRef.current
+                            ? (() => {
+                                const graveRect =
+                                  graveStackRef.current.getBoundingClientRect();
+                                const stagedRect =
+                                  stagedRef.current.getBoundingClientRect();
+                                const isGraveLandscape = cardW > cardH;
+                                const tiltRot =
+                                  Math.sin(
+                                    (graveyard?.length || 0) * 5.7 + 1.3,
+                                  ) * 8;
+                                const targetRot = isGraveLandscape
+                                  ? 90 + tiltRot
+                                  : tiltRot;
+                                const parentScale = 0.55;
+                                const innerW = 82;
+                                const innerH = 115;
+                                const stagedVisualW = isGraveLandscape
+                                  ? innerH * parentScale
+                                  : innerW * parentScale;
+                                const targetScale =
+                                  graveRect.width / stagedVisualW;
+                                const dx =
+                                  (graveRect.left +
+                                    graveRect.width / 2 -
+                                    (stagedRect.left + innerW / 2)) /
+                                  parentScale;
+                                const dy =
+                                  (graveRect.top +
+                                    graveRect.height / 2 -
+                                    (stagedRect.top + innerH / 2)) /
+                                  parentScale;
+                                return {
+                                  x: dx,
+                                  y: dy,
+                                  scale: targetScale,
+                                  opacity: 1,
+                                  rotate: targetRot,
+                                };
+                              })()
+                            : { opacity: 1, scale: 1, y: 0 }
+                        }
+                        exit={{ opacity: 0, transition: { duration: 0 } }}
+                        transition={
+                          card._phase === "fly"
+                            ? { duration: 0.5, ease: "easeInOut" }
+                            : { duration: 0.3 }
+                        }
+                        style={
+                          card._phase !== "fly"
+                            ? { rotate: `${card._rotation}deg` }
+                            : undefined
+                        }
+                        className={`absolute inset-0 rounded-lg border-2 overflow-hidden shadow-2xl flex flex-col ${
+                          TYPE_BORDER[card.type] || "border-gray-600"
+                        }`}
+                      >
+                        {card.image ? (
+                          <img
+                            src={`/cards/${card.image}`}
+                            alt={card.name}
+                            className="w-full h-[155%] object-cover object-top"
+                            draggable={false}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-800" />
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        // Desktop: staged card (original layout)
+        <>
+          {stagedCards.length > 0 && (
+            <div
+              ref={stagedRef}
+              className="relative z-10"
+              style={{
+                width: 80,
+                height: 112,
+                overflow: "visible",
+              }}
+            >
+              <div
+                style={{
+                  transform: "scale(0.55)",
+                  transformOrigin: "center center",
+                }}
+              >
+                <div className="relative" style={{ width: 110, height: 154 }}>
+                  <AnimatePresence>
+                    {stagedCards.map((card) => (
+                      <motion.div
+                        key={card._stagedId}
+                        initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                        animate={
+                          card._phase === "fly" &&
+                          graveStackRef.current &&
+                          stagedRef.current
+                            ? (() => {
+                                const graveRect =
+                                  graveStackRef.current.getBoundingClientRect();
+                                const stagedRect =
+                                  stagedRef.current.getBoundingClientRect();
+                                const isGraveLandscape = cardW > cardH;
+                                const tiltRot =
+                                  Math.sin(
+                                    (graveyard?.length || 0) * 5.7 + 1.3,
+                                  ) * 8;
+                                const targetRot = isGraveLandscape
+                                  ? 90 + tiltRot
+                                  : tiltRot;
+                                const parentScale = 0.55;
+                                const innerW = 110;
+                                const innerH = 154;
+                                const stagedVisualW = isGraveLandscape
+                                  ? innerH * parentScale
+                                  : innerW * parentScale;
+                                const targetScale =
+                                  graveRect.width / stagedVisualW;
+                                const dx =
+                                  (graveRect.left +
+                                    graveRect.width / 2 -
+                                    (stagedRect.left + innerW / 2)) /
+                                  parentScale;
+                                const dy =
+                                  (graveRect.top +
+                                    graveRect.height / 2 -
+                                    (stagedRect.top + innerH / 2)) /
+                                  parentScale;
+                                return {
+                                  x: dx,
+                                  y: dy,
+                                  scale: targetScale,
+                                  opacity: 1,
+                                  rotate: targetRot,
+                                };
+                              })()
+                            : { opacity: 1, scale: 1, y: 0 }
+                        }
+                        exit={{ opacity: 0, transition: { duration: 0 } }}
+                        transition={
+                          card._phase === "fly"
+                            ? { duration: 0.5, ease: "easeInOut" }
+                            : { duration: 0.3 }
+                        }
+                        style={
+                          card._phase !== "fly"
+                            ? { rotate: `${card._rotation}deg` }
+                            : undefined
+                        }
+                        className={`absolute inset-0 rounded-lg border-2 overflow-hidden shadow-2xl flex flex-col ${
+                          TYPE_BORDER[card.type] || "border-gray-600"
+                        }`}
+                      >
+                        {card.image ? (
+                          <img
+                            src={`/cards/${card.image}`}
+                            alt={card.name}
+                            className="w-full h-[155%] object-cover object-top"
+                            draggable={false}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-800" />
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Col 5: Graveyard */}
+      <div
+        ref={graveRef}
+        className="flex flex-col items-center gap-1 justify-self-center"
+      >
         <span
           className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
         >

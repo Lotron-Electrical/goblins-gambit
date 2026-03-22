@@ -663,6 +663,7 @@ export default function GameScreen({ isStoryMode } = {}) {
           volcano={gameState.volcano}
           dragon={gameState.dragon}
           jargon={gameState.jargon}
+          announcement={announcement}
         />
       </div>
 
