@@ -213,7 +213,7 @@ export default function CenterZone({
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div
-                  className={`w-full border rounded backdrop-blur-md text-center px-1 py-1 ${
+                  className={`w-full border rounded backdrop-blur-md text-center px-2 py-2 ${
                     TOAST_BORDER[announcement.type] || "border-gray-600/60"
                   } ${TOAST_BG[announcement.type] || "bg-gray-900/85"}`}
                   style={{
@@ -223,7 +223,7 @@ export default function CenterZone({
                   }}
                 >
                   <div
-                    className={`font-display text-xs truncate ${
+                    className={`font-display text-sm truncate ${
                       TOAST_COLOR[announcement.type] || "text-white"
                     }`}
                     style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)" }}
@@ -232,7 +232,7 @@ export default function CenterZone({
                   </div>
                   {announcement.flavor && (
                     <div
-                      className="text-[var(--color-gold)] font-display text-[9px] truncate"
+                      className="text-[var(--color-gold)] font-display text-[11px] truncate"
                       style={{
                         textShadow: "0 0 8px rgba(212, 175, 55, 0.3)",
                       }}
@@ -397,14 +397,14 @@ export default function CenterZone({
               ref={stagedRef}
               className="relative z-10"
               style={{
-                width: 70,
-                height: 80,
+                width: 85,
+                height: 85,
                 overflow: "visible",
               }}
             >
               <div
                 style={{
-                  transform: "scale(0.6)",
+                  transform: "scale(0.75)",
                   transformOrigin: "center center",
                 }}
               >
@@ -431,7 +431,7 @@ export default function CenterZone({
                                 const targetRot = isGraveLandscape
                                   ? 90 + tiltRot
                                   : tiltRot;
-                                const parentScale = 0.6;
+                                const parentScale = 0.75;
                                 const innerW = 82;
                                 const innerH = 115;
                                 const stagedVisualW = isGraveLandscape
