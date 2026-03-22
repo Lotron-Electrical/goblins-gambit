@@ -110,25 +110,13 @@ export default function CardAnnouncement({
         <motion.div
           key="toast"
           className="fixed z-50 pointer-events-none"
-          style={{ left: "50%", top: hasStaged ? toastTop : centerTop }}
-          initial={{
-            opacity: 0,
-            scale: 0.85,
-            x: "-50%",
-            y: hasStaged ? "-100%" : "-50%",
+          style={{
+            left: hasStaged && isMobile ? "30%" : "50%",
+            top: centerTop,
           }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-            x: "-50%",
-            y: hasStaged ? "-100%" : "-50%",
-          }}
-          exit={{
-            opacity: 0,
-            scale: 0.92,
-            x: "-50%",
-            y: hasStaged ? "-100%" : "-50%",
-          }}
+          initial={{ opacity: 0, scale: 0.85, x: "-50%", y: "-50%" }}
+          animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+          exit={{ opacity: 0, scale: 0.92, x: "-50%", y: "-50%" }}
           transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
           <div

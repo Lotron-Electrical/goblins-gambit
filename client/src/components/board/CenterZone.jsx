@@ -224,9 +224,10 @@ export default function CenterZone({
                                 graveRect.height / 2 -
                                 (stagedRect.top + stagedRect.height / 2)) /
                               parentScale;
+                            const dyNudge = isMobile ? -8 : 0;
                             return {
                               x: dx,
-                              y: dy,
+                              y: dy + dyNudge,
                               scale: targetScale,
                               opacity: 1,
                               rotate: targetRot,
