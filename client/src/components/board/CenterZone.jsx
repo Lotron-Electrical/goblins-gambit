@@ -205,9 +205,11 @@ export default function CenterZone({
                             const targetRot = isGraveLandscape
                               ? 90 + tiltRot
                               : tiltRot;
+                            const innerW = isMobile ? 82 : 110;
+                            const innerH = isMobile ? 115 : 154;
                             const stagedVisualW = isGraveLandscape
-                              ? stagedRect.height
-                              : stagedRect.width;
+                              ? innerH * parentScale
+                              : innerW * parentScale;
                             const targetScale = graveRect.width / stagedVisualW;
                             // motion.div is inside a scale wrapper, so divide
                             // screen-space offsets by the parent scale factor
