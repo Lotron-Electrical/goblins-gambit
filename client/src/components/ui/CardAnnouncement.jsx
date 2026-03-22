@@ -100,7 +100,7 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
         <motion.div
           key="toast"
           className="fixed z-50 pointer-events-none"
-          style={{ left: "50%", top: "50%" }}
+          style={{ left: "50%", top: centerTop }}
           initial={{ opacity: 0, scale: 0.85, x: "-50%", y: "-50%" }}
           animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
           exit={{ opacity: 0, scale: 0.92, x: "-50%", y: "-50%" }}
