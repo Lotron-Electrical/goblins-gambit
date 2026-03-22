@@ -400,7 +400,7 @@ export default function GameScreen({ isStoryMode } = {}) {
       setTimeout(() => clearAttackAnimation(), 350);
     }
 
-    // Draw card reveal: show card in center, fly down to hand strip, pulse
+    // Draw card reveal: preload image, show card in center, fly down to hand strip
     if (
       currentAnimation.type === "draw_card" &&
       currentAnimation.card &&
@@ -408,48 +408,69 @@ export default function GameScreen({ isStoryMode } = {}) {
       !animationsOff
     ) {
       const TYPE_ORDER = { Creature: 0, Magic: 1, Armour: 2, Tricks: 3 };
+      const card = currentAnimation.card;
       useStore.setState({ drawAnimActive: true });
 
-      setDrawnCard({ card: currentAnimation.card, phase: "reveal" });
+      const startReveal = () => {
+        setDrawnCard({ card, phase: "reveal" });
 
-      // Phase 2: fly down to hand strip
-      setTimeout(() => {
-        let flyTarget = null;
-        const stripEl = document.querySelector("[data-hand-strip]");
-        if (stripEl) {
-          const r = stripEl.getBoundingClientRect();
-          // Find sorted index of drawn card in hand
-          const myHand = gameState?.players?.[gameState.myId]?.hand || [];
-          const sorted = [...myHand].sort(
-            (a, b) =>
-              (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9) ||
-              a.cost - b.cost,
+        // Phase 2: fly down to hand strip
+        setTimeout(() => {
+          let flyTarget = null;
+          const stripEl = document.querySelector("[data-hand-strip]");
+          if (stripEl) {
+            const r = stripEl.getBoundingClientRect();
+            const myHand = gameState?.players?.[gameState.myId]?.hand || [];
+            const sorted = [...myHand].sort(
+              (a, b) =>
+                (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9) ||
+                a.cost - b.cost,
+            );
+            const targetIndex = sorted.findIndex((c) => c.uid === card.uid);
+            const idx = targetIndex >= 0 ? targetIndex : 0;
+            flyTarget = {
+              x: r.left + 4 + idx * 8,
+              y: r.top + r.height / 2,
+            };
+          }
+          setDrawnCard((prev) =>
+            prev ? { ...prev, phase: "fly", flyTarget } : null,
           );
-          const targetIndex = sorted.findIndex(
-            (c) => c.uid === currentAnimation.card.uid,
-          );
-          const idx = targetIndex >= 0 ? targetIndex : 0;
-          // Each collapsed card: 28px wide, -20px margin = 8px effective per card
-          flyTarget = {
-            x: r.left + 4 + idx * 8,
-            y: r.top + r.height / 2,
-          };
-        }
-        setDrawnCard((prev) =>
-          prev ? { ...prev, phase: "fly", flyTarget } : null,
-        );
-      }, 600);
+        }, 600);
 
-      // Phase 3: land + pulse
-      setTimeout(() => {
-        setDrawnCard((prev) => (prev ? { ...prev, phase: "land" } : null));
-      }, 1100);
+        // Phase 3: land + pulse
+        setTimeout(() => {
+          setDrawnCard((prev) => (prev ? { ...prev, phase: "land" } : null));
+        }, 1100);
 
-      // Cleanup
-      setTimeout(() => {
-        setDrawnCard(null);
-        useStore.setState({ drawAnimActive: false });
-      }, 1900);
+        // Cleanup
+        setTimeout(() => {
+          setDrawnCard(null);
+          useStore.setState({ drawAnimActive: false });
+        }, 1900);
+      };
+
+      // Preload card image before revealing to avoid wireframe flash
+      if (card.image) {
+        let started = false;
+        const img = new Image();
+        img.onload = () => {
+          if (!started) {
+            started = true;
+            startReveal();
+          }
+        };
+        img.src = `/cards/${card.image}`;
+        // Fallback: show anyway after 200ms if image is slow
+        setTimeout(() => {
+          if (!started) {
+            started = true;
+            startReveal();
+          }
+        }, 200);
+      } else {
+        startReveal();
+      }
     }
 
     // Stage played cards briefly in center
