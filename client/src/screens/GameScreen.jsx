@@ -450,27 +450,8 @@ export default function GameScreen({ isStoryMode } = {}) {
         }, 1900);
       };
 
-      // Preload card image before revealing to avoid wireframe flash
-      if (card.image) {
-        let started = false;
-        const img = new Image();
-        img.onload = () => {
-          if (!started) {
-            started = true;
-            startReveal();
-          }
-        };
-        img.src = `/cards/${card.image}`;
-        // Fallback: show anyway after 200ms if image is slow
-        setTimeout(() => {
-          if (!started) {
-            started = true;
-            startReveal();
-          }
-        }, 200);
-      } else {
-        startReveal();
-      }
+      // Images already preloaded at game start — reveal immediately
+      startReveal();
     }
 
     // Stage played cards briefly in center
