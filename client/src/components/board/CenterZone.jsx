@@ -133,12 +133,13 @@ export default function CenterZone({
   // Non-major announcement to show in toast column
   const isMajor = announcement && announcement.type === "Event";
   const showToast = announcement && !isMajor && isMobile;
+  const hasEvent = volcano?.active || dragon?.active || jargon?.active;
 
   return (
     <div
       className={`flex-shrink-0 ${zoneH} ${
         isMobile
-          ? "grid grid-cols-5 items-center px-2"
+          ? `grid ${hasEvent ? "grid-cols-5" : "grid-cols-4"} items-center px-2`
           : "flex items-center justify-between px-4 md:px-12 lg:px-24"
       } relative z-10`}
     >
@@ -147,7 +148,7 @@ export default function CenterZone({
       <div className="absolute left-4 right-4 md:left-12 md:right-12 lg:left-24 lg:right-24 bottom-0 h-px bg-gradient-to-r from-transparent via-gray-700/30 to-transparent" />
 
       {/* Col 1: Deck stack */}
-      <div className="flex flex-col items-center gap-1 justify-self-center">
+      <div className="h-full flex flex-col items-center justify-center gap-1">
         <span
           className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
         >
@@ -200,18 +201,19 @@ export default function CenterZone({
 
       {/* Col 2: Toast (mobile only, inline when staged card present) */}
       {isMobile && (
-        <div className="flex items-center justify-center">
+        <div className="h-full flex items-center justify-center overflow-hidden">
           <AnimatePresence>
             {showToast && (
               <motion.div
                 key="inline-toast"
+                className="w-full"
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.92 }}
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div
-                  className={`w-fit max-w-full border rounded-lg backdrop-blur-md text-center px-2 py-1 ${
+                  className={`w-full border rounded backdrop-blur-md text-center px-1 py-1 ${
                     TOAST_BORDER[announcement.type] || "border-gray-600/60"
                   } ${TOAST_BG[announcement.type] || "bg-gray-900/85"}`}
                   style={{
@@ -221,7 +223,7 @@ export default function CenterZone({
                   }}
                 >
                   <div
-                    className={`font-display text-sm ${
+                    className={`font-display text-xs truncate ${
                       TOAST_COLOR[announcement.type] || "text-white"
                     }`}
                     style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)" }}
@@ -230,7 +232,7 @@ export default function CenterZone({
                   </div>
                   {announcement.flavor && (
                     <div
-                      className="text-[var(--color-gold)] font-display text-[10px]"
+                      className="text-[var(--color-gold)] font-display text-[9px] truncate"
                       style={{
                         textShadow: "0 0 8px rgba(212, 175, 55, 0.3)",
                       }}
@@ -245,10 +247,10 @@ export default function CenterZone({
         </div>
       )}
 
-      {/* Col 3: Event zone — Volcano, Dragon, Jargon */}
+      {/* Col 3: Event zone — Volcano, Dragon, Jargon (mobile: only when active) */}
       {isMobile ? (
-        <div className="flex items-center justify-center">
-          {(volcano?.active || dragon?.active || jargon?.active) && (
+        hasEvent ? (
+          <div className="h-full flex items-center justify-center overflow-hidden">
             <div className="flex items-center gap-1">
               {volcano?.active && !dragon?.active && (
                 <button
@@ -313,8 +315,8 @@ export default function CenterZone({
                 </button>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        ) : null
       ) : (
         // Desktop: events between staged and grave (original layout)
         <>
@@ -389,20 +391,20 @@ export default function CenterZone({
 
       {/* Col 4: Staged card */}
       {isMobile ? (
-        <div className="flex items-center justify-center">
+        <div className="h-full flex items-center justify-center">
           {stagedCards.length > 0 && (
             <div
               ref={stagedRef}
               className="relative z-10"
               style={{
-                width: 60,
-                height: 84,
+                width: 70,
+                height: 80,
                 overflow: "visible",
               }}
             >
               <div
                 style={{
-                  transform: "scale(0.55)",
+                  transform: "scale(0.6)",
                   transformOrigin: "center center",
                 }}
               >
@@ -429,7 +431,7 @@ export default function CenterZone({
                                 const targetRot = isGraveLandscape
                                   ? 90 + tiltRot
                                   : tiltRot;
-                                const parentScale = 0.55;
+                                const parentScale = 0.6;
                                 const innerW = 82;
                                 const innerH = 115;
                                 const stagedVisualW = isGraveLandscape
@@ -598,7 +600,7 @@ export default function CenterZone({
       {/* Col 5: Graveyard */}
       <div
         ref={graveRef}
-        className="flex flex-col items-center gap-1 justify-self-center"
+        className="h-full flex flex-col items-center justify-center gap-1"
       >
         <span
           className={`text-gray-500 font-display ${isMobile ? "text-[14px]" : "text-[16px]"}`}
