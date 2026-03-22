@@ -729,6 +729,7 @@ export default function GameScreen({ isStoryMode } = {}) {
       <CardAnnouncement
         announcement={announcement}
         mobileCenterY={isMobile ? centerZoneY : null}
+        hasStaged={stagedCards.length > 0}
       />
 
       {/* VFX overlays */}

@@ -33,7 +33,11 @@ const TYPE_GLOW_SHADOW = {
 // Major events get the big centered treatment
 const MAJOR_EVENTS = ["Event"];
 
-export default function CardAnnouncement({ announcement, mobileCenterY }) {
+export default function CardAnnouncement({
+  announcement,
+  mobileCenterY,
+  hasStaged,
+}) {
   const animationsOff = useStore((s) => s.animationsOff);
   const centerZoneY = useStore((s) => s.centerZoneY);
   const isMobile = useIsMobile();
@@ -106,10 +110,25 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
         <motion.div
           key="toast"
           className="fixed z-50 pointer-events-none"
-          style={{ left: "50%", top: toastTop }}
-          initial={{ opacity: 0, scale: 0.85, x: "-50%", y: "-100%" }}
-          animate={{ opacity: 1, scale: 1, x: "-50%", y: "-100%" }}
-          exit={{ opacity: 0, scale: 0.92, x: "-50%", y: "-100%" }}
+          style={{ left: "50%", top: hasStaged ? toastTop : centerTop }}
+          initial={{
+            opacity: 0,
+            scale: 0.85,
+            x: "-50%",
+            y: hasStaged ? "-100%" : "-50%",
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            x: "-50%",
+            y: hasStaged ? "-100%" : "-50%",
+          }}
+          exit={{
+            opacity: 0,
+            scale: 0.92,
+            x: "-50%",
+            y: hasStaged ? "-100%" : "-50%",
+          }}
           transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
         >
           <div
