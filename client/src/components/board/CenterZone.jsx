@@ -99,7 +99,7 @@ export default function CenterZone({
   const cardH = isMobile ? 48 : 150;
   const layoutW = cardW;
   const layoutH = cardH;
-  const zoneH = isMobile ? "h-[72px]" : "h-[175px]";
+  const zoneH = isMobile ? "h-[90px]" : "h-[175px]";
 
   return (
     <div
@@ -166,14 +166,14 @@ export default function CenterZone({
           ref={stagedRef}
           className="relative z-10"
           style={{
-            width: isMobile ? 70 : 80,
-            height: isMobile ? 98 : 112,
+            width: isMobile ? 50 : 80,
+            height: isMobile ? 70 : 112,
             overflow: "visible",
           }}
         >
           <div
             style={{
-              transform: isMobile ? "scale(0.65)" : "scale(0.55)",
+              transform: isMobile ? "scale(0.45)" : "scale(0.55)",
               transformOrigin: "center center",
             }}
           >
@@ -207,7 +207,7 @@ export default function CenterZone({
                               : tiltRot;
                             // motion.div is inside a scale wrapper, so divide
                             // screen-space offsets by the parent scale factor
-                            const parentScale = isMobile ? 0.65 : 0.55;
+                            const parentScale = isMobile ? 0.45 : 0.55;
                             const innerW = isMobile ? 82 : 110;
                             const innerH = isMobile ? 115 : 154;
                             const stagedVisualW = isGraveLandscape
@@ -234,7 +234,7 @@ export default function CenterZone({
                           })()
                         : { opacity: 1, scale: 1, y: 0 }
                     }
-                    exit={{ opacity: 0 }}
+                    exit={{ opacity: 0, transition: { duration: 0 } }}
                     transition={
                       card._phase === "fly"
                         ? { duration: 0.5, ease: "easeInOut" }

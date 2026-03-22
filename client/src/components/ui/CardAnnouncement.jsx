@@ -50,8 +50,8 @@ export default function CardAnnouncement({
     mobileCenterY || centerZoneY ? `${mobileCenterY || centerZoneY}px` : "45%";
 
   // Position toast above the staged card's visual top edge
-  const cardHalfH = isMobile ? 32 : 31;
-  const gap = 8;
+  const cardHalfH = isMobile ? 23 : 31;
+  const gap = 4;
   const rawY = mobileCenterY || centerZoneY;
   const toastTop = rawY ? `${rawY - cardHalfH - gap}px` : "40%";
 
