@@ -108,7 +108,7 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
         >
           <div
             className={`w-fit max-w-[85vw] flex items-center gap-2 border rounded-lg backdrop-blur-md text-center ${
-              isMobile ? "px-4 py-2.5" : "px-5 py-3"
+              isMobile ? "px-3 py-1.5" : "px-5 py-3"
             } ${TYPE_BORDER[announcement.type] || "border-gray-600/60"} ${TYPE_BG[announcement.type] || "bg-gray-900/85"}`}
             style={{
               boxShadow:
@@ -118,14 +118,14 @@ export default function CardAnnouncement({ announcement, mobileCenterY }) {
           >
             <div>
               <div
-                className={`font-display ${isMobile ? "text-lg" : "text-xl"} ${TYPE_COLOR[announcement.type] || "text-white"}`}
+                className={`font-display ${isMobile ? "text-base" : "text-xl"} ${TYPE_COLOR[announcement.type] || "text-white"}`}
                 style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)" }}
               >
                 {announcement.name}
               </div>
               {announcement.flavor && (
                 <div
-                  className={`text-[var(--color-gold)] font-display ${isMobile ? "text-[12px]" : "text-base"}`}
+                  className={`text-[var(--color-gold)] font-display ${isMobile ? "text-[11px]" : "text-base"}`}
                   style={{ textShadow: "0 0 8px rgba(212, 175, 55, 0.3)" }}
                 >
                   {announcement.flavor}
